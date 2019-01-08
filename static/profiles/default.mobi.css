@@ -1,0 +1,304 @@
+.h0 {
+    font-size: 140%;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+.h1 {
+    font-size: 120%;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+.h2 {
+    font-size: 120%;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+.h3 {
+    font-size: 120%;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+.h4 {
+    font-size: 120%;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1em;
+}
+
+.h5 {
+    font-size: 120%;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1em;
+}
+
+.h6 {
+    font-size: 120%;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 1em;
+}
+
+.titleblock {
+    page-break-before: always;
+    text-indent: 0em;
+    margin-top: 2em;
+    margin-bottom: 1em;
+}
+
+.titleblock_nobreak {
+    text-indent: 0em;
+    margin-top: 2em;
+    margin-bottom: 1em;
+}
+
+.titlenotes {
+    font-size: 100%;
+    font-weight: bold;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    page-break-after: avoid;
+}
+
+.titlenotes p {
+    text-indent: 0;
+    text-align: center;
+}
+
+.indent0 {
+    text-align: left;
+    margin-left: 0pt;
+}
+
+.indent1 {
+    text-align: left;
+    margin-left: 10pt;
+}
+
+.indent2 {
+    text-align: left;
+    margin-left: 20pt;
+}
+
+.indent3 {
+    text-align: left;
+    margin-left: 30pt;
+}
+
+.indent4 {
+    text-align: left;
+    margin-left: 40pt;
+}
+
+.indent5 {
+    text-align: left;
+    margin-left: 40pt;
+}
+
+.indent6 {
+    text-align: left;
+    margin-left: 40pt;
+}
+
+.anchor {
+    vertical-align: super;
+    font-size: 70%;
+}
+
+.linkanchor {
+    font-size: 80%;
+}
+
+.inlineanchor {
+    display: none;
+}
+
+.blockanchor {
+    vertical-align: super;
+    font-size: 70%;
+}
+
+.emptyline {
+    margin-top: 1em;
+}
+
+.emphasis {
+    font-style: italic;
+}
+
+.strong {
+    font-weight: bold;
+}
+
+.strike {
+    text-decoration: line-through;
+}
+
+.epigraph {
+    text-align: right;
+    margin-top: 0.4em;
+    margin-bottom: 0.2em;
+    margin-left: 4em;
+    font-style: italic;
+}
+
+.text-author {
+    page-break-before: avoid;
+    text-align: right;
+    font-weight: bold;
+}
+
+.subtitle {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 0.5em;
+    margin-top: 1em;
+    page-break-after: avoid;
+}
+
+p.subtitle {
+    text-indent: 0em;
+}
+
+p {
+    text-indent: 1em;
+    text-align: justify;
+    padding-bottom: 0.3em;
+    margin: 0pt 0pt 0pt 0pt;
+}
+
+p.title {
+    text-indent: 0em;
+    text-align: center;
+}
+
+.cite {
+    font-style: italic;
+    text-indent: 1em;
+    margin-top: 0.3em;
+    margin-bottom: 0.3em;
+}
+
+.image {
+    text-indent: 0em;
+    text-align: center;
+}
+
+.poem {
+    text-indent: 0em;
+    font-style: italic;
+    margin-left: 3em;
+    margin-bottom: 0em;
+    margin-top: 0em;
+}
+
+.stanza {
+    margin-bottom: 0.5em;
+}
+
+.poem p {
+    margin-top: 0em;
+    margin-bottom: 0em;
+}
+
+.table {
+    width: 100%;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.table th {
+    border: 1px solid black;
+    background: #ccc;
+}
+
+.table td {
+    border: 1px solid black;
+}
+
+.code {
+    margin-top: 0em;
+    margin-bottom: 0em;
+}
+
+.inlinenote {
+    font-style: italic;
+    font-size: 80%;
+    color: #6e6e6e;
+}
+
+.inlinenote::before {
+    content: "[";
+}
+
+.inlinenote::after {
+    content: "]";
+}
+
+.blocknote {
+    font-style: italic;
+    font-size: 80%;
+    border-radius: 4px;
+    background: #e6e6fa;
+    padding: 2px;
+    border: 1px #505050 solid;
+}
+
+.floatnote {
+    font-size: 80%;
+    text-indent: 0em;
+}
+
+.notenum {
+    font-weight: bold;
+}
+
+.annotation {
+    font-size: 80%;
+    text-align: center;
+    margin: 2em 1em 1em 1em;
+}
+
+span.dropcaps {
+    font-weight: bold;
+    font-size: 4em;
+    float: left;
+    padding-right: .1em;
+    margin-top: -.1em;
+    margin-bottom: -.1em;
+    margin-right: .1em;
+}
+
+p.dropcaps {
+    text-indent: 0;
+}
+
+.vignette_title_before {
+    text-indent: 0;
+    text-align: center;
+    margin-bottom: 0;
+    page-break-after: avoid;
+}
+
+.vignette_title_after {
+    page-break-before: avoid;
+    text-indent: 0;
+    text-align: center;
+    margin: 0 inherit 0 inherit;
+}
+
+.vignette_chapter_end {
+    page-break-before: avoid;
+    page-break-inside: avoid;
+    text-indent: 0;
+    text-align: center;
+    font-size: 200%;
+    margin-top: 2em;
+    margin-bottom: 0;
+}
+
+.chapter_end {}
