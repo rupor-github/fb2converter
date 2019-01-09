@@ -18,7 +18,7 @@
 		#---- "normal" - messages INFO level and higher are printed
 		#---- "debug"  - all log output is printed
 		level = "debug"
-		#---- path to the log file
+		#---- path to the log file, if relative - relative to current working directory
 		destination = "conversion.log"
 		#---- how to handle output file during consecutive program runs
 		#---- "append"    - keep all old log messages, append new ones at the end
@@ -29,6 +29,9 @@
 	#---- NOTE: in all format specifications curly brackets are indicating conditional blocks: only if result of keywords
 	#---- expansion inside block is not empty - block will be used, otherwise entire block will be ignored. Could be recursive,
 	#---- to output curly brackets escape them with backslash.
+	#
+	#---- NOTE: unless specified separately all relative paths in configuration are relative to the directory of configuration
+	#---- file!
 
 	#---- CSS stylesheet to use. If absent - default one will be supplied
 	# style = "profiles/default.css"
