@@ -11,10 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beevik/etree"
 	"github.com/disintegration/imaging"
 	"github.com/gosimple/slug"
 	"go.uber.org/zap"
+
+	"fb2converter/etree"
 )
 
 // generateTOCPage creates an HTML page with TOC.

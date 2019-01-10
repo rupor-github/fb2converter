@@ -1,0 +1,9 @@
+﻿Note:
+
+	https://github.com/beevik/etree
+
+Original package does not support mixed-content XML - which I needed, so I had to modify it. Result intorduces breaking change
+to the API, so my PR was declined (properly) by Brett Vickers (original author). I will keep it here with original licence and
+list of contibutors for reference at it probably will never make into Brett's code.
+
+Just in case, I forked it at commit 6d7c4e994fa577a54ad1ae652d59bd7875b93460

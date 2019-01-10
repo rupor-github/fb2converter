@@ -18,7 +18,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/beevik/etree"
 	"github.com/google/uuid"
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
@@ -29,6 +28,7 @@ import (
 	"gopkg.in/gomail.v2"
 
 	"fb2converter/config"
+	"fb2converter/etree"
 	"fb2converter/state"
 )
 

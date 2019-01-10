@@ -12,11 +12,11 @@ import (
 	"unicode/utf8"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/beevik/etree"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
 	"fb2converter/config"
+	"fb2converter/etree"
 )
 
 // processBody parses fb2 document body and produces formatted output.

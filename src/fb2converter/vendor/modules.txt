@@ -2,8 +2,6 @@
 github.com/BurntSushi/toml
 # github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
 github.com/asaskevich/govalidator
-# github.com/beevik/etree v1.0.2-0.20181120000056-6d7c4e994fa5 => github.com/rupor-github/etree v1.0.2-0.20181226185504-2ffdca046f30
-github.com/beevik/etree
 # github.com/bitly/go-simplejson v0.5.0
 github.com/bitly/go-simplejson
 # github.com/disintegration/imaging v1.5.0

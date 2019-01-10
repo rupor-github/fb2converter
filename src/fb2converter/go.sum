@@ -48,8 +48,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be h1:ta7tUOvsPHVHGom5hKW5VXNc2xZIkfCKP8iaqOyYtUQ=
 github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be/go.mod h1:MIDFMn7db1kT65GmV94GzpX9Qdi7N/pQlwb+AN8wh+Q=
-github.com/rupor-github/etree v1.0.2-0.20181226185504-2ffdca046f30 h1:hBN+ClJa7cj54l4RuoPyHrO2JpSzOfd27Zs9aOEnFR4=
-github.com/rupor-github/etree v1.0.2-0.20181226185504-2ffdca046f30/go.mod h1:pBTD/cXduWlQ8DwavhpEOXvZwIl+G3TJKjil/Hl1yHE=
 github.com/shuLhan/go-bindata v3.4.0+incompatible h1:xlNGW4LRRs+BPBpefnlrgSqb9x7vNF9YyzKeMuuqMpk=
 github.com/shuLhan/go-bindata v3.4.0+incompatible/go.mod h1:pkcPAATLBDD2+SpAPnX5vEM90F7fcwHCvvLCMXcmw3g=
 github.com/stretchr/testify v1.2.2 h1:bSDNvY7ZPG5RlJ8otE/7V6gMiyenm9RtJ7IUVIAoJ1w=

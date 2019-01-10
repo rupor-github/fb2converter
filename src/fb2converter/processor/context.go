@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/beevik/etree"
+	"fb2converter/etree"
 )
 
 // context used during fb2 transformation.

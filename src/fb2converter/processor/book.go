@@ -6,9 +6,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/beevik/etree"
 	"github.com/google/uuid"
 	"golang.org/x/text/language"
+
+	"fb2converter/etree"
 )
 
 // TOC entries collected during parsing.

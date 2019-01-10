@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/beevik/etree"
+	"fb2converter/etree"
 )
 
 const (

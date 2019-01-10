@@ -3,7 +3,7 @@ package processor
 import (
 	"strings"
 
-	"github.com/beevik/etree"
+	"fb2converter/etree"
 )
 
 var attr = etree.NewAttr

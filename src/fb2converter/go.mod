@@ -3,7 +3,6 @@ module fb2converter
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20180720115003-f9ffefc3facf
-	github.com/beevik/etree v1.0.2-0.20181120000056-6d7c4e994fa5
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/disintegration/imaging v1.5.0
@@ -41,5 +40,3 @@ require (
 	gopkg.in/h2non/filetype.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.1 // indirect
 )
-
-replace github.com/beevik/etree => github.com/rupor-github/etree v1.0.2-0.20181226185504-2ffdca046f30

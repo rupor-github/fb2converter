@@ -5,8 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/beevik/etree"
 	"github.com/pkg/errors"
+
+	"fb2converter/etree"
 )
 
 type dataTransientFlags uint8
