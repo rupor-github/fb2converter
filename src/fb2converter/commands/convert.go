@@ -20,7 +20,7 @@ import (
 // processBook processes single FB2 file. "src" is part of the source path (always including file name) relative to the original
 // path. When actual file was specified it will be just base file name without a path. When looking inside archive or directory
 // it will be relative path inside archive or directory (including base file name).
-func processBook(r io.Reader, enc encoding, src, dst string, nodirs, stk bool, format processor.OutputFmt, env *state.LocalEnv) error {
+func processBook(r io.Reader, enc encoding, src, dst string, nodirs, stk, overwrite bool, format processor.OutputFmt, env *state.LocalEnv) error {
 
 	var fname string
 
@@ -30,7 +30,7 @@ func processBook(r io.Reader, enc encoding, src, dst string, nodirs, stk bool, f
 		env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Now().Sub(start)), zap.String("to", fname))
 	}(start)
 
-	p, err := processor.New(selectReader(r, enc), enc == encUnknown, src, dst, nodirs, stk, format, env)
+	p, err := processor.New(selectReader(r, enc), enc == encUnknown, src, dst, nodirs, stk, overwrite, format, env)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func processBook(r io.Reader, enc encoding, src, dst string, nodirs, stk bool, f
 }
 
 // processDir walks directory tree finding fb2 files and processes them.
-func processDir(dir string, format processor.OutputFmt, nodirs, stk bool, dst string, env *state.LocalEnv) (err error) {
+func processDir(dir string, format processor.OutputFmt, nodirs, stk, overwrite bool, dst string, env *state.LocalEnv) (err error) {
 
 	count := 0
 	defer func() {
@@ -65,7 +65,7 @@ func processDir(dir string, format processor.OutputFmt, nodirs, stk bool, dst st
 				// checking format - but cannot open target file
 				env.Log.Warn("Skipping file", zap.String("file", path), zap.Error(err))
 			} else if ok {
-				if err := processArchive(path, "", format, nodirs, stk, dst, env); err != nil {
+				if err := processArchive(path, "", format, nodirs, stk, overwrite, dst, env); err != nil {
 					env.Log.Error("Unable to process archive", zap.String("file", path), zap.Error(err))
 				}
 			} else if ok, enc, err = isBookFile(path); err != nil {
@@ -77,7 +77,10 @@ func processDir(dir string, format processor.OutputFmt, nodirs, stk bool, dst st
 					env.Log.Error("Unable to process file", zap.String("file", path), zap.Error(err))
 				} else {
 					defer file.Close()
-					if err := processBook(file, enc, strings.TrimPrefix(strings.TrimPrefix(path, dir), string(filepath.Separator)), dst, nodirs, stk, format, env); err != nil {
+					if err := processBook(
+						file, enc, strings.TrimPrefix(strings.TrimPrefix(path, dir), string(filepath.Separator)), dst,
+						nodirs, stk, overwrite, format, env); err != nil {
+
 						env.Log.Error("Unable to process file", zap.String("file", path), zap.Error(err))
 					}
 				}
@@ -89,7 +92,7 @@ func processDir(dir string, format processor.OutputFmt, nodirs, stk bool, dst st
 }
 
 // processArchive walks all files inside archive, finds fb2 files under "pathIn" and processes them.
-func processArchive(path, pathIn string, format processor.OutputFmt, nodirs, stk bool, dst string, env *state.LocalEnv) (err error) {
+func processArchive(path, pathIn string, format processor.OutputFmt, nodirs, stk, overwrite bool, dst string, env *state.LocalEnv) (err error) {
 
 	count := 0
 	defer func() {
@@ -114,7 +117,7 @@ func processArchive(path, pathIn string, format processor.OutputFmt, nodirs, stk
 					zap.Error(err))
 			} else {
 				defer r.Close()
-				if err := processBook(r, enc, f.FileHeader.Name, dst, nodirs, stk, format, env); err != nil {
+				if err := processBook(r, enc, f.FileHeader.Name, dst, nodirs, stk, overwrite, format, env); err != nil {
 					env.Log.Error("Unable to process file in archive",
 						zap.String("archive", archive),
 						zap.String("file", f.FileHeader.Name),
@@ -173,6 +176,7 @@ func Convert(ctx *cli.Context) (err error) {
 	}
 
 	nodirs := ctx.Bool("nodirs")
+	overwrite := ctx.Bool("ow")
 
 	stk := ctx.Bool("stk")
 	if env.Mhl {
@@ -207,7 +211,7 @@ func Convert(ctx *cli.Context) (err error) {
 					errors.Errorf("%sinput source was not found (%s) => (%s)", errPrefix, head, strings.TrimPrefix(src, head)),
 					errCode)
 			}
-			if err := processDir(head, format, nodirs, stk, dst, env); err != nil {
+			if err := processDir(head, format, nodirs, stk, overwrite, dst, env); err != nil {
 				return cli.NewExitError(errors.Wrapf(err, "%sunable to process directory", errPrefix), errCode)
 			}
 			break
@@ -224,7 +228,7 @@ func Convert(ctx *cli.Context) (err error) {
 			if ok {
 				// we need to look inside to see if path makes sense
 				tail = strings.TrimPrefix(strings.TrimPrefix(src, head), string(filepath.Separator))
-				if err := processArchive(head, tail, format, nodirs, stk, dst, env); err != nil {
+				if err := processArchive(head, tail, format, nodirs, stk, overwrite, dst, env); err != nil {
 					return cli.NewExitError(errors.Wrapf(err, "%sunable to process archive", errPrefix), errCode)
 				}
 				break
@@ -245,7 +249,7 @@ func Convert(ctx *cli.Context) (err error) {
 					env.Log.Error("Unable to process file", zap.String("file", head), zap.Error(err))
 				} else {
 					defer file.Close()
-					if err := processBook(file, enc, filepath.Base(head), dst, nodirs, stk, format, env); err != nil {
+					if err := processBook(file, enc, filepath.Base(head), dst, nodirs, stk, overwrite, format, env); err != nil {
 						env.Log.Error("Unable to process file", zap.String("file", head), zap.Error(err))
 					}
 				}

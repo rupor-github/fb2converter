@@ -25,11 +25,10 @@ func (p *Processor) FinalizeMOBI(fname string) error {
 	}
 
 	if _, err := os.Stat(fname); err == nil {
-		if !p.env.Debug {
+		if !p.env.Debug && !p.overwrite {
 			return errors.Errorf("output file already exists: %s", fname)
 		}
-		// NOTE: when debugging - ignore existing file
-		p.env.Log.Debug("Overwriting existing file - debug mode", zap.String("file", fname))
+		p.env.Log.Warn("Overwriting existing file", zap.String("file", fname))
 		if err = os.Remove(fname); err != nil {
 			return err
 		}
@@ -71,11 +70,10 @@ func (p *Processor) FinalizeAZW3(fname string) error {
 	}
 
 	if _, err := os.Stat(fname); err == nil {
-		if !p.env.Debug {
+		if !p.env.Debug && !p.overwrite {
 			return errors.Errorf("output file already exists: %s", fname)
 		}
-		// NOTE: when debugging - ignore existing file
-		p.env.Log.Debug("Overwriting existing file - debug mode", zap.String("file", fname))
+		p.env.Log.Warn("Overwriting existing file", zap.String("file", fname))
 		if err = os.Remove(fname); err != nil {
 			return err
 		}

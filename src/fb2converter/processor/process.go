@@ -55,6 +55,7 @@ type Processor struct {
 	// parameters translated to internal types
 	nodirs         bool
 	stk            bool
+	overwrite      bool
 	format         OutputFmt
 	notesMode      NotesFmt
 	tocPlacement   TOCPlacement
@@ -76,7 +77,7 @@ type Processor struct {
 }
 
 // New creates book processor and prepares necessary temporary directories.
-func New(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk bool, format OutputFmt, env *state.LocalEnv) (*Processor, error) {
+func New(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, overwrite bool, format OutputFmt, env *state.LocalEnv) (*Processor, error) {
 
 	kindle := format == OAzw3 || format == OMobi
 
@@ -126,6 +127,7 @@ func New(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk bool, f
 		dst:             dst,
 		nodirs:          nodirs,
 		stk:             stk,
+		overwrite:       overwrite,
 		format:          format,
 		notesMode:       notes,
 		tocType:         toct,
