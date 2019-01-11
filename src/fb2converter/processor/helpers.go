@@ -30,7 +30,10 @@ func (p *Processor) getStylesheet() (*dataFile, error) {
 
 	fname := p.env.Cfg.Doc.Stylesheet
 	if len(fname) > 0 && len(p.env.Cfg.Path) > 0 {
-		if d.data, err = ioutil.ReadFile(filepath.Join(p.env.Cfg.Path, fname)); err != nil {
+		if !filepath.IsAbs(fname) {
+			fname = filepath.Join(p.env.Cfg.Path, fname)
+		}
+		if d.data, err = ioutil.ReadFile(fname); err != nil {
 			return nil, errors.Wrap(err, "unable to read stylesheet")
 		}
 	} else {
@@ -69,8 +72,11 @@ func (p *Processor) getDefaultCover(i int) (*binary, error) {
 
 	fname := p.env.Cfg.Doc.Cover.ImagePath
 	if len(fname) > 0 && len(p.env.Cfg.Path) > 0 {
+		if !filepath.IsAbs(fname) {
+			fname = filepath.Join(p.env.Cfg.Path, fname)
+		}
 		// NOTE: I do not want to make sure that supplied default cover has right properties, will just use it as is
-		if b.data, err = ioutil.ReadFile(filepath.Join(p.env.Cfg.Path, fname)); err != nil {
+		if b.data, err = ioutil.ReadFile(fname); err != nil {
 			return nil, errors.Wrap(err, "unable to read cover image")
 		}
 		ext := filepath.Ext(fname)
@@ -169,7 +175,11 @@ func (p *Processor) getVignetteFile(level, vignette string) string {
 	var err error
 	if len(p.env.Cfg.Path) > 0 {
 		// try disk first
-		if b.data, err = ioutil.ReadFile(filepath.Join(p.env.Cfg.Path, fname)); err != nil {
+		absname := fname
+		if !filepath.IsAbs(absname) {
+			absname = filepath.Join(p.env.Cfg.Path, absname)
+		}
+		if b.data, err = ioutil.ReadFile(absname); err != nil {
 			b.data = nil
 		}
 	}

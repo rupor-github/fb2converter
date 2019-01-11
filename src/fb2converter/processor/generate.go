@@ -305,7 +305,7 @@ func (p *Processor) prepareStylesheet() error {
 
 		fname := name
 		if !filepath.IsAbs(fname) {
-			fname = filepath.Join(p.env.Cfg.Path, name)
+			fname = filepath.Join(p.env.Cfg.Path, fname)
 		}
 
 		data, err := ioutil.ReadFile(fname)

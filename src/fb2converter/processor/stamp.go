@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/fogleman/gg"
@@ -49,7 +50,11 @@ func (p *Processor) stampCover(im image.Image) (image.Image, error) {
 
 	// prepare font
 	if len(p.env.Cfg.Doc.Cover.Font) > 0 {
-		if err := dc.LoadFontFace(p.env.Cfg.Doc.Cover.Font, fh); err != nil {
+		absname := p.env.Cfg.Doc.Cover.Font
+		if !filepath.IsAbs(absname) {
+			absname = filepath.Join(p.env.Cfg.Path, absname)
+		}
+		if err := dc.LoadFontFace(absname, fh); err != nil {
 			// misconfiguration - get out
 			return nil, err
 		}

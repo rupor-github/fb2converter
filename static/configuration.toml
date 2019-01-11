@@ -225,8 +225,36 @@
 	# smtp_password = "your mail password"
 
 	#---- Required by Amazon service
-	# from_mail = "address authorized by your Amazon accont"
+	# from_mail = "address authorized by your Amazon account"
 	# to_mail = "mail address of your Kindle device"
+
+#-----------------------------------------------------------------------------------------------------------------------------
+#---- Sometimes external processors will need to overwrite some or all of book meta-data and or cover image. You could specify
+#---- array of overwrites here
+#----
+#---- "name" specifies to which book overwrite is applicable, "*" means to all converted books, name could specify part of the
+#---- file path (relative to source path), for example "aaa/bbb.fb2" will cause meta data for all "bbb.fb2" files found under
+#---- "aaa" path converted during program run to be overwritten. Overwrites are always searched from most specific to less
+#---- specific: "aaa/bbb.fb2", then "bbb.fb2", then "*". When first suitable overwrite is found - it will be used, no further
+#---- search is performed.
+#-----
+#---- "meta" section could have any or all of following tags: "id", "language", "title", "genres", "authors", "sequence",
+#---- "sequence_number", "date" and "cover_image", where genres and authors are arrays of strings and cover_image is a path
+#---- to valid image. If any of the tags are wrong (file does not exists or bad, sequence number is negative, etc.) - they
+#---- will be dropped silently and no overwrite will be performed.
+#-----------------------------------------------------------------------------------------------------------------------------
+[[overwrites]]
+#	name = "*"
+#	[overwrites.meta]
+#		id = "250ddd1e-86e8-41c0-a881-0e0c96c4da7c"
+#		language = "hu"
+#		title = "Global title"
+#		genres = ["sci_fy", "history"]
+#		authors = ["First Author", "Second Author"]
+#		sequence = "Super Series"
+#		sequence_number = 666
+#		date = "1984"
+#		cover_image = "file_name"
 
 #-----------------------------------------------------------------------------------------------------------------------------
 #---- Windows only, support for MyHomeLib

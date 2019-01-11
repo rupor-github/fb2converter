@@ -73,6 +73,7 @@ type Processor struct {
 	env             *state.LocalEnv
 	speechTransform *config.Transformation
 	dashTransform   *config.Transformation
+	metaOverwrite   *config.MetaInfo
 	kindlegenPath   string
 }
 
@@ -139,6 +140,7 @@ func New(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, overwr
 		env:             env,
 		speechTransform: env.Cfg.GetTransformation("speech"),
 		dashTransform:   env.Cfg.GetTransformation("dashes"),
+		metaOverwrite:   env.Cfg.GetOverwrite(src),
 	}
 	p.doc.WriteSettings = etree.WriteSettings{CanonicalText: true, CanonicalAttrVal: true}
 
@@ -500,6 +502,60 @@ func (p *Processor) processDescription() error {
 			}
 		}
 	}
+
+	// Let's see if we need to correct any meta information
+	if p.metaOverwrite == nil {
+		return nil
+	}
+
+	if len(p.metaOverwrite.ID) > 0 {
+		if u, err := uuid.Parse(strings.TrimSpace(p.metaOverwrite.ID)); err == nil {
+			p.Book.ID = u
+		}
+	}
+	title := strings.TrimSpace(p.metaOverwrite.Title)
+	if len(title) > 0 {
+		p.Book.Title = title
+	}
+	if len(p.metaOverwrite.Lang) > 0 {
+		if l := strings.TrimSpace(p.metaOverwrite.Lang); len(l) > 0 {
+			if t, err := language.Parse(l); err == nil {
+				p.Book.Lang = t
+				if p.env.Cfg.Doc.Hyphenate {
+					p.Book.hyph = newHyph(t, p.env.Log)
+				}
+			}
+		}
+	}
+	var genres []string
+	for _, e := range p.metaOverwrite.Genres {
+		if g := strings.TrimSpace(e); len(g) > 0 {
+			genres = append(genres, g)
+		}
+	}
+	if len(genres) > 0 {
+		p.Book.Genres = genres
+	}
+	var authors []string
+	for _, e := range p.metaOverwrite.Authors {
+		if a := strings.TrimSpace(e); len(a) > 0 {
+			authors = append(authors, a)
+		}
+	}
+	if len(authors) > 0 {
+		p.Book.Authors = authors
+	}
+	seq := strings.TrimSpace(p.metaOverwrite.SeqName)
+	if len(seq) > 0 {
+		p.Book.SeqName = seq
+	}
+	if p.metaOverwrite.SeqNum > 0 {
+		p.Book.SeqNum = p.metaOverwrite.SeqNum
+	}
+	date := strings.TrimSpace(p.metaOverwrite.Date)
+	if len(date) > 0 {
+		p.Book.Date = date
+	}
 	return nil
 }
 
@@ -724,8 +780,7 @@ func (p *Processor) processImages() error {
 	}(start)
 
 	if len(p.Book.Cover) > 0 {
-		// some badly formatted fb2 have several covers (LibRusEq - engineers with two left feet)
-		// leave only first one
+		// some badly formatted fb2 have several covers (LibRusEq - engineers with two left feet) leave only first one
 		haveFirstCover, haveExtraCovers := false, false
 		for i, b := range p.Book.Images {
 			if b.id == p.Book.Cover {
@@ -734,6 +789,24 @@ func (p *Processor) processImages() error {
 					p.Book.Images[i].id = "" // mark for removal
 				} else {
 					haveFirstCover = true
+					// Since we are here anyway - let's see if we need to correct cover information
+					if p.metaOverwrite != nil && len(p.metaOverwrite.CoverImage) > 0 {
+						var (
+							err error
+							b   = &binary{log: p.env.Log, relpath: filepath.Join(DirContent, DirImages)}
+						)
+						fname := p.metaOverwrite.CoverImage
+						if !filepath.IsAbs(fname) {
+							fname = filepath.Join(p.env.Cfg.Path, fname)
+						}
+						if b.data, err = ioutil.ReadFile(fname); err == nil {
+							if b.img, b.imgType, err = image.Decode(bytes.NewReader(b.data)); err == nil {
+								b.ct = mime.TypeByExtension("." + b.imgType)
+								b.fname = strings.TrimSuffix(p.Book.Images[i].fname, filepath.Ext(p.Book.Images[i].fname)) + "." + b.imgType
+								p.Book.Images[i] = b
+							}
+						}
+					}
 					// NOTE: We will process cover separately
 					b.flags &= ^imageScale
 					b.scaleFactor = 0

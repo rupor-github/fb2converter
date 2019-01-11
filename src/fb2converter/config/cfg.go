@@ -48,6 +48,24 @@ type SMTPConfig struct {
 	To              string `json:"to_mail"`
 }
 
+// MetaInfo keeps book meta-info overwrites from configuration.
+type MetaInfo struct {
+	ID         string   `json:"id"`
+	Title      string   `json:"title"`
+	Lang       string   `json:"language"`
+	Genres     []string `json:"genres"`
+	Authors    []string `json:"authors"`
+	SeqName    string   `json:"sequence"`
+	SeqNum     int      `json:"sequence_number"`
+	Date       string   `json:"date"`
+	CoverImage string   `json:"cover_image"`
+}
+
+type confMetaOverwrite struct {
+	Name string   `json:"name"`
+	Meta MetaInfo `json:"meta"`
+}
+
 // IsValid checks if we have enough smtp parameters to attemp sending mail.
 // It does not attempt actual connection.
 func (c *SMTPConfig) IsValid() bool {
@@ -137,6 +155,7 @@ type Config struct {
 	Doc           Doc
 	SMTPConfig    SMTPConfig
 	Fb2Mobi       Fb2Mobi
+	Overwrites    map[string]MetaInfo
 }
 
 var defaultConfig = []byte(`{
@@ -260,7 +279,7 @@ func BuildConfig(fname string) (*Config, error) {
 		}
 	}
 
-	conf := Config{cfg: c, Path: base}
+	conf := Config{cfg: c, Path: base, Overwrites: make(map[string]MetaInfo)}
 	if err := c.Get("logger", "console").Scan(&conf.ConsoleLogger); err != nil {
 		return nil, errors.Wrap(err, "unable to read console logger configuration")
 	}
@@ -276,6 +295,18 @@ func BuildConfig(fname string) (*Config, error) {
 	if err := c.Get("sendtokindle").Scan(&conf.SMTPConfig); err != nil {
 		return nil, errors.Wrap(err, "unable to read send to kindle cnfiguration")
 	}
+
+	var metas []confMetaOverwrite
+	if err := c.Get("overwrites").Scan(&metas); err != nil {
+		return nil, errors.Wrap(err, "unable to read meta information overwrites")
+	}
+	for _, meta := range metas {
+		name := filepath.ToSlash(meta.Name)
+		if _, exists := conf.Overwrites[name]; !exists {
+			conf.Overwrites[name] = meta.Meta
+		}
+	}
+
 	// some defaults
 	if conf.Doc.Kindlegen.CompressionLevel < 0 || conf.Doc.Kindlegen.CompressionLevel > 2 {
 		conf.Doc.Kindlegen.CompressionLevel = 1
@@ -318,6 +349,36 @@ func (conf *Config) GetTransformation(name string) *Transformation {
 	return nil
 }
 
+// GetOverwrite returns pointer to information to be used instead of parsed data.
+func (conf *Config) GetOverwrite(name string) *MetaInfo {
+
+	if len(conf.Overwrites) == 0 {
+		return nil
+	}
+
+	// start from most specific
+
+	// NOTE: all path separators were converted to slash before being added to map
+	name = filepath.ToSlash(name)
+	for {
+		if i, ok := conf.Overwrites[name]; ok {
+			return &i
+		}
+		parts := strings.SplitN(name, "/", 1)
+		if len(parts) <= 1 {
+			break
+		}
+		name = parts[1]
+	}
+
+	// not found - see if we have generic overwrite
+	name = "*"
+	if i, ok := conf.Overwrites[name]; ok {
+		return &i
+	}
+	return nil
+}
+
 // GetKindlegenPath provides platform specific path to the kindlegen executable.
 func (conf *Config) GetKindlegenPath() (string, error) {
 
@@ -355,12 +416,24 @@ func (conf *Config) GetActualBytes() ([]byte, error) {
 		D Doc        `json:"document"`
 		E SMTPConfig `json:"sendtokindle"`
 		F Fb2Mobi    `json:"fb2mobi"`
+		G []struct {
+			Name string   `json:"name"`
+			Meta MetaInfo `json:"meta"`
+		} `json:"overwrites"`
 	}{}
 	a.B.Cl = conf.ConsoleLogger
 	a.B.Fl = conf.FileLogger
 	a.D = conf.Doc
 	a.E = conf.SMTPConfig
 	a.F = conf.Fb2Mobi
+
+	for k, v := range conf.Overwrites {
+		s := struct {
+			Name string   `json:"name"`
+			Meta MetaInfo `json:"meta"`
+		}{Name: filepath.FromSlash(k), Meta: v}
+		a.G = append(a.G, s)
+	}
 
 	// Marshall it to json
 	b, err := json.Marshal(a)
