@@ -174,9 +174,14 @@ Exports built-in resources (example configuration, style sheets, fonts, etc.) fo
 `, cli.CommandHelpTemplate),
 		},
 		{
-			Name:      "synccovers",
-			Usage:     "Extracts thumbnails from documents (Kindle only!)",
-			Action:    commands.SyncCovers,
+			Name:   "synccovers",
+			Usage:  "Extracts thumbnails from documents (Kindle only!)",
+			Action: commands.SyncCovers,
+			Flags: []cli.Flag{
+				cli.IntFlag{Name: "width", Value: 330, Usage: "width of the resulting thumbnail (default: 330)"},
+				cli.IntFlag{Name: "height", Value: 470, Usage: "height of the resulting thumbnail (default: 470)"},
+				cli.BoolFlag{Name: "stretch", Usage: "do not preserve thumbnail aspect ratio when resizing"},
+			},
 			ArgsUsage: "SOURCE",
 			CustomHelpTemplate: fmt.Sprintf(`%s
 SOURCE:

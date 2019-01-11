@@ -73,6 +73,7 @@ func main() {
 	}
 
 	args = append(args, "convert")
+	args = append(args, "--ow")
 
 	args = append(args, from)
 	args = append(args, to)

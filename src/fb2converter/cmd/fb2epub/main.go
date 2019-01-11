@@ -72,6 +72,7 @@ func main() {
 	}
 
 	args = append(args, "convert")
+	args = append(args, "--ow")
 	args = append(args, "--to", "epub")
 
 	args = append(args, from)

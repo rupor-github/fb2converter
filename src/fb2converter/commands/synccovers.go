@@ -1,13 +1,17 @@
 package commands
 
 import (
-	// "os"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/urfave/cli"
-	// "fb2converter/processor"
-	// "fb2converter/state"
-	// "fb2converter/static"
+	"go.uber.org/zap"
+
+	"fb2converter/processor"
+	"fb2converter/state"
 )
 
 // SyncCovers reads books in Kindle formats and produces thumbnails for them. Very Kindle specific.
@@ -20,34 +24,59 @@ func SyncCovers(ctx *cli.Context) error {
 		errCode   = 1
 	)
 
-	// env := ctx.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+	env := ctx.GlobalGeneric(state.FlagName).(*state.LocalEnv)
 
-	// fname := ctx.Args().Get(0)
-	// if len(fname) == 0 {
-	// 	return cli.NewExitError(errors.New(errPrefix+"destination directory has not been specified"), errCode)
-	// }
-	// if info, err := os.Stat(fname); err != nil && !os.IsNotExist(err) {
-	// 	return cli.NewExitError(errors.New(errPrefix+"unable to access destination directory"), errCode)
-	// } else if err != nil {
-	// 	return cli.NewExitError(errors.New(errPrefix+"destination directory does not exits"), errCode)
-	// } else if !info.IsDir() {
-	// 	return cli.NewExitError(errors.New(errPrefix+"destination is not a directory"), errCode)
-	// }
+	indir := ctx.Args().Get(0)
+	if len(indir) == 0 {
+		return cli.NewExitError(errors.New(errPrefix+"books directory has not been specified"), errCode)
+	}
 
-	// ignoreNames := map[string]bool{
-	// 	processor.DirHyphenator: true,
-	// 	processor.DirResources:  true,
-	// }
+	width := ctx.Int("width")
+	height := ctx.Int("height")
+	stretch := ctx.Bool("stretch")
 
-	// if dir, err := static.AssetDir(""); err == nil {
-	// 	for _, a := range dir {
-	// 		if _, ignore := ignoreNames[a]; env.Debug || !ignore {
-	// 			err = static.RestoreAssets(fname, a)
-	// 			if err != nil {
-	// 				return cli.NewExitError(errors.New(errPrefix+"unable to store resources"), errCode)
-	// 			}
-	// 		}
-	// 	}
-	// }
-	return cli.NewExitError(errors.New(errPrefix+"not implemented yet"), errCode)
+	var dir string
+	// let's see if we could locate kindle directory
+	for head, tail := filepath.Split(strings.TrimSuffix(indir, string(os.PathSeparator))); len(tail) > 0; head, tail = filepath.Split(head) {
+		dir = filepath.Join(head, "system", "thumbnails")
+		if info, err := os.Stat(dir); err == nil && info.IsDir() {
+			break
+		}
+	}
+	if len(dir) == 0 {
+		return cli.NewExitError(errors.New(errPrefix+"unable to find Kindle system directory along the specified path"), errCode)
+	}
+
+	files, count := 0, 0
+
+	start := time.Now()
+	env.Log.Info("Thumbnail extraction starting", zap.String("kindle directory", dir))
+	defer func(start time.Time) {
+		env.Log.Info("Thumbnail extraction completed", zap.Duration("elapsed", time.Now().Sub(start)), zap.Int("files", files), zap.Int("extracted", count))
+	}(start)
+
+	err := filepath.Walk(indir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		} else if info.Mode().IsRegular() {
+			ext := filepath.Ext(info.Name())
+			if strings.EqualFold(ext, ".mobi") || strings.EqualFold(ext, ".azw3") {
+				env.Log.Debug("Creating thumbnail", zap.String("file", path))
+				files++
+				created, err := processor.ProduceThumbnail(path, dir, width, height, stretch, env.Log)
+				if err != nil {
+					return err
+				}
+				if created {
+					count++
+				}
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		env.Log.Error("Unable to process Kindle files", zap.Error(err))
+	}
+	return nil
 }

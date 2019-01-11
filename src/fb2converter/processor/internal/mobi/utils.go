@@ -11,13 +11,13 @@ const (
 	uniqueIDSseed      = 68
 	numberOfPdbRecords = 76
 
-	// important palmdoc header offsets
 	bookLength      = 4
 	bookRecordCount = 8
 	firstPdbRecord  = 78
 
 	// important rec0 offsets
 	lengthOfBook      = 4
+	cryptoType        = 12
 	mobiHeaderBase    = 16
 	mobiHeaderLength  = 20
 	mobiType          = 24

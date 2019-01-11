@@ -24,8 +24,9 @@ import (
 
 // Splitter - mobi splitter annd optimizer.
 type Splitter struct {
-	log         *zap.Logger
-	combo       bool
+	log   *zap.Logger
+	combo bool
+	//
 	contentGUID string
 	acr         []byte
 	asin        []byte
