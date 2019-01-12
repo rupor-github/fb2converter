@@ -126,7 +126,7 @@ func main() {
 	app.Commands = []cli.Command{
 		{
 			Name:   "convert",
-			Usage:  "Converts file(s) to specified format",
+			Usage:  "Converts FB2 file(s) to specified format",
 			Action: commands.Convert,
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "to", Value: "epub", Usage: "conversion output `TYPE` (supported types: epub, azw3, mobi)"},
@@ -147,6 +147,47 @@ func main() {
 DESTINATION:
     always a path, output file name(s) and extension will be derived from other parameters
     if absent - current working directory
+`, cli.CommandHelpTemplate),
+		},
+		{
+			Name:   "transfer",
+			Usage:  "Prepares EPUB file(s) for transfer (Kindle only!)",
+			Action: commands.Transfer,
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "to", Value: "mobi", Usage: "conversion output `TYPE` (supported types: azw3, mobi)"},
+				cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
+				cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (mobi only)"},
+				cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},
+			},
+			ArgsUsage: "SOURCE [DESTINATION]",
+			CustomHelpTemplate: fmt.Sprintf(`%sSOURCE:
+    path to epub file(s) to process, following formats are supported:
+        path to a file: [path]file.epub
+        path to a directory: [path]directory - recursively process all files under directory (symbolic links are not followed)
+
+DESTINATION:
+    always a path, output file name(s) and extension will be derived from other parameters
+    if absent - current working directory
+
+Presently no processing of input files is performed - not even unpacking, so most of program functionality is disabled.
+This command is a mere convenience wrapper to simplify transfer of files to Kindle over USB or mail.
+`, cli.CommandHelpTemplate),
+		},
+		{
+			Name:   "synccovers",
+			Usage:  "Extracts thumbnails from documents (Kindle only!)",
+			Action: commands.SyncCovers,
+			Flags: []cli.Flag{
+				cli.IntFlag{Name: "width", Value: 330, Usage: "width of the resulting thumbnail (default: 330)"},
+				cli.IntFlag{Name: "height", Value: 470, Usage: "height of the resulting thumbnail (default: 470)"},
+				cli.BoolFlag{Name: "stretch", Usage: "do not preserve thumbnail aspect ratio when resizing"},
+			},
+			ArgsUsage: "SOURCE",
+			CustomHelpTemplate: fmt.Sprintf(`%s
+SOURCE:
+	directory on mounted device to look for books
+
+Synchronizes kindle thumbnails with books already in Kindle memory so Kindle home page looks better.
 `, cli.CommandHelpTemplate),
 		},
 		{
@@ -171,23 +212,6 @@ DESTINATION:
 	existing path to export resources to, must be present
 
 Exports built-in resources (example configuration, style sheets, fonts, etc.) for customization. With --debug option will export all built-in resources, even non-customizable.
-`, cli.CommandHelpTemplate),
-		},
-		{
-			Name:   "synccovers",
-			Usage:  "Extracts thumbnails from documents (Kindle only!)",
-			Action: commands.SyncCovers,
-			Flags: []cli.Flag{
-				cli.IntFlag{Name: "width", Value: 330, Usage: "width of the resulting thumbnail (default: 330)"},
-				cli.IntFlag{Name: "height", Value: 470, Usage: "height of the resulting thumbnail (default: 470)"},
-				cli.BoolFlag{Name: "stretch", Usage: "do not preserve thumbnail aspect ratio when resizing"},
-			},
-			ArgsUsage: "SOURCE",
-			CustomHelpTemplate: fmt.Sprintf(`%s
-SOURCE:
-	directory on mounted device to look for books
-
-Synchronizes kindle thumbnails with actual documents.
 `, cli.CommandHelpTemplate),
 		},
 	}

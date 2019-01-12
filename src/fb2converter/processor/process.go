@@ -32,6 +32,15 @@ import (
 	"fb2converter/state"
 )
 
+// InputFmt defines type of input we are processing.
+type InputFmt int
+
+// Supported formats
+const (
+	InFb2 InputFmt = iota
+	InEpub
+)
+
 // Various directories used across the program
 const (
 	DirContent    = "OEBPS"
@@ -49,6 +58,8 @@ var nameSpaceFB2 = uuid.MustParse("09aa0c17-ca72-42d3-afef-75911e5d7646")
 
 // Processor state.
 type Processor struct {
+	// what kind of processing is expected
+	kind InputFmt
 	// input parameters
 	src string
 	dst string
@@ -77,8 +88,8 @@ type Processor struct {
 	kindlegenPath   string
 }
 
-// New creates book processor and prepares necessary temporary directories.
-func New(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, overwrite bool, format OutputFmt, env *state.LocalEnv) (*Processor, error) {
+// NewFB2 creates FB2 book processor and prepares necessary temporary directories.
+func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, overwrite bool, format OutputFmt, env *state.LocalEnv) (*Processor, error) {
 
 	kindle := format == OAzw3 || format == OMobi
 
@@ -124,6 +135,7 @@ func New(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, overwr
 	}
 
 	p := &Processor{
+		kind:            InFb2,
 		src:             src,
 		dst:             dst,
 		nodirs:          nodirs,
@@ -215,8 +227,75 @@ func New(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, overwr
 	return p, nil
 }
 
+// NewEPUB creates EPUB book processor and prepares necessary temporary directories.
+func NewEPUB(r io.Reader, src, dst string, nodirs, stk, overwrite bool, format OutputFmt, env *state.LocalEnv) (*Processor, error) {
+
+	var err error
+
+	p := &Processor{
+		kind:      InEpub,
+		src:       src,
+		dst:       dst,
+		nodirs:    nodirs,
+		stk:       stk,
+		overwrite: overwrite,
+		format:    format,
+		env:       env,
+	}
+
+	// Fail early
+	if p.kindlegenPath, err = env.Cfg.GetKindlegenPath(); err != nil {
+		return nil, err
+	}
+
+	// re-route temporary directory for debugging
+	if env.Debug {
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to get working directory")
+		}
+		tmpd := filepath.Join(wd, "fb2c_deb")
+		if err = os.MkdirAll(tmpd, 0700); err != nil {
+			return nil, errors.Wrap(err, "unable to create debug directory")
+		}
+		t := time.Now()
+		ulid, err := ulid.New(ulid.Timestamp(t), ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0))
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to allocate ULID")
+		}
+		p.tmpDir = filepath.Join(tmpd, ulid.String()+"_"+filepath.Base(src))
+		if err = os.MkdirAll(p.tmpDir, 0700); err != nil {
+			return nil, errors.Wrap(err, "unable to create temporary directory")
+		}
+	} else {
+		p.tmpDir, err = ioutil.TempDir("", "fb2c-")
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to create temporary directory")
+		}
+	}
+
+	// copy source file to temporary directory - when we decide what else to do with EPUBs this will be very handy
+
+	if destination, err := os.Create(filepath.Join(p.tmpDir, filepath.Base(src))); err == nil {
+		defer destination.Close()
+		if _, err := io.Copy(destination, r); err != nil {
+			return nil, errors.Wrap(err, "unable to copy source")
+		}
+	} else {
+		return nil, errors.Wrap(err, "unable to copy source")
+	}
+
+	// we are ready to convert document
+	return p, nil
+}
+
 // Process does all the work.
 func (p *Processor) Process() error {
+
+	if p.kind == InEpub {
+		// later we may decide to clean epub, massage its stylesheet, etc.
+		return nil
+	}
 
 	// Processing - order of steps and their presence are important as information and context
 	// being built and accumulated...
@@ -275,20 +354,22 @@ func (p *Processor) Save() (string, error) {
 		p.env.Log.Debug("Saving content - done", zap.Duration("elapsed", time.Now().Sub(start)))
 	}(start)
 
-	if err := p.Book.flushData(p.tmpDir); err != nil {
-		return "", err
-	}
-	if err := p.Book.flushVignettes(p.tmpDir); err != nil {
-		return "", err
-	}
-	if err := p.Book.flushImages(p.tmpDir); err != nil {
-		return "", err
-	}
-	if err := p.Book.flushXHTML(p.tmpDir); err != nil {
-		return "", err
-	}
-	if err := p.Book.flushMeta(p.tmpDir); err != nil {
-		return "", err
+	if p.kind == InFb2 {
+		if err := p.Book.flushData(p.tmpDir); err != nil {
+			return "", err
+		}
+		if err := p.Book.flushVignettes(p.tmpDir); err != nil {
+			return "", err
+		}
+		if err := p.Book.flushImages(p.tmpDir); err != nil {
+			return "", err
+		}
+		if err := p.Book.flushXHTML(p.tmpDir); err != nil {
+			return "", err
+		}
+		if err := p.Book.flushMeta(p.tmpDir); err != nil {
+			return "", err
+		}
 	}
 
 	fname := p.prepareOutputName()
@@ -377,7 +458,7 @@ func (p *Processor) prepareOutputName() string {
 	outDir = filepath.Join(p.dst, outDir)
 
 	outFile := strings.TrimSuffix(filepath.Base(p.src), filepath.Ext(p.src)) + "." + p.format.String()
-	if len(p.env.Cfg.Doc.FileNameFormat) > 0 {
+	if p.kind == InFb2 && len(p.env.Cfg.Doc.FileNameFormat) > 0 {
 		name := config.CleanFileName(
 			ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos)),
 		)

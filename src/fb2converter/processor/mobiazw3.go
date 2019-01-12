@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -45,7 +46,16 @@ func (p *Processor) FinalizeMOBI(fname string) error {
 			return errors.Wrap(err, "unable to copy resulting MOBI")
 		}
 	} else {
-		splitter, err := mobi.NewSplitter(tmp, p.Book.ID, true, p.env.Cfg.Doc.Kindlegen.RemovePersonal, p.env.Log)
+		var u uuid.UUID
+		if p.Book == nil {
+			u, err = uuid.NewRandom()
+			if err != nil {
+				return errors.Wrap(err, "unable to generate UUID")
+			}
+		} else {
+			u = p.Book.ID
+		}
+		splitter, err := mobi.NewSplitter(tmp, u, true, p.env.Cfg.Doc.Kindlegen.RemovePersonal, p.env.Log)
 		if err != nil {
 			return errors.Wrap(err, "unable to parse intermediate content file")
 		}
@@ -90,7 +100,16 @@ func (p *Processor) FinalizeAZW3(fname string) error {
 			return errors.Wrap(err, "unable to copy resulting AZW3")
 		}
 	} else {
-		splitter, err := mobi.NewSplitter(tmp, p.Book.ID, false, p.env.Cfg.Doc.Kindlegen.RemovePersonal, p.env.Log)
+		var u uuid.UUID
+		if p.Book == nil {
+			u, err = uuid.NewRandom()
+			if err != nil {
+				return errors.Wrap(err, "unable to generate UUID")
+			}
+		} else {
+			u = p.Book.ID
+		}
+		splitter, err := mobi.NewSplitter(tmp, u, false, p.env.Cfg.Doc.Kindlegen.RemovePersonal, p.env.Log)
 		if err != nil {
 			return errors.Wrap(err, "unable to parse intermediate content file")
 		}
@@ -110,10 +129,19 @@ func (p *Processor) FinalizeAZW3(fname string) error {
 func (p *Processor) generateIntermediateContent(fname string) (string, error) {
 
 	workDir := filepath.Join(p.tmpDir, DirContent)
+	if p.kind == InEpub {
+		// TODO: for now - I do not even want to unpack epubs
+		workDir = p.tmpDir
+	}
 	workFile := strings.TrimSuffix(filepath.Base(fname), filepath.Ext(fname)) + ".mobi"
 
 	args := make([]string, 0, 10)
-	args = append(args, filepath.Join(workDir, "content.opf"))
+	if p.kind == InEpub {
+		// TODO: for now - I do not even want to unpack epubs
+		args = append(args, filepath.Join(p.tmpDir, filepath.Base(p.src)))
+	} else {
+		args = append(args, filepath.Join(workDir, "content.opf"))
+	}
 	args = append(args, fmt.Sprintf("-c%d", p.env.Cfg.Doc.Kindlegen.CompressionLevel))
 	args = append(args, "-locale", "en")
 	if p.env.Cfg.Doc.Kindlegen.Verbose || p.env.Debug {

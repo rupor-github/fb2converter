@@ -32,6 +32,25 @@ func isArchiveFile(fname string) (bool, error) {
 	return filetype.Is(header, "zip"), nil
 }
 
+// isEpubFile detects if file is our supported archive.
+func isEpubFile(fname string) (bool, error) {
+
+	if !strings.EqualFold(filepath.Ext(fname), ".epub") {
+		return false, nil
+	}
+
+	file, err := os.Open(fname)
+	if err != nil {
+		return false, err
+	}
+	defer file.Close()
+
+	header := make([]byte, 261)
+	file.Read(header)
+
+	return filetype.Is(header, "epub"), nil
+}
+
 type encoding int
 
 const (

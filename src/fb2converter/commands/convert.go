@@ -30,7 +30,7 @@ func processBook(r io.Reader, enc encoding, src, dst string, nodirs, stk, overwr
 		env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Now().Sub(start)), zap.String("to", fname))
 	}(start)
 
-	p, err := processor.New(selectReader(r, enc), enc == encUnknown, src, dst, nodirs, stk, overwrite, format, env)
+	p, err := processor.NewFB2(selectReader(r, enc), enc == encUnknown, src, dst, nodirs, stk, overwrite, format, env)
 	if err != nil {
 		return err
 	}
@@ -77,8 +77,8 @@ func processDir(dir string, format processor.OutputFmt, nodirs, stk, overwrite b
 					env.Log.Error("Unable to process file", zap.String("file", path), zap.Error(err))
 				} else {
 					defer file.Close()
-					if err := processBook(
-						file, enc, strings.TrimPrefix(strings.TrimPrefix(path, dir), string(filepath.Separator)), dst,
+					if err := processBook(file, enc,
+						strings.TrimPrefix(strings.TrimPrefix(path, dir), string(filepath.Separator)), dst,
 						nodirs, stk, overwrite, format, env); err != nil {
 
 						env.Log.Error("Unable to process file", zap.String("file", path), zap.Error(err))

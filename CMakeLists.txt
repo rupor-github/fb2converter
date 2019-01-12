@@ -44,7 +44,7 @@ find_package(Git REQUIRED)
 
 # Project version number
 set(PRJ_VERSION_MAJOR 0)
-set(PRJ_VERSION_MINOR 91)
+set(PRJ_VERSION_MINOR 92)
 
 ########################################################################################################
 # Setting up versioning

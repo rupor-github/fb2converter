@@ -243,7 +243,7 @@
 #---- to valid image. If any of the tags are wrong (file does not exists or bad, sequence number is negative, etc.) - they
 #---- will be dropped silently and no overwrite will be performed.
 #-----------------------------------------------------------------------------------------------------------------------------
-[[overwrites]]
+#[[overwrites]]
 #	name = "*"
 #	[overwrites.meta]
 #		id = "250ddd1e-86e8-41c0-a881-0e0c96c4da7c"
