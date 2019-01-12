@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/h2non/filetype"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -208,13 +209,13 @@ func (p *Processor) getVignetteFile(level, vignette string) string {
 }
 
 // isTTFFontFile returns true is file is True Type font - based on the file name.
-func isTTFFontFile(path string) bool {
-	return strings.EqualFold(filepath.Ext(path), ".ttf")
+func isTTFFontFile(path string, buf []byte) bool {
+	return strings.EqualFold(filepath.Ext(path), ".ttf") && filetype.Is(buf, "ttf")
 }
 
 // isOTFFontFile returns true is file is opentype font - based on the file name.
-func isOTFFontFile(path string) bool {
-	return strings.EqualFold(filepath.Ext(path), ".otf")
+func isOTFFontFile(path string, buf []byte) bool {
+	return strings.EqualFold(filepath.Ext(path), ".otf") && filetype.Is(buf, "otf")
 }
 
 var fmts = [...]string{"gif", "bmp", "jpeg", "png"}

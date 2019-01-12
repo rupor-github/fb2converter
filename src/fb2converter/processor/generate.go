@@ -315,12 +315,12 @@ func (p *Processor) prepareStylesheet() error {
 		}
 
 		d := &dataFile{data: data}
-		if isTTFFontFile(fname) {
+		if isTTFFontFile(fname, data) {
 			d.id = fmt.Sprintf("font%d", index+1)
 			d.fname = filepath.Base(fname)
 			d.relpath = filepath.Join(DirContent, DirFonts)
 			d.ct = "application/x-font-ttf"
-		} else if isOTFFontFile(fname) {
+		} else if isOTFFontFile(fname, data) {
 			d.id = fmt.Sprintf("font%d", index+1)
 			d.fname = filepath.Base(fname)
 			d.relpath = filepath.Join(DirContent, DirFonts)
