@@ -37,7 +37,7 @@ func SyncCovers(ctx *cli.Context) error {
 
 	var dir string
 	// let's see if we could locate kindle directory
-	for head, tail := filepath.Split(strings.TrimSuffix(indir, string(os.PathSeparator))); len(tail) > 0; head, tail = filepath.Split(head) {
+	for head, tail := filepath.Split(strings.TrimSuffix(indir, string(os.PathSeparator))); len(tail) > 0; head, tail = filepath.Split(strings.TrimSuffix(head, string(os.PathSeparator))) {
 		dir = filepath.Join(head, "system", "thumbnails")
 		if info, err := os.Stat(dir); err == nil && info.IsDir() {
 			break
