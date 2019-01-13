@@ -11,6 +11,7 @@ better diagnostics and no installation required.
 - no "default" external configuration, path to configuration file has to be supplied
 - no overwriting of configuration parameters from command line, options either specified in configuration file or on command line
 - slightly different hyphenation algorithm (no hyphensReplaceNBSP)
+- fixes in toc.ncx generation
 - epub processing was separated into its own command "transfer" and any attempts to process epub content were dropped
 - go differs in how it processes images, it is less forgiving than Python's PILLOW and do not have lazy decoding (see use_broken_images configuration option)
 - small changes in result formatting, for example:
