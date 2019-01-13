@@ -60,9 +60,13 @@ Additional help for any command could be obtained by running `./fb2c help COMMAN
 ### Examples:
 
 In order to convert all fb2 files in `c:\books\to-read` directory and get results in `d:\out` directory without keeping original subdirectory structure
-sending mobi files to Kindle via e-mail in process execute `fb2c.exe convert --nodirs --stk --to mobi c:\books\to-read`
+sending mobi files to Kindle via e-mail in process execute
 
-If you want resulting mobi files to be located alongside with original files, do something like `fb2c.exe convert --to mobi c:\books\to-read c:\books\to-read`
+   `fb2c.exe convert --nodirs --stk --to mobi c:\books\to-read d:\out`
+
+If you want resulting mobi files to be located alongside with original files, do something like
+
+   `fb2c.exe convert --to mobi c:\books\to-read c:\books\to-read`
 
 ### MyHomeLib support:
 
