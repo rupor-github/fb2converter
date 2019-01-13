@@ -18,7 +18,7 @@ better diagnostics and no installation required.
   - html tags unknown to fb2 spec may be dropped depending on context
   - page size is calculated based on proper Unicode code points rather than byte size
   - ...
-- fb2c processes files, directories, zip archives and directories with zip archives. So it does not make any special distinction for .fb2.zip files.
+- fb2c processes files, directories, zip archives and directories with zip archives - no special consideration is made for `.fb2.zip` files.
 - fb2c could be build for any platform supported by [go language](https://golang.org/doc/install). If mobi or azw3 are required additional limitations are imposed by [Amazon's kindlegen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
 - fb2c has no dependencies and does not require installation or any kind
 
@@ -27,7 +27,7 @@ better diagnostics and no installation required.
 Configuration is fully documented [here](https://github.com/rupor-github/fb2converter/blob/master/static/configuration.toml).
 In order to customize program behavior use "export" command to the directory of your choice and then supply path to your configuration file during program run.
 
-Program has detailed logging configured by default (conversion.log in current working directory) - in case of problems, take a look there first.
+Program has detailed logging configured by default (by default conversion.log in current working directory) - in case of problems, take a look there first.
 
 ```
 >>> ./fb2c
