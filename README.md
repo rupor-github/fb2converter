@@ -70,7 +70,7 @@ If you want resulting mobi files to be located alongside with original files, do
 
 ### MyHomeLib support:
 
-Windows builds come with full MyHomeLib support. Just make sure that your `MyHomeLib\converters` directory does not contain old
+Windows builds come with full [MyHomeLib](https://myhomelib.org/) support. Just make sure that your `MyHomeLib\converters` directory does not contain old
 `fb2mobi` and/or `fb2epub` subdirectories and unpack `fb2c-win32.7z` or `fb2c-win64.7z` there. It is a drop-in replacement and
 should be functional out of the box. Note, that `fb2mobi.exe` looks for `fb2mobi.toml` in its directory (similarly `fb2epub.exe` looks for `fb2epub.toml`),
 so any additional customizations are easy.
