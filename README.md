@@ -1,4 +1,7 @@
 ﻿## A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi).
+ 
+ Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter)
+ Russian [forum](http://www.the-ebook.org/forum/viewtopic.php?t=30380)
 
 Aims to be faster than python implementation and much easier to maintain. Simpler configuration, zero dependencies,
 better diagnostics and no installation required.
