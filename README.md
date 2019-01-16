@@ -1,7 +1,8 @@
 ﻿## A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi).
  
- Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter)
- Russian [forum](http://www.the-ebook.org/forum/viewtopic.php?t=30380)
+  Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter)
+  
+  Russian [forum](http://www.the-ebook.org/forum/viewtopic.php?t=30380).
 
 Aims to be faster than python implementation and much easier to maintain. Simpler configuration, zero dependencies,
 better diagnostics and no installation required.
@@ -78,4 +79,3 @@ Windows builds come with full [MyHomeLib](https://myhomelib.org/) support. Just 
 `fb2mobi` and/or `fb2epub` subdirectories and unpack `fb2c-win32.7z` or `fb2c-win64.7z` there. It is a drop-in replacement and
 should be functional out of the box. Note, that `fb2mobi.exe` looks for `fb2mobi.toml` in its directory (similarly `fb2epub.exe` looks for `fb2epub.toml`),
 so any additional customizations are easy.
-
