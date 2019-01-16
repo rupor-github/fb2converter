@@ -65,7 +65,7 @@ func processDir(dir string, format processor.OutputFmt, nodirs, stk, overwrite b
 				// checking format - but cannot open target file
 				env.Log.Warn("Skipping file", zap.String("file", path), zap.Error(err))
 			} else if ok {
-				if err := processArchive(path, "", format, nodirs, stk, overwrite, dst, env); err != nil {
+				if err := processArchive(path, "", filepath.Dir(strings.TrimPrefix(path, dir)), format, nodirs, stk, overwrite, dst, env); err != nil {
 					env.Log.Error("Unable to process archive", zap.String("file", path), zap.Error(err))
 				}
 			} else if ok, enc, err = isBookFile(path); err != nil {
@@ -92,7 +92,7 @@ func processDir(dir string, format processor.OutputFmt, nodirs, stk, overwrite b
 }
 
 // processArchive walks all files inside archive, finds fb2 files under "pathIn" and processes them.
-func processArchive(path, pathIn string, format processor.OutputFmt, nodirs, stk, overwrite bool, dst string, env *state.LocalEnv) (err error) {
+func processArchive(path, pathIn, pathOut string, format processor.OutputFmt, nodirs, stk, overwrite bool, dst string, env *state.LocalEnv) (err error) {
 
 	count := 0
 	defer func() {
@@ -117,7 +117,7 @@ func processArchive(path, pathIn string, format processor.OutputFmt, nodirs, stk
 					zap.Error(err))
 			} else {
 				defer r.Close()
-				if err := processBook(r, enc, f.FileHeader.Name, dst, nodirs, stk, overwrite, format, env); err != nil {
+				if err := processBook(r, enc, filepath.Join(pathOut, f.FileHeader.Name), dst, nodirs, stk, overwrite, format, env); err != nil {
 					env.Log.Error("Unable to process file in archive",
 						zap.String("archive", archive),
 						zap.String("file", f.FileHeader.Name),
@@ -228,7 +228,7 @@ func Convert(ctx *cli.Context) (err error) {
 			if ok {
 				// we need to look inside to see if path makes sense
 				tail = strings.TrimPrefix(strings.TrimPrefix(src, head), string(filepath.Separator))
-				if err := processArchive(head, tail, format, nodirs, stk, overwrite, dst, env); err != nil {
+				if err := processArchive(head, tail, "", format, nodirs, stk, overwrite, dst, env); err != nil {
 					return cli.NewExitError(errors.Wrapf(err, "%sunable to process archive", errPrefix), errCode)
 				}
 				break

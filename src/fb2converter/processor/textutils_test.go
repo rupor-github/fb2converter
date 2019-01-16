@@ -63,7 +63,7 @@ var cases = []testCase{
 			"#f": "First_Name",
 			"#m": "",
 		},
-		out: `Last_Name \{mm\} First_Name`,
+		out: `Last_Name {mm} First_Name`,
 	},
 	testCase{
 		in: `#authors #title #author`,

@@ -206,7 +206,7 @@
 		# verbose = false
 		#---- When producing mobi - do not touch it after kindlegen
 		# no_mobi_optimization = true
-		#---- If set to true program will produce "Personal document" file, otherwise - normal book
+		#---- If set to true program will remove "Personal document" label from file producing normal book, otherwise "Personal document"
 		# remove_personal_label = false
 		#----  depending on device Kindle expects APNX page map file in different places
 		#----  "none" - nothing will be generated

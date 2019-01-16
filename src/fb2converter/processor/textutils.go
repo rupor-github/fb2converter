@@ -117,19 +117,26 @@ func ReplaceKeywords(in string, m map[string]string) string {
 	}
 
 	bopen, bclose := -1, -1
+
+	// I do not want to write real parser
+	in = strings.Replace(strings.Replace(in, `\{`, "\x01", -1), `\}`, "\x02", -1)
+
 	for i, c := range in {
-		if c == '{' && (i == 0 || i > 0 && in[i-1] != '\\') {
+		if c == '{' {
 			bopen = i
-		} else if c == '}' && (i == 0 || i > 0 && in[i-1] != '\\') {
+		} else if c == '}' {
 			bclose = i
 			break
 		}
 	}
 
+	var out string
 	if bopen >= 0 && bclose > 0 && bopen < bclose {
-		return ReplaceKeywords(in[:bopen]+expandAll(in[bopen+1:bclose], m)+in[bclose+1:], m)
+		out = ReplaceKeywords(in[:bopen]+expandAll(in[bopen+1:bclose], m)+in[bclose+1:], m)
+	} else {
+		out = expandAll(in, m)
 	}
-	return expandAll(in, m)
+	return strings.Replace(strings.Replace(out, "\x01", "{", -1), "\x02", "}", -1)
 }
 
 // CreateAuthorKeywordsMap prepares keywords map for replacement.

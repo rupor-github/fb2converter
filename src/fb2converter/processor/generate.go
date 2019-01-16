@@ -333,7 +333,7 @@ func (p *Processor) prepareStylesheet() error {
 		}
 
 		p.Book.Data = append(p.Book.Data, d)
-		return path.Join(d.relpath, d.fname)
+		return path.Join(DirFonts, d.fname)
 	}
 
 	// Get all references from stylesheet
