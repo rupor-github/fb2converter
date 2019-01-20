@@ -206,7 +206,8 @@
 		# verbose = false
 		#---- When producing mobi - do not touch it after kindlegen
 		# no_mobi_optimization = true
-		#---- If set to true program will remove "Personal document" label from file producing normal book, otherwise "Personal document"
+		#---- If set to true "Personal label" will be removed from the resulting book producing "EBOK" document.
+		#---- Otherwise - "PDOC", default for kndlegen
 		# remove_personal_label = false
 		#----  depending on device Kindle expects APNX page map file in different places
 		#----  "none" - nothing will be generated
