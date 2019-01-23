@@ -745,7 +745,22 @@ func (p *Processor) processBinaries() error {
 		s = strings.Replace(s, " ", "", -1)
 		data, err := base64.StdEncoding.DecodeString(s)
 		if err != nil {
-			return errors.Wrapf(err, "unable to decode binary (%s)", id)
+			// And some have several images staffed together
+			// NOTE: I know this is wrong, but short of writing my own base64 decoder this should do...
+			const errString = "illegal base64 data at input byte "
+			if strings.HasPrefix(err.Error(), errString) {
+				i, er := strconv.ParseInt(strings.TrimPrefix(err.Error(), errString), 10, 64)
+				if er != nil {
+					return errors.Wrapf(err, "unable to decode binary (%s)", id)
+				}
+				// try to ignore everything after error position
+				data, er = base64.StdEncoding.DecodeString(s[0:i])
+				if er != nil {
+					return errors.Wrapf(err, "unable to decode binary (%s)", id)
+				}
+			} else {
+				return errors.Wrapf(err, "unable to decode binary (%s)", id)
+			}
 		}
 
 		if strings.HasSuffix(strings.ToLower(declaredCT), "svg") {

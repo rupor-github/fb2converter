@@ -68,7 +68,7 @@ func selectReader(r io.Reader, enc encoding) io.Reader {
 	case encUnknown:
 		return r
 	case encUTF8:
-		return transform.NewReader(r, unicode.UTF8.NewDecoder())
+		return transform.NewReader(r, unicode.BOMOverride(unicode.UTF8.NewDecoder()))
 	case encUTF16BigEndian:
 		return transform.NewReader(r, unicode.UTF16(unicode.BigEndian, unicode.ExpectBOM).NewDecoder())
 	case encUTF16LittleEndian:

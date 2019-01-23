@@ -1,29 +1,29 @@
 @page {
-    margin: 20px 20px 5px;
+    margin: 20px 20px 5px
 }
 
 .h0 {
     font-size: 140%;
     font-weight: bold;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
 .h1 {
     font-size: 120%;
     font-weight: bold;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
 .h2 {
     font-size: 120%;
     font-weight: bold;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
 .h3 {
     font-size: 120%;
     font-weight: bold;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
 .h4 {
@@ -31,34 +31,34 @@
     font-size: 120%;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
 .h5 {
     text-align: center;
     font-size: 120%;
     font-weight: bold;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
 .h6 {
     text-align: center;
     font-size: 120%;
     font-weight: bold;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
 .titleblock {
     page-break-before: always;
     text-indent: 0em;
     margin-top: 2em;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
 .titleblock_nobreak {
     text-indent: 0em;
     margin-top: 2em;
-    margin-bottom: 1em;
+    margin-bottom: 1em
 }
 
 .titlenotes {
@@ -66,81 +66,81 @@
     font-weight: bold;
     margin-top: 1em;
     margin-bottom: 0.5em;
-    page-break-after: avoid;
+    page-break-after: avoid
 }
 
 .titlenotes p {
     text-indent: 0;
-    text-align: center;
+    text-align: center
 }
 
 .indent0 {
     text-align: left;
-    margin-left: 0pt;
+    margin-left: 0pt
 }
 
 .indent1 {
     text-align: left;
-    margin-left: 10pt;
+    margin-left: 10pt
 }
 
 .indent2 {
     text-align: left;
-    margin-left: 20pt;
+    margin-left: 20pt
 }
 
 .indent3 {
     text-align: left;
-    margin-left: 30pt;
+    margin-left: 30pt
 }
 
 .indent4 {
     text-align: left;
-    margin-left: 40pt;
+    margin-left: 40pt
 }
 
 .indent5 {
     text-align: left;
-    margin-left: 40pt;
+    margin-left: 40pt
 }
 
 .indent6 {
     text-align: left;
-    margin-left: 40pt;
+    margin-left: 40pt
 }
 
 .anchor {
     vertical-align: super;
-    font-size: 70%;
+    font-size: 70%
 }
 
 .linkanchor {
-    font-size: 80%;
+    font-size: 80%
 }
 
 .inlineanchor {
-    display: none;
+    display: none
 }
 
 .blockanchor {
     vertical-align: super;
-    font-size: 70%;
+    font-size: 70%
 }
 
 .emptyline {
-    margin-top: 1em;
+    margin-top: 1em
 }
 
 .emphasis {
-    font-style: italic;
+    font-style: italic
 }
 
 .strong {
-    font-weight: bold;
+    font-weight: bold
 }
 
 .strike {
-    text-decoration: line-through;
+    text-decoration: line-through
 }
 
 .epigraph {
@@ -148,13 +148,13 @@
     margin-top: 0.4em;
     margin-bottom: 0.2em;
     margin-left: 4em;
-    font-style: italic;
+    font-style: italic
 }
 
 .text-author {
     page-break-before: avoid;
     text-align: right;
-    font-weight: bold;
+    font-weight: bold
 }
 
 .subtitle {
@@ -162,40 +162,40 @@
     font-weight: bold;
     margin-bottom: 0.5em;
     margin-top: 1em;
-    page-break-after: avoid;
+    page-break-after: avoid
 }
 
 p.subtitle {
-    text-indent: 0em;
+    text-indent: 0em
 }
 
 p {
     text-indent: 1em;
     text-align: justify;
     padding-bottom: 0.3em;
-    margin: 0pt 0pt 0pt 0pt;
+    margin: 0pt 0pt 0pt 0pt
 }
 
 p.title {
     text-indent: 0em;
-    text-align: center;
+    text-align: center
 }
 
 .cite {
     font-style: italic;
     text-indent: 1em;
     margin-top: 0.3em;
-    margin-bottom: 0.3em;
+    margin-bottom: 0.3em
 }
 
 .image {
     text-indent: 0em;
-    text-align: center;
+    text-align: center
 }
 
 .image img {
     max-width: 100%;
-    max-height: 100%;
+    max-height: 100%
 }
 
 .poem {
@@ -203,50 +203,50 @@ p.title {
     font-style: italic;
     margin-left: 3em;
     margin-bottom: 0em;
-    margin-top: 0em;
+    margin-top: 0em
 }
 
 .stanza {
-    margin-bottom: 0.5em;
+    margin-bottom: 0.5em
 }
 
 .poem p {
     margin-top: 0em;
-    margin-bottom: 0em;
+    margin-bottom: 0em
 }
 
 .table {
     width: 100%;
     border: 1px solid black;
-    border-collapse: collapse;
+    border-collapse: collapse
 }
 
 .table th {
     border: 1px solid black;
-    background: #ccc;
+    background: #ccc
 }
 
 .table td {
-    border: 1px solid black;
+    border: 1px solid black
 }
 
 .code {
     margin-top: 0em;
-    margin-bottom: 0em;
+    margin-bottom: 0em
 }
 
 .inlinenote {
     font-style: italic;
     font-size: 80%;
-    color: #6e6e6e;
+    color: #6e6e6e
 }
 
 .inlinenote::before {
-    content: "[";
+    content: "["
 }
 
 .inlinenote::after {
-    content: "]";
+    content: "]"
 }
 
 .blocknote {
@@ -255,22 +255,22 @@ p.title {
     border-radius: 4px;
     background: #e6e6fa;
     padding: 2px;
-    border: 1px #505050 solid;
+    border: 1px #505050 solid
 }
 
 .floatnote {
     font-size: 80%;
-    text-indent: 0em;
+    text-indent: 0em
 }
 
 .notenum {
-    font-weight: bold;
+    font-weight: bold
 }
 
 .annotation {
     font-size: 80%;
     text-align: center;
-    margin: 2em 1em 1em 1em;
+    margin: 2em 1em 1em 1em
 }
 
 span.dropcaps {
@@ -280,25 +280,26 @@ span.dropcaps {
     padding-right: .1em;
     margin-top: -.1em;
     margin-bottom: -.1em;
-    margin-right: .1em;
+    margin-right: .1em
 }
 
 p.dropcaps {
-    text-indent: 0;
+    text-indent: 0
 }
 
 .vignette_title_before {
     text-indent: 0;
     text-align: center;
     margin-bottom: 0;
-    page-break-after: avoid;
+    page-break-after: avoid
 }
 
 .vignette_title_after {
     page-break-before: avoid;
     text-indent: 0;
     text-align: center;
-    margin: 0 inherit 0 inherit;
+    margin-top: 0;
+    margin-bottom: 0
 }
 
 .vignette_chapter_end {
@@ -308,7 +309,7 @@ p.dropcaps {
     text-align: center;
     font-size: 200%;
     margin-top: 2em;
-    margin-bottom: 0;
+    margin-bottom: 0
 }
 
 .chapter_end {}
