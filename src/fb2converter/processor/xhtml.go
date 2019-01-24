@@ -351,6 +351,12 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	for _, child := range from.ChildElements() {
 		if proc, ok := supportedTransfers[child.Tag]; ok {
 			err = proc(p, child, inner)
+			if err == nil && from.Tag == "section" {
+				// NOTE: during section transfer we may open new xhtml file starting new chapter, so we want to sync up current node...
+				if body := p.ctx().out.FindElement("./html/body"); body != nil {
+					to, inner = body, body
+				}
+			}
 		} else {
 			// unexpected tag to transfer
 			if from.Tag == "body" || from.Tag == "section" {
