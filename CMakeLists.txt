@@ -52,29 +52,24 @@ set(PRJ_VERSION_MINOR 96)
 ########################################################################################################
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
-    # if we can - get current state of the project
-    add_custom_target(gen_git_ver
-        BYPRODUCTS ${PROJECT_BINARY_DIR}/project_git_ver
-        COMMAND ${GIT_EXECUTABLE} rev-list -1 HEAD >${PROJECT_BINARY_DIR}/project_git_ver.tmp
-        COMMAND sh -c 'test -n \"\$\(shell ${GIT_EXECUTABLE} diff --shortstat 2> /dev/null | tail -n1\)\" && echo \"*\" >>${PROJECT_BINARY_DIR}/project_git_ver.tmp || true'
-        COMMAND tr -d '\\n' <${PROJECT_BINARY_DIR}/project_git_ver.tmp >${PROJECT_BINARY_DIR}/project_git_ver.new
-        COMMAND ${CMAKE_COMMAND} -E remove -f ${PROJECT_BINARY_DIR}/project_git_ver.tmp
-        COMMAND sh -c 'if diff -q ${PROJECT_BINARY_DIR}/project_git_ver ${PROJECT_BINARY_DIR}/project_git_ver.new >/dev/null 2>&1\; then { rm ${PROJECT_BINARY_DIR}/project_git_ver.new >/dev/null 2>&1\; }\; else { rm ${PROJECT_BINARY_DIR}/project_git_ver >/dev/null 2>&1\; mv ${PROJECT_BINARY_DIR}/project_git_ver.new ${PROJECT_BINARY_DIR}/project_git_ver\; }\; fi' 
-        COMMENT "Checking git status..."
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        RESULT_VARIABLE res
+        OUTPUT_VARIABLE GIT_HASH
+        ERROR_QUIET
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # This will cause reconfiguration on every commit
+    set_property(GLOBAL APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/.git/index")
 else()
-    add_custom_target(gen_git_ver
-        BYPRODUCTS ${PROJECT_BINARY_DIR}/project_git_ver
-        COMMAND sh -c 'echo -n no-git-repo >${PROJECT_BINARY_DIR}/project_git_ver.new'
-        COMMAND sh -c 'if diff -q ${PROJECT_BINARY_DIR}/project_git_ver ${PROJECT_BINARY_DIR}/project_git_ver.new >/dev/null 2>&1\; then { rm ${PROJECT_BINARY_DIR}/project_git_ver.new >/dev/null 2>&1\; }\; else { rm ${PROJECT_BINARY_DIR}/project_git_ver >/dev/null 2>&1\; mv ${PROJECT_BINARY_DIR}/project_git_ver.new ${PROJECT_BINARY_DIR}/project_git_ver\; }\; fi' 
-        COMMENT "Checking git status..."
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    set(GIT_HASH "no-git")
 endif()
 configure_file("${PROJECT_SOURCE_DIR}/cmake/version.go.in" "${PROJECT_SOURCE_DIR}/src/fb2converter/misc/version.go")
-execute_process(COMMAND ${CMAKE_COMMAND} -E remove -f ${PROJECT_BINARY_DIR}/project_git_ver ERROR_QUIET)
-execute_process(COMMAND ${CMAKE_COMMAND} -E env ${GIT_EXECUTABLE} changelog --final-tag ${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR} --stdout OUTPUT_FILE ${PROJECT_BINARY_DIR}/history.txt ERROR_QUIET)
 
-message(STATUS "Building version \"${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR}\"")
+# TODO: do we want to distribute history?
+# execute_process(COMMAND ${CMAKE_COMMAND} -E env ${GIT_EXECUTABLE} changelog --final-tag ${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR} --stdout OUTPUT_FILE ${PROJECT_BINARY_DIR}/history.txt ERROR_QUIET)
+
+message(STATUS "Building version \"${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR}\" git sha \"${GIT_HASH}\"")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # Create git pre-commit hook to check formatting before commit
@@ -96,12 +91,11 @@ endif()
 ########################################################################################################
 
 add_custom_target(bin_fb2c ALL
-    DEPENDS gen_git_ver
-        ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
+    DEPENDS ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
         ${PROJECT_SOURCE_DIR}/src/fb2converter/static/files.go
     COMMAND GOPATH=${PROJECT_SOURCE_DIR} GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
         ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}
-        -ldflags='-X main.LastGitCommit=\$\(shell cat ${PROJECT_BINARY_DIR}/project_git_ver\)'
+        -ldflags='-X main.LastGitCommit=${GIT_HASH}'
         fb2converter/cmd/fb2c
     COMMENT "Building fb2c..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
@@ -112,19 +106,17 @@ if(CROSS_GOOS STREQUAL "windows")
 
     # myhomelib suppport - Windows only
     add_custom_target(bin_fb2mobi ALL
-        DEPENDS gen_git_ver
         COMMAND GOPATH=${PROJECT_SOURCE_DIR} GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
-            -ldflags='-X main.LastGitCommit=\$\(shell cat ${PROJECT_BINARY_DIR}/project_git_ver\)'
+            -ldflags='-X main.LastGitCommit=${GIT_HASH}'
             fb2converter/cmd/fb2mobi
         COMMENT "Building fb2mobi..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2mobi CONFIGURATIONS Release)
     add_custom_target(bin_fb2epub ALL
-        DEPENDS gen_git_ver
         COMMAND GOPATH=${PROJECT_SOURCE_DIR} GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
-            -ldflags='-X main.LastGitCommit=\$\(shell cat ${PROJECT_BINARY_DIR}/project_git_ver\)'
+            -ldflags='-X main.LastGitCommit=${GIT_HASH}'
             fb2converter/cmd/fb2epub
         COMMENT "Building fb2epub..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
@@ -158,8 +150,8 @@ add_custom_target(test_processor
     COMMAND GOPATH=${PROJECT_SOURCE_DIR}
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_processor.out
-            -run=\$\(TEST_RUN_REGEXP\) fb2converter/processor
-    COMMENT "processor tests...\t To run tests selectivly pass TEST_RUN_REGEXP=name to make"
+            fb2converter/processor
+    COMMENT "processor tests..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
 
 add_custom_target(test_hyphenator
@@ -168,8 +160,8 @@ add_custom_target(test_hyphenator
     COMMAND GOPATH=${PROJECT_SOURCE_DIR}
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_hyphenator.out
-            -run=\$\(TEST_RUN_REGEXP\) fb2converter/hyphenator
-    COMMENT "hyphenator tests...\t To run tests selectivly pass TEST_RUN_REGEXP=name to make"
+            fb2converter/hyphenator
+    COMMENT "hyphenator tests..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
 
 ########################################################################################################
@@ -180,12 +172,11 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
     # main target with race detector
     add_custom_target(bin_fb2c_race
-        DEPENDS gen_git_ver
-            ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
+        DEPENDS ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
             ${PROJECT_SOURCE_DIR}/src/fb2converter/static/files.go
         COMMAND GOPATH=${PROJECT_SOURCE_DIR} GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -race -o ${PROJECT_BINARY_DIR}/fb2c_race${CMAKE_EXECUTABLE_SUFFIX}
-            -ldflags='-X main.LastGitCommit=\$\(shell cat ${PROJECT_BINARY_DIR}/project_git_ver\)'
+            -ldflags='-X main.LastGitCommit=${GIT_HASH}'
             fb2converter/cmd/fb2c
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter"
         COMMENT "Building fb2c with race detector...")
@@ -244,10 +235,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         SOURCES ${PROJECT_SOURCE_DIR}/src/fb2converter/go.mod
         # This what needs to be done (COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} clean -modcache fb2converter/cmd/fb2c), but removing directory is much faster
         COMMAND ${CMAKE_COMMAND} -E remove_directory ${PROJECT_SOURCE_DIR}/pkg/mod
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} get -u=\$\(PATCH\) \$\(URL\)
         COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} mod download
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter"
-        COMMENT "Updating dependencies (go get -u=<PATCH> <URL>)"
+        COMMENT "Updating ALL dependencies (go mod download)"
         VERBATIM)
 
     add_custom_target(deps_print
