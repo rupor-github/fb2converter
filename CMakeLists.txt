@@ -60,7 +60,7 @@ if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     # This will cause reconfiguration on every commit
-    set_property(GLOBAL APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/.git/index")
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/.git/index")
 else()
     set(GIT_HASH "no-git")
 endif()
