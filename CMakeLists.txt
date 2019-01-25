@@ -8,6 +8,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "Generator: ${CMAKE_GENERATOR}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
