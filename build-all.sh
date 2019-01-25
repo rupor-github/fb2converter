@@ -40,6 +40,16 @@ if not command -v cmake >/dev/null 2>&1; then
 	exit 1
 fi
 
+if [ "$1" = "" ]; then
+    mk=ninja
+else
+    mk=make
+fi
+if not command -v ${mk} >/dev/null 2>&1; then
+	print_error "No ${mk} found - please, install"
+	exit 1
+fi
+
 for _arch in ${ARCH_INSTALLS}; do
 	
 	_dist=bin_${_arch}
@@ -58,10 +68,10 @@ for _arch in ${ARCH_INSTALLS}; do
 
 		if [ ${_arch} = linux ]; then
 			cmake -DCMAKE_BUILD_TYPE=Release ..
-			make install
+			${mk} install
 		else
 			MSYSTEM=${_msystem} cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=cmake/${_arch}.toolchain ..
-			MSYSTEM=${_msystem} make install
+			MSYSTEM=${_msystem} ${mk} install
 		fi
 	)
 	(
