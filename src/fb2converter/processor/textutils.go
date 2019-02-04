@@ -176,7 +176,7 @@ func CreateTitleKeywordsMap(b *Book, pos int) map[string]string {
 	if len(b.Title) > 0 {
 		rd["#title"] = b.Title
 	}
-	rd["#series"], rd["#abbrseries"] = "", ""
+	rd["#series"], rd["#abbrseries"], rd["#ABBRseries"] = "", "", ""
 	if len(b.SeqName) > 0 {
 		rd["#series"] = b.SeqName
 		var abbr string
@@ -190,6 +190,7 @@ func CreateTitleKeywordsMap(b *Book, pos int) map[string]string {
 		}
 		if len(abbr) > 0 {
 			rd["#abbrseries"] = strings.ToLower(abbr)
+			rd["#ABBRseries"] = strings.ToUpper(abbr)
 		}
 	}
 	rd["#number"], rd["#padnumber"] = "", ""
@@ -211,7 +212,7 @@ func CreateFileNameKeywordsMap(b *Book, pos int) map[string]string {
 	if len(b.Title) > 0 {
 		rd["#title"] = b.Title
 	}
-	rd["#series"], rd["#abbrseries"] = "", ""
+	rd["#series"], rd["#abbrseries"], rd["#ABBRseries"] = "", "", ""
 	if len(b.SeqName) > 0 {
 		rd["#series"] = b.SeqName
 		var abbr string
@@ -225,6 +226,7 @@ func CreateFileNameKeywordsMap(b *Book, pos int) map[string]string {
 		}
 		if len(abbr) > 0 {
 			rd["#abbrseries"] = strings.ToLower(abbr)
+			rd["#ABBRseries"] = strings.ToUpper(abbr)
 		}
 	}
 	rd["#number"], rd["#padnumber"] = "", ""

@@ -160,7 +160,7 @@ type Config struct {
 
 var defaultConfig = []byte(`{
   "document": {
-    "title_format": "{(#abbrseries{ #padnumber}) }#title",
+    "title_format": "{(#ABBRseries{ - #padnumber}) }#title",
     "author_format": "#l{ #f}{ #m}",
     "chapter_per_file": true,
     "chapter_level": 2147483647,

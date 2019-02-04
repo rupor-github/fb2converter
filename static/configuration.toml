@@ -44,7 +44,8 @@
 	#---- Pattern to format book title
 	#---- "#title"      - book title
 	#---- "#series"     - name of sequence book belongs to
-	#---- "#abbrseries" - abbreviated #series
+	#---- "#abbrseries" - abbreviated #series, lower case
+	#---- "#ABBRseries" - abbreviated #series, upper case
 	#---- "#number"     - number in a series
 	#---- "#padnumber"  - number in a series padded with zeros to "series_number_positions"
 	#---- "#date"       - date specified in a book description
@@ -64,7 +65,8 @@
 	#---- NOTE: only file name - you cannot create directories using this
 	#---- "#title"      - book title
 	#---- "#series"     - name of sequence book belongs to
-	#---- "#abbrseries" - abbreviated #series
+	#---- "#abbrseries" - abbreviated #series, lower case
+	#---- "#ABBRseries" - abbreviated #series, upper case
 	#---- "#number"     - number in a series
 	#---- "#padnumber"  - number in a series padded with zeros to "series_number_positions"
 	#---- "#authors"    - list of all authors (each formatted as specified in "author_format")

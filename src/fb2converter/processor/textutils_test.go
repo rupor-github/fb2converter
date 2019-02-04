@@ -74,6 +74,14 @@ var cases = []testCase{
 		},
 		out: `_multiple_authors_ book-title _single_author_`,
 	},
+	testCase{
+		in: `#abbrseries #ABBRseries`,
+		m: map[string]string{
+			"#abbrseries": "_a_b_c_",
+			"#ABBRseries": "_A_B_C_",
+		},
+		out: `_a_b_c_ _A_B_C_`,
+	},
 }
 
 func TestReplaceKeywords(t *testing.T) {

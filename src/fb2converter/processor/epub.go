@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -47,6 +48,10 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 		}
 		if filepath.ToSlash(path) == filepath.ToSlash(fname) {
 			// ignore itself
+			return nil
+		}
+		if p.env.Debug && strings.HasSuffix(info.Name(), filepath.Base(p.src)) {
+			// ignore debug fb2
 			return nil
 		}
 
