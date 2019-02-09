@@ -2,7 +2,7 @@
  
   Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter)
   
-  Russian [forum](http://www.the-ebook.org/forum/viewtopic.php?t=30380).
+  Russian [forum](https://4pda.ru/forum/index.php?showtopic=372225).
 
 Aims to be faster than python implementation and much easier to maintain. Simpler configuration, zero dependencies,
 better diagnostics and no installation required.
