@@ -185,7 +185,7 @@ func (ctx *context) createOCF(name string) (*etree.Element, *dataFile) {
 		attr("xmlns", `urn:oasis:names:tc:opendocument:xmlns:container`)).
 		AddNext("rootfiles").
 		AddNext("rootfile",
-			attr("full-path", filepath.Join(DirContent, "content.opf")),
+			attr("full-path", filepath.ToSlash(filepath.Join(DirContent, "content.opf"))),
 			attr("media-type", "application/oebps-package+xml"))
 
 	return nil, f
