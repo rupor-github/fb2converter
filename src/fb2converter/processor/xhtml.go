@@ -546,7 +546,7 @@ func transferTitle(p *Processor, from, to *etree.Element) error {
 		vignette := p.getVignetteFile(h, config.VigBeforeTitle)
 		if len(vignette) > 0 {
 			div.AddNext("div", attr("class", "vignette_title_before")).
-				AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))))
+				AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))), attr("alt", config.VigBeforeTitle))
 		}
 
 		if err := p.transfer(from, div, "div", h); err != nil {
@@ -556,7 +556,7 @@ func transferTitle(p *Processor, from, to *etree.Element) error {
 		vignette = p.getVignetteFile(h, config.VigAfterTitle)
 		if len(vignette) > 0 {
 			div.AddNext("div", attr("class", "vignette_title_after")).
-				AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))))
+				AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))), attr("alt", config.VigAfterTitle))
 		}
 
 		p.Book.TOC = append(p.Book.TOC, &tocEntry{
@@ -597,7 +597,7 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 		vignette := p.getVignetteFile(h, config.VigBeforeTitle)
 		if len(vignette) > 0 {
 			div.AddNext("div", attr("class", "vignette_title_before")).
-				AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))))
+				AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))), attr("alt", config.VigBeforeTitle))
 		}
 
 		header := div.AddNext("div", attr("class", h))
@@ -609,7 +609,7 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 		vignette = p.getVignetteFile(h, config.VigAfterTitle)
 		if len(vignette) > 0 {
 			div.AddNext("div", attr("class", "vignette_title_after")).
-				AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))))
+				AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))), attr("alt", config.VigAfterTitle))
 		}
 
 		p.Book.TOC = append(p.Book.TOC, &tocEntry{
@@ -653,10 +653,10 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 			vignette := p.getVignetteFile(p.ctx().header.String("h"), config.VigChapterEnd)
 			if len(vignette) > 0 {
 				to.AddNext("p", attr("class", "vignette_chapter_end")).
-					AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))))
+					AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))), attr("alt", config.VigChapterEnd))
 			}
 		}
-		to.AddNext("span", attr("class", "chapter_end"))
+		to.AddNext("div", attr("class", "chapter_end"))
 	}
 	return nil
 }

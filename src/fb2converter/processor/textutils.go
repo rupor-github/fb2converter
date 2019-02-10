@@ -55,7 +55,7 @@ func GetFirstRuneString(in string) string {
 func GenSafeName(name string) string {
 	h := md5.New()
 	io.WriteString(h, name)
-	return fmt.Sprintf("%x", h.Sum(nil))
+	return fmt.Sprintf("zz%x", h.Sum(nil))
 }
 
 var nameCleaner = strings.NewReplacer("\r", "", "\n", "", " ", "")

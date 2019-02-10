@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -39,6 +38,8 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 	epub := zip.NewWriter(f)
 	defer epub.Close()
 
+	var content bool
+
 	saveFile := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -50,8 +51,8 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 			// ignore itself
 			return nil
 		}
-		if p.env.Debug && strings.HasSuffix(info.Name(), filepath.Base(p.src)) {
-			// ignore debug fb2
+		if content && filepath.ToSlash(filepath.Dir(path)) == filepath.ToSlash(p.tmpDir) {
+			// ignore everything in the root directory
 			return nil
 		}
 
@@ -63,9 +64,9 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 		rel = filepath.ToSlash(rel)
 
 		var w io.Writer
-		if info.Name() == "mimetype" {
+		if !content {
 			if w, err = epub.CreateHeader(&zip.FileHeader{
-				Name:   "mimetype",
+				Name:   info.Name(),
 				Method: zip.Store,
 			}); err != nil {
 				return err
@@ -87,6 +88,18 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 		}
 		return nil
 	}
+
+	// mimetype should be the fist entry in epub
+	mt := filepath.Join(p.tmpDir, "mimetype")
+	info, err := os.Stat(mt)
+	if err != nil {
+		return errors.Wrap(err, "unable to find mimetype file")
+	}
+	if err = saveFile(mt, info, nil); err != nil {
+		return errors.Wrap(err, "unable to add mimetype to EPUB")
+	}
+
+	content = true
 
 	if err = filepath.Walk(p.tmpDir, saveFile); err != nil {
 		return errors.Wrap(err, "unable to add file to EPUB")
