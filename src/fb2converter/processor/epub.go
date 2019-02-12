@@ -89,7 +89,7 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 		return nil
 	}
 
-	// mimetype should be the fist entry in epub
+	// mimetype should be the first entry in epub
 	mt := filepath.Join(p.tmpDir, "mimetype")
 	info, err := os.Stat(mt)
 	if err != nil {

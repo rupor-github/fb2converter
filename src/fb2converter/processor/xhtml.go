@@ -330,6 +330,8 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			}
 			p.Book.LinksLocations[newid] = p.ctx().fname
 		}
+		// NOTE: There could be sections inside sections to no end, so we do not want to repeat this as it will break TOC on "strangly" formatted texts,
+		// we will just mark main section beginning with "section" css in case somebody wants to do some formatting there
 		if css == "section" {
 			to.AddNext(tag, attr("id", newid), attr("class", css), attr("href", href))
 		} else {
@@ -352,7 +354,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 		if proc, ok := supportedTransfers[child.Tag]; ok {
 			err = proc(p, child, inner)
 			if err == nil && from.Tag == "section" {
-				// NOTE: during section transfer we may open new xhtml file starting new chapter, so we want to sync up current node...
+				// NOTE: during inner section transfer we may open new xhtml file starting new chapter, so we want to sync up current node...
 				if body := p.ctx().out.FindElement("./html/body"); body != nil {
 					to, inner = body, body
 				}
