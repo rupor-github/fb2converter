@@ -41,9 +41,9 @@ if not command -v cmake >/dev/null 2>&1; then
 fi
 
 if [ "$1" = "" ]; then
-    mk=ninja
-else
     mk=make
+else
+    mk=ninja
 fi
 if not command -v ${mk} >/dev/null 2>&1; then
 	print_error "No ${mk} found - please, install"
