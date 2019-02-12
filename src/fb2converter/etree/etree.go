@@ -795,7 +795,7 @@ func (e *Element) writeTo(w *bufio.Writer, s *WriteSettings, depth int, indent i
 			prevNodeHasTail = len(c.tail()) > 0 && !isWhitespace(c.tail())
 			prevNodeWasText = isCharData
 		}
-		if haveNonCharacterNodes && !prevNodeHasTail && depth >= 0 && indent != nil {
+		if haveNonCharacterNodes && !prevNodeHasTail && !prevNodeWasText && depth >= 0 && indent != nil {
 			w.WriteString(indent(depth))
 		}
 		w.Write([]byte{'<', '/'})
