@@ -51,6 +51,7 @@ const (
 	DirProfile    = "profiles"
 	DirHyphenator = "dictionaries"
 	DirResources  = "resources"
+	DirSentences  = "sentences"
 )
 
 // will be used to derive UUIDs from non-parsable book ID
@@ -339,6 +340,9 @@ func (p *Processor) Process() error {
 	if err := p.generateMeta(); err != nil {
 		return err
 	}
+	if err := p.KepubifyXHTML(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -378,6 +382,8 @@ func (p *Processor) Save() (string, error) {
 	switch p.format {
 	case OEpub:
 		err = p.FinalizeEPUB(fname)
+	case OKepub:
+		err = p.FinalizeKEPUB(fname)
 	case OMobi:
 		err = p.FinalizeMOBI(fname)
 	case OAzw3:
@@ -458,12 +464,18 @@ func (p *Processor) prepareOutputName() string {
 	outDir = filepath.Join(p.dst, outDir)
 
 	outFile := strings.TrimSuffix(filepath.Base(p.src), filepath.Ext(p.src)) + "." + p.format.String()
+	if p.format == OKepub {
+		outFile += "." + OEpub.String()
+	}
 	if p.kind == InFb2 && len(p.env.Cfg.Doc.FileNameFormat) > 0 {
 		name := config.CleanFileName(
 			ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos)),
 		)
 		if len(name) > 0 {
 			outFile = name + "." + p.format.String()
+			if p.format == OKepub {
+				outFile += "." + OEpub.String()
+			}
 		}
 	}
 	return filepath.Join(outDir, outFile)
@@ -527,6 +539,9 @@ func (p *Processor) processDescription() error {
 					p.Book.Lang = t
 					if p.env.Cfg.Doc.Hyphenate {
 						p.Book.hyph = newHyph(t, p.env.Log)
+					}
+					if p.format == OKepub {
+						p.Book.tokenizer = newTokenizer(t, p.env.Log)
 					}
 				}
 			}

@@ -562,3 +562,68 @@ func (p *Processor) generateMeta() error {
 
 	return nil
 }
+
+// KepubifyXHTML inserts Kobo specific formatting into results.
+func (p *Processor) KepubifyXHTML() error {
+
+	if p.format != OKepub {
+		return nil
+	}
+
+	for _, f := range p.Book.Files {
+		if f.ct == "application/xhtml+xml" && filepath.Ext(f.fname) == ".xhtml" && f.doc != nil {
+			if body := f.doc.FindElement("./html/body"); body != nil {
+				to := etree.NewElement("div")
+				to.CreateAttr("class", "book-columns")
+				inner := to.AddNext("div", attr("class", "book-inner"))
+				children := body.ChildElements()
+				for i := 0; i < len(children); i++ {
+					inner.AddChild(body.RemoveChild(children[i]))
+				}
+				body.AddChild(to)
+
+				if p.Book.tokenizer == nil {
+					continue
+				}
+
+				// FIXME - FindElements do not work!
+
+				paragraph := 1
+				for _, e := range body.FindElements(".//p") {
+					sentence := 1
+					// if len(getAttrValue(e, "class")) == 0 {
+					// 	println("AAA", e.Text())
+					// }
+					if text := e.Text(); len(text) > 0 {
+
+						e.SetText("")
+
+						var ex etree.Token
+						for _, ch := range e.Child {
+							if _, ok := ch.(*etree.CharData); !ok {
+								ex = ch
+								break
+							}
+						}
+
+						for _, s := range p.Book.tokenizer.tokenize(text) {
+							span := etree.NewElement("span")
+							span.CreateAttr("class", "koboSpan")
+							span.CreateAttr("id", fmt.Sprintf("kobo.%d.%d", paragraph, sentence))
+							span.SetText(s)
+							if ex == nil {
+								e.AddChild(span)
+							} else {
+								e.InsertChild(ex, span)
+							}
+							sentence++
+						}
+						paragraph++
+					}
+					// FIXME: child tails
+				}
+			}
+		}
+	}
+	return nil
+}

@@ -10,6 +10,7 @@ type OutputFmt int
 // Supported output formats
 const (
 	OEpub                OutputFmt = iota // epub
+	OKepub                                // kepub
 	OAzw3                                 // azw3
 	OMobi                                 // mobi
 	UnsupportedOutputFmt                  //

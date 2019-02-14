@@ -223,7 +223,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 -pkg static
                 -o static/files.go
                 ${PROJECT_SOURCE_DIR}/static/...
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} fmt static/files.go
+        # cannot do this due to the size COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} fmt static/files.go
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/fb2converter
         COMMENT "Generating Go resources for static assets")
 

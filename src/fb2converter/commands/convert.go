@@ -163,7 +163,7 @@ func Convert(ctx *cli.Context) (err error) {
 	format := processor.UnsupportedOutputFmt
 	if env.Mhl {
 		format = processor.ParseFmtString(env.Cfg.Fb2Mobi.OutputFormat)
-		if format == processor.UnsupportedOutputFmt || format == processor.OEpub {
+		if format == processor.UnsupportedOutputFmt || format == processor.OEpub || format == processor.OKepub {
 			env.Log.Warn("Unknown output format in MHL mode requested, switching to mobi", zap.String("format", env.Cfg.Fb2Mobi.OutputFormat))
 			format = processor.OMobi
 		}

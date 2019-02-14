@@ -62,6 +62,7 @@ type Book struct {
 	context      *context
 	contextStack []*context
 	hyph         *hyph
+	tokenizer    *tokenizer
 }
 
 // NewBook returns pointer to book.

@@ -129,7 +129,7 @@ func main() {
 			Usage:  "Converts FB2 file(s) to specified format",
 			Action: commands.Convert,
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "to", Value: "epub", Usage: "conversion output `TYPE` (supported types: epub, azw3, mobi)"},
+				cli.StringFlag{Name: "to", Value: "epub", Usage: "conversion output `TYPE` (supported types: epub, kepub, azw3, mobi)"},
 				cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
 				cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (mobi only)"},
 				cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},

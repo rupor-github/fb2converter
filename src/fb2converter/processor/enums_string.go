@@ -4,9 +4,9 @@ package processor
 
 import "strconv"
 
-const _OutputFmt_name = "epubazw3mobi"
+const _OutputFmt_name = "epubkepubazw3mobi"
 
-var _OutputFmt_index = [...]uint8{0, 4, 8, 12, 12}
+var _OutputFmt_index = [...]uint8{0, 4, 9, 13, 17, 17}
 
 func (i OutputFmt) String() string {
 	if i < 0 || i >= OutputFmt(len(_OutputFmt_index)-1) {

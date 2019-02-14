@@ -34,6 +34,7 @@ _obj/
 _test/
 testdata/
 static/dictionaries/*.txt
+static/sentences/*.json
 
 # build specific
 src/**/*.pb.go

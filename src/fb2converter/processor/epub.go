@@ -106,3 +106,8 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 	}
 	return nil
 }
+
+// FinalizeKEPUB produces kepub.epub file out of previously saved temporary files.
+func (p *Processor) FinalizeKEPUB(fname string) error {
+	return p.FinalizeEPUB(fname)
+}

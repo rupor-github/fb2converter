@@ -38,6 +38,7 @@ func ExportResources(ctx *cli.Context) error {
 	ignoreNames := map[string]bool{
 		processor.DirHyphenator: true,
 		processor.DirResources:  true,
+		processor.DirSentences:  true,
 	}
 
 	if dir, err := static.AssetDir(""); err == nil {
