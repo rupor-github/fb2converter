@@ -228,7 +228,7 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 				p.ctx().sectionTextLength.add(textOutLen)
 			}
 
-			if insertMarkers && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
+			if insertMarkers && paragraph && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
 				if textOutLen > 0 {
 					if kobo {
 						p.ctx().sentence++
