@@ -2,6 +2,7 @@ package processor
 
 import (
 	"fmt"
+	"html"
 	"net/url"
 	"path"
 	"path/filepath"
@@ -176,6 +177,17 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 		kobo                = p.format == OKepub
 	)
 
+	bufWriteString := func(text string, kobo bool) {
+		if kobo {
+			p.ctx().sentence++
+			buf.WriteString(`<span class="koboSpan" id=` + fmt.Sprintf("\"kobo.%d.%d\"", p.ctx().paragraph, p.ctx().sentence) + `>`)
+		}
+		buf.WriteString(html.EscapeString(text))
+		if kobo {
+			buf.WriteString(`</span>`)
+		}
+	}
+
 	buf.WriteString(`<root>`)
 
 	sentences := []string{in}
@@ -188,10 +200,8 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 
 			wl := utf8.RuneCountInString(word)
 
-			// TODO: should we look for dropcap in a first word of a first sentence (i == 0 && k == 0) only instead of using dropcapFound?
-
 			dropIndex := 0
-			if wl > 0 && !dropcapFound && // worth looking and we still do not have it
+			if i == 0 && wl > 0 && !dropcapFound && // worth looking and we still do not have it
 				paragraph && p.env.Cfg.Doc.DropCaps.Create && !tail &&
 				p.ctx().firstChapterLine && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 
@@ -202,10 +212,13 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 						break
 					}
 				}
+				if !dropcapFound {
+					dropIndex = 0
+				}
 
 				if dropIndex > 0 {
 					buf.WriteString(`<span class="dropcaps">`)
-					buf.WriteString(word[0:dropIndex])
+					bufWriteString(word[0:dropIndex], false)
 					buf.WriteString(`</span>`)
 					word = word[dropIndex:]
 				}
@@ -230,14 +243,7 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 
 			if insertMarkers && paragraph && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
 				if textOutLen > 0 {
-					if kobo {
-						p.ctx().sentence++
-						buf.WriteString(`<span class="koboSpan" id=` + fmt.Sprintf("\"kobo.%d.%d\"", p.ctx().paragraph, p.ctx().sentence) + `>`)
-					}
-					buf.WriteString(textOut)
-					if kobo {
-						buf.WriteString(`</span>`)
-					}
+					bufWriteString(textOut, kobo)
 				}
 				buf.WriteString(`<a class="pagemarker" id=` + fmt.Sprintf("\"page_%d\"/>", page))
 
@@ -247,14 +253,7 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 		}
 		if textOutLen > 0 {
 			p.ctx().pageLength += textOutLen
-			if kobo {
-				p.ctx().sentence++
-				buf.WriteString(`<span class="koboSpan" id=` + fmt.Sprintf("\"kobo.%d.%d\"", p.ctx().paragraph, p.ctx().sentence) + `>`)
-			}
-			buf.WriteString(textOut)
-			if kobo {
-				buf.WriteString(`</span>`)
-			}
+			bufWriteString(textOut, kobo)
 		}
 	}
 
