@@ -22,6 +22,7 @@ better diagnostics and no installation required.
   - chapter-end vignette would not be added if chapter does not have text paragraphs
   - html tags unknown to fb2 spec may be dropped depending on context
   - page size is calculated based on proper Unicode code points rather than byte size
+  - support for kepub format
   - ...
 - fb2c processes files, directories, zip archives and directories with zip archives - no special consideration is made for `.fb2.zip` files.
 - fb2c could be build for any platform supported by [go language](https://golang.org/doc/install). If mobi or azw3 are required additional limitations are imposed by [Amazon's kindlegen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
