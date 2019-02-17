@@ -19,6 +19,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
+	"github.com/gosimple/slug"
 	"github.com/oklog/ulid"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -216,10 +217,14 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		return nil, errors.Wrap(err, "unable to parse FB2")
 	}
 
+	// Clean document
+	p.doc.Indent(etree.NoIndent)
+
 	// Save parsed document back to file (pretty-printed) for debugging
 	if p.env.Debug {
-		p.doc.IndentTabs()
-		if err := p.doc.WriteToFile(filepath.Join(p.tmpDir, filepath.Base(src))); err != nil {
+		doc := p.doc.Copy()
+		doc.IndentTabs()
+		if err := doc.WriteToFile(filepath.Join(p.tmpDir, filepath.Base(src))); err != nil {
 			return nil, errors.Wrap(err, "unable to write XML")
 		}
 	}
@@ -463,15 +468,21 @@ func (p *Processor) prepareOutputName() string {
 	}
 	outDir = filepath.Join(p.dst, outDir)
 
-	outFile := strings.TrimSuffix(filepath.Base(p.src), filepath.Ext(p.src)) + "." + p.format.String()
+	name := strings.TrimSuffix(filepath.Base(p.src), filepath.Ext(p.src))
+	if p.env.Cfg.Doc.FileNameTransliterate {
+		name = config.CleanFileName(slug.Make(name))
+	}
+	outFile := name + "." + p.format.String()
 	if p.format == OKepub {
 		outFile += "." + OEpub.String()
 	}
+
 	if p.kind == InFb2 && len(p.env.Cfg.Doc.FileNameFormat) > 0 {
-		name := config.CleanFileName(
-			ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos)),
-		)
+		name = ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos))
 		if len(name) > 0 {
+			if p.env.Cfg.Doc.FileNameTransliterate {
+				name = config.CleanFileName(slug.Make(name))
+			}
 			outFile = name + "." + p.format.String()
 			if p.format == OKepub {
 				outFile += "." + OEpub.String()

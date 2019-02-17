@@ -24,6 +24,14 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+//  Internal constants defining if program was invoked via MyHomeLib wrappers.
+const (
+	MhlNone int = iota
+	MhlEpub
+	MhlMobi
+	MhlUnknown
+)
+
 // Logger configuration for single logger.
 type Logger struct {
 	Level       string `json:"level"`
@@ -35,6 +43,11 @@ type Logger struct {
 type Fb2Mobi struct {
 	OutputFormat string `json:"output_format"`
 	SendToKindle bool   `json:"send_to_kindle"`
+}
+
+// Fb2Epub provides special support for MyHomeLib.
+type Fb2Epub struct {
+	OutputFormat string `json:"output_format"`
 }
 
 // SMTPConfig keeps STK configuration.
@@ -92,6 +105,7 @@ type Doc struct {
 	Hyphenate             bool    `json:"insert_soft_hyphen"`
 	UseBrokenImages       bool    `json:"use_broken_images"`
 	FileNameFormat        string  `json:"file_name_format"`
+	FileNameTransliterate bool    `json:"file_name_transliterate"`
 	//
 	DropCaps struct {
 		Create        bool   `json:"create"`
@@ -155,6 +169,7 @@ type Config struct {
 	Doc           Doc
 	SMTPConfig    SMTPConfig
 	Fb2Mobi       Fb2Mobi
+	Fb2Epub       Fb2Epub
 	Overwrites    map[string]MetaInfo
 }
 
@@ -219,6 +234,9 @@ var defaultConfig = []byte(`{
   },
   "fb2mobi": {
     "output_format": "mobi"
+  },
+  "fb2epub": {
+    "output_format": "epub"
   }
 }`)
 
@@ -291,6 +309,9 @@ func BuildConfig(fname string) (*Config, error) {
 	}
 	if err := c.Get("fb2mobi").Scan(&conf.Fb2Mobi); err != nil {
 		return nil, errors.Wrap(err, "unable to read fb2mobi cnfiguration")
+	}
+	if err := c.Get("fb2epub").Scan(&conf.Fb2Epub); err != nil {
+		return nil, errors.Wrap(err, "unable to read fb2epub cnfiguration")
 	}
 	if err := c.Get("sendtokindle").Scan(&conf.SMTPConfig); err != nil {
 		return nil, errors.Wrap(err, "unable to read send to kindle cnfiguration")
@@ -416,7 +437,8 @@ func (conf *Config) GetActualBytes() ([]byte, error) {
 		D Doc        `json:"document"`
 		E SMTPConfig `json:"sendtokindle"`
 		F Fb2Mobi    `json:"fb2mobi"`
-		G []struct {
+		G Fb2Epub    `json:"fb2epub"`
+		H []struct {
 			Name string   `json:"name"`
 			Meta MetaInfo `json:"meta"`
 		} `json:"overwrites"`
@@ -426,13 +448,14 @@ func (conf *Config) GetActualBytes() ([]byte, error) {
 	a.D = conf.Doc
 	a.E = conf.SMTPConfig
 	a.F = conf.Fb2Mobi
+	a.G = conf.Fb2Epub
 
 	for k, v := range conf.Overwrites {
 		s := struct {
 			Name string   `json:"name"`
 			Meta MetaInfo `json:"meta"`
 		}{Name: filepath.FromSlash(k), Meta: v}
-		a.G = append(a.G, s)
+		a.H = append(a.H, s)
 	}
 
 	// Marshall it to json

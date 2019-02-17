@@ -19,6 +19,8 @@ type context struct {
 	specialParagraph  bool        // special paragraph processing, no drop caps
 	sectionWithTitle  stackedBool // indicates that current section has title
 	sectionTextLength stackedInt  // has current section text length - paragraphs only
+	paragraph         int         // used for Kobo spans
+	sentence          int         // used for Kobo spans
 	inlineImage       bool
 	inHeader          bool
 	inSubHeader       bool
@@ -55,6 +57,7 @@ func (ctx *context) createXHTML(name string) (*etree.Element, *dataFile) {
 	}
 	ctx.fname = fname + ".xhtml"
 	ctx.pageLength = 0
+	ctx.paragraph = 0
 
 	// set up XML
 	ctx.out = etree.NewDocument()
@@ -83,6 +86,7 @@ func (ctx *context) createNCX(name, id string) (*etree.Element, *dataFile) {
 
 	ctx.fname = name + ".ncx"
 	ctx.pageLength = 0
+	ctx.paragraph = 0
 
 	// set up XML
 	ctx.out = etree.NewDocument()
@@ -114,6 +118,7 @@ func (ctx *context) createPM(name string) (*etree.Element, *dataFile) {
 
 	ctx.fname = name + ".xml"
 	ctx.pageLength = 0
+	ctx.paragraph = 0
 
 	// set up XML
 	ctx.out = etree.NewDocument()
@@ -137,6 +142,7 @@ func (ctx *context) createOPF(name string) (*etree.Element, *dataFile) {
 
 	ctx.fname = name + ".opf"
 	ctx.pageLength = 0
+	ctx.paragraph = 0
 
 	// set up XML
 	ctx.out = etree.NewDocument()
@@ -165,6 +171,7 @@ func (ctx *context) createOCF(name string) (*etree.Element, *dataFile) {
 
 	ctx.fname = name + ".xml"
 	ctx.pageLength = 0
+	ctx.paragraph = 0
 
 	// set up XML
 	ctx.out = etree.NewDocument()

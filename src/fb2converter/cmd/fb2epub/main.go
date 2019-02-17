@@ -65,6 +65,7 @@ func main() {
 	}
 
 	args := make([]string, 0, 10)
+	args = append(args, "-mhl", fmt.Sprintf("%d", config.MhlEpub))
 
 	config := filepath.Join(filepath.Dir(expath), "fb2epub.toml")
 	if _, err := os.Stat(config); err == nil {
@@ -73,7 +74,6 @@ func main() {
 
 	args = append(args, "convert")
 	args = append(args, "--ow")
-	args = append(args, "--to", "epub")
 
 	args = append(args, from)
 	args = append(args, to)

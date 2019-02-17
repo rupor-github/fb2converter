@@ -581,47 +581,6 @@ func (p *Processor) KepubifyXHTML() error {
 					inner.AddChild(body.RemoveChild(children[i]))
 				}
 				body.AddChild(to)
-
-				if p.Book.tokenizer == nil {
-					continue
-				}
-
-				// FIXME - FindElements do not work!
-
-				paragraph := 1
-				for _, e := range body.FindElements(".//p") {
-					sentence := 1
-					// if len(getAttrValue(e, "class")) == 0 {
-					// 	println("AAA", e.Text())
-					// }
-					if text := e.Text(); len(text) > 0 {
-
-						e.SetText("")
-
-						var ex etree.Token
-						for _, ch := range e.Child {
-							if _, ok := ch.(*etree.CharData); !ok {
-								ex = ch
-								break
-							}
-						}
-
-						for _, s := range p.Book.tokenizer.tokenize(text) {
-							span := etree.NewElement("span")
-							span.CreateAttr("class", "koboSpan")
-							span.CreateAttr("id", fmt.Sprintf("kobo.%d.%d", paragraph, sentence))
-							span.SetText(s)
-							if ex == nil {
-								e.AddChild(span)
-							} else {
-								e.InsertChild(ex, span)
-							}
-							sentence++
-						}
-						paragraph++
-					}
-					// FIXME: child tails
-				}
 			}
 		}
 	}

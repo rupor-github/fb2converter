@@ -44,8 +44,8 @@ find_package(Go 1.11 REQUIRED)
 find_package(Git REQUIRED)
 
 # Project version number
-set(PRJ_VERSION_MAJOR 0)
-set(PRJ_VERSION_MINOR 99)
+set(PRJ_VERSION_MAJOR 1)
+set(PRJ_VERSION_MINOR 0)
 
 ########################################################################################################
 # Setting up versioning

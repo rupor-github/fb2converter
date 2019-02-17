@@ -65,7 +65,7 @@ func main() {
 	}
 
 	args := make([]string, 0, 10)
-	args = append(args, "-mhl")
+	args = append(args, "-mhl", fmt.Sprintf("%d", config.MhlMobi))
 
 	config := filepath.Join(filepath.Dir(expath), "fb2mobi.toml")
 	if _, err := os.Stat(config); err == nil {

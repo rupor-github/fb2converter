@@ -38,7 +38,10 @@ func (w *appWrapper) beforeRun(c *cli.Context) error {
 
 	env := c.GlobalGeneric(state.FlagName).(*state.LocalEnv)
 	env.Debug = c.GlobalBool("debug")
-	env.Mhl = c.GlobalBool("mhl")
+	mhl := c.GlobalInt("mhl")
+	if mhl >= config.MhlNone && mhl < config.MhlUnknown {
+		env.Mhl = mhl
+	}
 
 	// Prepare configuration
 	fconfig := c.GlobalString("config")
@@ -117,7 +120,7 @@ func main() {
 		cli.StringFlag{Name: "mutexprofile", Hidden: true, Usage: "write mutex profile to `PATH`"},
 
 		cli.GenericFlag{Name: state.FlagName, Hidden: true, Usage: "--internal--", Value: state.NewLocalEnv()},
-		cli.BoolFlag{Name: "mhl", Hidden: true, Usage: "--internal--"},
+		cli.IntFlag{Name: "mhl", Value: config.MhlNone, Hidden: true, Usage: "--internal--"},
 
 		cli.StringFlag{Name: "config, c", Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
 		cli.BoolFlag{Name: "debug, d", Usage: "leave behind various artifacts for debugging (do not delete intermediate results)"},

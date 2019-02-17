@@ -9,7 +9,7 @@ import (
 // LocalEnv keeps everything program needs in a single place.
 type LocalEnv struct {
 	Debug bool
-	Mhl   bool
+	Mhl   int
 
 	Cfg *config.Config
 	Log *zap.Logger

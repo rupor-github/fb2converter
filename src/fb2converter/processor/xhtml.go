@@ -115,17 +115,8 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	return nil
 }
 
-// formatText inserts page markers (for page map) and hyphenates words if requested.
-func (p *Processor) formatText(text string, paragraph, tail bool, to *etree.Element) {
+func (p *Processor) doTextTransformations(text string, paragraph, tail bool) string {
 
-	var (
-		textOut    string
-		textOutLen int // before hyphenation
-		dropIndex  int // If dropcaps processing requested this would be an index to first non-dropcap rune in the text
-		prev       = to
-	)
-
-	// Text transformations
 	if paragraph {
 		// normalize direct speech if requested
 		if !tail && p.speechTransform != nil {
@@ -147,6 +138,7 @@ func (p *Processor) formatText(text string, paragraph, tail bool, to *etree.Elem
 				}
 			}
 		}
+
 		// unify dashes if requested
 		if p.dashTransform != nil {
 			var (
@@ -166,77 +158,107 @@ func (p *Processor) formatText(text string, paragraph, tail bool, to *etree.Elem
 			text = b.String()
 		}
 	}
+	return text
+}
 
-	page, insertMarkers := p.Book.Pages[p.ctx().fname]
+// formatText inserts page markers (for page map), kobo spans (if necessary) and hyphenates words if requested.
+func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Element) {
 
-	dropcapFound := false // if true - do not look for dropcap
-	for i, w := range strings.Split(text, " ") {
+	in = p.doTextTransformations(in, paragraph, tail)
 
-		wl := utf8.RuneCountInString(w)
+	// prev                = to
+	var (
+		textOut             string
+		textOutLen          int  // before hyphenation
+		dropcapFound        bool // if true - do not look for dropcap
+		buf                 strings.Builder
+		page, insertMarkers = p.Book.Pages[p.ctx().fname]
+		kobo                = p.format == OKepub
+	)
 
-		// TODO: should we look for dropcap in a first word (i == 0) only?
+	buf.WriteString(`<root>`)
 
-		dropcapWord := false // word with dropcap - it should not be hyphenated
+	sentences := []string{in}
+	if kobo && p.Book.tokenizer != nil {
+		sentences = p.Book.tokenizer.tokenize(in)
+	}
 
-		if wl > 0 && !dropcapFound && // worth looking and we still do not have it
-			paragraph && p.env.Cfg.Doc.DropCaps.Create && !tail &&
-			p.ctx().firstChapterLine && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
+	for _, sentence := range sentences {
+		for i, word := range strings.Split(sentence, " ") {
 
-			for j, sym := range w {
-				if !unicode.IsSpace(sym) && strings.IndexRune(p.env.Cfg.Doc.DropCaps.IgnoreSymbols, sym) == -1 {
-					dropIndex = textOutLen + j + utf8.RuneLen(sym)
-					dropcapFound, dropcapWord = true, true
-					break
-				}
-			}
-		}
+			wl := utf8.RuneCountInString(word)
 
-		if p.Book.hyph != nil && !p.ctx().inHeader && !p.ctx().inSubHeader && wl > 2 && !dropcapWord {
-			w = p.Book.hyph.hyphenate(w)
-		}
+			// TODO: should we look for dropcap in a first word of a first sentence (i == 0 && k == 0) only instead of using dropcapFound?
 
-		textOutLen += wl
-		if i == 0 {
-			textOut = w
-		} else {
-			textOut = strings.Join([]string{textOut, w}, " ")
-			textOutLen++ // count extra space
-		}
+			dropIndex := 0
+			if wl > 0 && !dropcapFound && // worth looking and we still do not have it
+				paragraph && p.env.Cfg.Doc.DropCaps.Create && !tail &&
+				p.ctx().firstChapterLine && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 
-		if paragraph && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 {
-			// to properly set chapter_end vignette we need to know if chapter has some text in it
-			p.ctx().sectionTextLength.add(textOutLen)
-		}
-
-		if insertMarkers && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
-
-			if tail || prev != to {
-				prev.SetTail(textOut)
-			} else {
-				if dropIndex > 0 {
-					if attr := prev.SelectAttr("class"); attr != nil {
-						attr.Value = "dropcaps"
-					} else {
-						prev.CreateAttr("class", "dropcaps")
+				for j, sym := range word {
+					if !unicode.IsSpace(sym) && strings.IndexRune(p.env.Cfg.Doc.DropCaps.IgnoreSymbols, sym) == -1 {
+						dropIndex = textOutLen + j + utf8.RuneLen(sym)
+						dropcapFound = true
+						break
 					}
-					prev.AddNext("span", attr("class", "dropcaps")).SetText(textOut[0:dropIndex]).SetTail(textOut[dropIndex:])
-					dropIndex = 0 // drop cup has been processed
-				} else {
-					prev.SetText(textOut)
+				}
+
+				if dropIndex > 0 {
+					buf.WriteString(`<span class="dropcaps">`)
+					buf.WriteString(word[0:dropIndex])
+					buf.WriteString(`</span>`)
+					word = word[dropIndex:]
 				}
 			}
 
-			if paragraph {
-				prev = to.AddNext("a", attr("class", "pagemarker"), attr("id", fmt.Sprintf("page_%d", page)))
+			if p.Book.hyph != nil && !p.ctx().inHeader && !p.ctx().inSubHeader && wl > 2 && dropIndex == 0 {
+				word = p.Book.hyph.hyphenate(word)
+			}
+
+			textOutLen += wl
+			if i == 0 {
+				textOut = word
+			} else {
+				textOut = strings.Join([]string{textOut, word}, " ")
+				textOutLen++ // count extra space
+			}
+
+			if paragraph && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 {
+				// to properly set chapter_end vignette we need to know if chapter has some text in it
+				p.ctx().sectionTextLength.add(textOutLen)
+			}
+
+			if insertMarkers && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
+				if textOutLen > 0 {
+					if kobo {
+						p.ctx().sentence++
+						buf.WriteString(`<span class="koboSpan" id=` + fmt.Sprintf("\"kobo.%d.%d\"", p.ctx().paragraph, p.ctx().sentence) + `>`)
+					}
+					buf.WriteString(textOut)
+					if kobo {
+						buf.WriteString(`</span>`)
+					}
+				}
+				buf.WriteString(`<a class="pagemarker" id=` + fmt.Sprintf("\"page_%d\"/>", page))
+
 				p.ctx().pageLength, textOutLen, textOut = 0, 0, ""
 				page++
-			} else if tail {
-				prev = to.Parent().AddNext("a", attr("class", "pagemarker"), attr("id", fmt.Sprintf("page_%d", page)))
-				p.ctx().pageLength, textOutLen, textOut = 0, 0, ""
-				page++
+			}
+		}
+		if textOutLen > 0 {
+			p.ctx().pageLength += textOutLen
+			if kobo {
+				p.ctx().sentence++
+				buf.WriteString(`<span class="koboSpan" id=` + fmt.Sprintf("\"kobo.%d.%d\"", p.ctx().paragraph, p.ctx().sentence) + `>`)
+			}
+			buf.WriteString(textOut)
+			if kobo {
+				buf.WriteString(`</span>`)
 			}
 		}
 	}
+
+	buf.WriteString(`</root>`)
 
 	if insertMarkers {
 		p.Book.Pages[p.ctx().fname] = page
@@ -248,21 +270,34 @@ func (p *Processor) formatText(text string, paragraph, tail bool, to *etree.Elem
 		p.ctx().firstChapterLine = false
 	}
 
-	if textOutLen > 0 {
-		p.ctx().pageLength += textOutLen
-		if tail || prev != to {
-			prev.SetTail(textOut)
-		} else {
-			if dropIndex > 0 {
-				if attr := prev.SelectAttr("class"); attr != nil {
-					attr.Value = "dropcaps"
-				} else {
-					prev.CreateAttr("class", "dropcaps")
-				}
-				prev.AddNext("span", attr("class", "dropcaps")).SetText(textOut[0:dropIndex]).SetTail(textOut[dropIndex:])
+	doc := etree.NewDocument()
+	if err := doc.ReadFromString(buf.String()); err != nil {
+		p.env.Log.Error("Unable to format text", zap.String("text", buf.String()), zap.Error(err))
+	}
+
+	if tail {
+		text := doc.Root().Text()
+		if len(text) > 0 {
+			to.SetTail(text)
+		}
+		pel := to.Parent()
+		for _, e := range doc.Root().ChildElements() {
+			pel.AddChild(e)
+		}
+	} else {
+		if dropcapFound {
+			if attr := to.SelectAttr("class"); attr != nil {
+				attr.Value = "dropcaps"
 			} else {
-				prev.SetText(textOut)
+				to.CreateAttr("class", "dropcaps")
 			}
+		}
+		text := doc.Root().Text()
+		if len(text) > 0 {
+			to.SetText(text)
+		}
+		for _, e := range doc.Root().ChildElements() {
+			to.AddChild(e)
 		}
 	}
 }
@@ -340,6 +375,8 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 		if tag == "p" {
 			p.ctx().inlineImage = true
 			defer func() { p.ctx().inlineImage = false }()
+			p.ctx().paragraph++
+			p.ctx().sentence = 0
 		}
 	}
 

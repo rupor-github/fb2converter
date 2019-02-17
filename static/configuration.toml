@@ -75,6 +75,9 @@
 	#---- "#bookid"     - Book UUID (either parsed from or genrated based of fb2 information)
 	# file_name_format = "{#author - }#title"
 
+	#---- Slugify/transliterate output file name - after all other processing on file name is completed
+	# file_name_transliterate = true
+
 	#---- Place book chapters in separate files. On most reading devices it also means starting
 	#---- chapter on a new page. This mode usually provides faster reading experience as most readers
 	#---- keep only current content file in memory.
@@ -85,7 +88,7 @@
 
 	#---- Slugify/transliterate book title and author(s) names
 	# transliterate_meta = true
-	
+
 	#---- On supported devices allows to open book from cover page, rather than from beginning of the text
 	#---- Kindles do not support this mode
 	# open_from_cover = true
@@ -101,7 +104,7 @@
 	#---- Do not skip images which cannot be decoded by program. Use them without any processing, allowing reader to decide what to do.
 	#---- Not a good idea in general - for example kindlegen will likely drop them anyways
 	# use_broken_images = true
-	
+
 	[document.dropcaps]
 		#---- Allow dropcap styles
 		create = true
@@ -280,3 +283,11 @@
 	#---- "convert" command line option "--stk" will be ignored and value of "send_to_kindle" will be used instead
 	#---- If it is not specified here - "false" is assumed.
 	# send_to_kindle = true
+	
+[fb2epub]
+
+	#---- NOTE: due to specifics of current MyHomeLib implementation there is no way to specify kepub output format
+	#---- via command line to fb2epub.exe. So in one and only case when fb2c is started indirectly using fb2epub helper
+	#---- "convert" command line option "--to" will be ignored and value of "output_format" will be used instead
+	#---- If it is not specified here - "epub" is assumed.
+	# output_format = "kepub"

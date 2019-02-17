@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"fb2converter/archive"
+	"fb2converter/config"
 	"fb2converter/processor"
 	"fb2converter/state"
 )
@@ -161,11 +162,17 @@ func Convert(ctx *cli.Context) (err error) {
 	}
 
 	format := processor.UnsupportedOutputFmt
-	if env.Mhl {
+	if env.Mhl == config.MhlMobi {
 		format = processor.ParseFmtString(env.Cfg.Fb2Mobi.OutputFormat)
 		if format == processor.UnsupportedOutputFmt || format == processor.OEpub || format == processor.OKepub {
 			env.Log.Warn("Unknown output format in MHL mode requested, switching to mobi", zap.String("format", env.Cfg.Fb2Mobi.OutputFormat))
 			format = processor.OMobi
+		}
+	} else if env.Mhl == config.MhlEpub {
+		format = processor.ParseFmtString(env.Cfg.Fb2Epub.OutputFormat)
+		if format == processor.UnsupportedOutputFmt || format == processor.OMobi || format == processor.OAzw3 {
+			env.Log.Warn("Unknown output format in MHL mode requested, switching to epub", zap.String("format", env.Cfg.Fb2Epub.OutputFormat))
+			format = processor.OEpub
 		}
 	} else {
 		format = processor.ParseFmtString(ctx.String("to"))
@@ -179,7 +186,7 @@ func Convert(ctx *cli.Context) (err error) {
 	overwrite := ctx.Bool("ow")
 
 	stk := ctx.Bool("stk")
-	if env.Mhl {
+	if env.Mhl == config.MhlMobi {
 		stk = env.Cfg.Fb2Mobi.SendToKindle
 	}
 	if stk && format != processor.OMobi {
