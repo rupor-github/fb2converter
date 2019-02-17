@@ -93,10 +93,14 @@
 	#---- Kindles do not support this mode
 	# open_from_cover = true
 	
-	# Insert soft hyphen symbols '\u00AD' inside words - for devices which do not support proper hyphenation
-	# Hyphenation dictionaries are from http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
-	# NOTE: modern day Kindles always have hyphenation on for Russian language (and off for English)
+	#---- Insert soft hyphen symbols '\u00AD' inside words - for devices which do not support proper hyphenation
+	#---- Hyphenation dictionaries are from http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
+	#---- NOTE: modern day Kindles always have hyphenation on for Russian language (and off for English)
 	# insert_soft_hyphen = true
+	
+	#---- Sometimes device hyphenation engines do not know what to do with NBSP, breaking hyphenation. This will replace all
+	#---- nbsp symbols with ordinary spaces, potentially breaking original formatting
+	# ignore_nonbreakable_space = true
 	
 	#---- To generate epub page map we use very rough text processing, controlling approximate page size in Unicode code points
 	# characters_per_page = 1200

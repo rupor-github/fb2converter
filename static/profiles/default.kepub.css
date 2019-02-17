@@ -2,36 +2,64 @@
     margin: 20px 20px 5px
 }
 
+* {
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    hyphens: auto;
+
+    -webkit-hyphenate-after: 3;
+    -webkit-hyphenate-before: 3;
+    -webkit-hyphenate-lines: 2;
+    hyphenate-after: 3;
+    hyphenate-before: 3;
+    hyphenate-lines: 2;
+}
+
 div#book-inner{
     margin-top: 0;
     margin-bottom: 0
 }
 
 .h0 {
+    -moz-hyphens: none !important;
+    -webkit-hyphens: none !important;
+    hyphens: none !important;
     font-size: 140%;
     font-weight: bold;
     margin-bottom: 1em
 }
 
 .h1 {
+    -moz-hyphens: none !important;
+    -webkit-hyphens: none !important;
+    hyphens: none !important;
     font-size: 120%;
     font-weight: bold;
     margin-bottom: 1em
 }
 
 .h2 {
+    -moz-hyphens: none !important;
+    -webkit-hyphens: none !important;
+    hyphens: none !important;
     font-size: 120%;
     font-weight: bold;
     margin-bottom: 1em
 }
 
 .h3 {
+    -moz-hyphens: none !important;
+    -webkit-hyphens: none !important;
+    hyphens: none !important;
     font-size: 120%;
     font-weight: bold;
     margin-bottom: 1em
 }
 
 .h4 {
+    -moz-hyphens: none !important;
+    -webkit-hyphens: none !important;
+    hyphens: none !important;
     text-align: center;
     font-size: 120%;
     font-weight: bold;
@@ -40,6 +68,9 @@ div#book-inner{
 }
 
 .h5 {
+    -moz-hyphens: none !important;
+    -webkit-hyphens: none !important;
+    hyphens: none !important;
     text-align: center;
     font-size: 120%;
     font-weight: bold;
@@ -47,6 +78,9 @@ div#book-inner{
 }
 
 .h6 {
+    -moz-hyphens: none !important;
+    -webkit-hyphens: none !important;
+    hyphens: none !important;
     text-align: center;
     font-size: 120%;
     font-weight: bold;

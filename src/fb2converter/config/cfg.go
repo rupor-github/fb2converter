@@ -103,6 +103,7 @@ type Doc struct {
 	Stylesheet            string  `json:"style"`
 	CharsPerPage          int     `json:"characters_per_page"`
 	Hyphenate             bool    `json:"insert_soft_hyphen"`
+	NoNBSP                bool    `json:"ignore_nonbreakable_space"`
 	UseBrokenImages       bool    `json:"use_broken_images"`
 	FileNameFormat        string  `json:"file_name_format"`
 	FileNameTransliterate bool    `json:"file_name_transliterate"`

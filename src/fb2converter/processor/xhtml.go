@@ -190,13 +190,8 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 
 	buf.WriteString(`<root>`)
 
-	sentences := []string{in}
-	if kobo && p.Book.tokenizer != nil {
-		sentences = p.Book.tokenizer.tokenize(in)
-	}
-
-	for _, sentence := range sentences {
-		for i, word := range strings.Split(sentence, " ") {
+	for _, sentence := range splitSentences(p.Book.tokenizer, in) {
+		for i, word := range splitWords(p.Book.tokenizer, sentence, p.env.Cfg.Doc.NoNBSP) {
 
 			wl := utf8.RuneCountInString(word)
 

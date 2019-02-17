@@ -77,11 +77,11 @@ func newTokenizer(lang language.Tag, log *zap.Logger) *tokenizer {
 	return &tokenizer{t: sentences.NewSentenceTokenizer(training)}
 }
 
-// tokenize returns slice of sentences.
-func (t *tokenizer) tokenize(in string) []string {
+// splitSentences returns slice of sentences.
+func splitSentences(t *tokenizer, in string) []string {
 
 	var res []string
-	if t.t == nil {
+	if t == nil || t.t == nil {
 		return append(res, in)
 	}
 
@@ -89,4 +89,13 @@ func (t *tokenizer) tokenize(in string) []string {
 		res = append(res, s.Text)
 	}
 	return res
+}
+
+// splitWords returns slice of words in sentence.
+// NOTE: we may want to use real word tokenizer later.
+func splitWords(_ *tokenizer, in string, ignoreNBSP bool) []string {
+	if ignoreNBSP {
+		in = strings.Replace(in, strNBSP, " ", -1)
+	}
+	return strings.Split(in, " ")
 }
