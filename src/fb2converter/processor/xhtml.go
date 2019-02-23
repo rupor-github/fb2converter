@@ -190,25 +190,33 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 
 	buf.WriteString(`<root>`)
 
-	for _, sentence := range splitSentences(p.Book.tokenizer, in) {
+	for k, sentence := range splitSentences(p.Book.tokenizer, in) {
 		for i, word := range splitWords(p.Book.tokenizer, sentence, p.env.Cfg.Doc.NoNBSP) {
 
 			wl := utf8.RuneCountInString(word)
 
 			dropIndex := 0
-			if i == 0 && wl > 0 && !dropcapFound && // worth looking and we still do not have it
+			if k == 0 && i == 0 && wl > 0 && !dropcapFound && // worth looking and we still do not have it
 				paragraph && p.env.Cfg.Doc.DropCaps.Create && !tail &&
 				p.ctx().firstChapterLine && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 
 				for j, sym := range word {
-					if !unicode.IsSpace(sym) && strings.IndexRune(p.env.Cfg.Doc.DropCaps.IgnoreSymbols, sym) == -1 {
-						dropIndex = textOutLen + j + utf8.RuneLen(sym)
+					if unicode.IsSpace(sym) {
+						dropIndex = j // Do not dropcap spaces
+						dropcapFound = true
+						break
+					}
+					if strings.IndexRune(p.env.Cfg.Doc.DropCaps.IgnoreSymbols, sym) == -1 {
+						dropIndex = j + utf8.RuneLen(sym)
 						dropcapFound = true
 						break
 					}
 				}
+
 				if !dropcapFound {
-					dropIndex = 0
+					// The whole word only has ignorable symbols - take the whole word and stop
+					dropIndex = len(word)
+					dropcapFound = true
 				}
 
 				if dropIndex > 0 {
@@ -237,7 +245,7 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 			}
 
 			if insertMarkers && paragraph && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
-				if textOutLen > 0 {
+				if len(textOut) > 0 {
 					bufWriteString(textOut, kobo)
 				}
 				buf.WriteString(`<a class="pagemarker" id=` + fmt.Sprintf("\"page_%d\"/>", page))
@@ -246,7 +254,7 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 				page++
 			}
 		}
-		if textOutLen > 0 {
+		if len(textOut) > 0 {
 			p.ctx().pageLength += textOutLen
 			bufWriteString(textOut, kobo)
 		}
@@ -318,6 +326,8 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	// links are notes - probably
 	if tag == "a" && len(href) > 0 {
 		var noteID string
+		// Some people does not know how to format url properly
+		href = strings.Replace(href, "\\", "/", -1)
 		if u, err := url.Parse(href); err != nil {
 			p.env.Log.Warn("unable to parse note href", zap.String("href", href), zap.Error(err))
 		} else {

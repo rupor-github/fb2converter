@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -28,7 +29,11 @@ func processBook(r io.Reader, enc encoding, src, dst string, nodirs, stk, overwr
 	start := time.Now()
 	env.Log.Info("Conversion starting", zap.String("from", src))
 	defer func(start time.Time) {
-		env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Now().Sub(start)), zap.String("to", fname))
+		if r := recover(); r != nil {
+			env.Log.Error("Conversion ended with panic", zap.Duration("elapsed", time.Now().Sub(start)), zap.String("to", fname), zap.ByteString("stack", debug.Stack()))
+		} else {
+			env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Now().Sub(start)), zap.String("to", fname))
+		}
 	}(start)
 
 	p, err := processor.NewFB2(selectReader(r, enc), enc == encUnknown, src, dst, nodirs, stk, overwrite, format, env)
