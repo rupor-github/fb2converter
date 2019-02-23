@@ -581,7 +581,7 @@ func (p *Processor) processDescription() error {
 				p.Book.SeqName = getAttrValue(e, "name")
 				num := getAttrValue(e, "number")
 				if len(num) > 0 {
-					if !govalidator.IsInt(num) {
+					if !govalidator.IsNumeric(num) {
 						p.env.Log.Warn("Sequence number is not an integer, ignoring", zap.String("xml", getXMLFragmentFromElement(e)))
 					} else {
 						p.Book.SeqNum, err = strconv.Atoi(num)
