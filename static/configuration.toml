@@ -212,7 +212,7 @@
 		# no_mobi_optimization = false
 		#---- If set to true "Personal label" will be removed from the resulting book producing "EBOK" document.
 		#---- Otherwise - "PDOC", default for kndlegen
-		emove_personal_label = true
+		remove_personal_label = true
 		#----  depending on device Kindle expects APNX page map file in different places
 		#----  "none" - nothing will be generated
 		#----  "eink" - apnx will be located in .sbr directory
