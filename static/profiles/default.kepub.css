@@ -1,7 +1,3 @@
-@page {
-    margin: 20px 20px 5px
-}
-
 * {
     -webkit-hyphens: auto;
     -moz-hyphens: auto;
@@ -24,6 +20,7 @@ div#book-inner{
     -moz-hyphens: none !important;
     -webkit-hyphens: none !important;
     hyphens: none !important;
+    text-align: center;
     font-size: 140%;
     font-weight: bold;
     margin-bottom: 1em
@@ -33,6 +30,7 @@ div#book-inner{
     -moz-hyphens: none !important;
     -webkit-hyphens: none !important;
     hyphens: none !important;
+    text-align: center;
     font-size: 120%;
     font-weight: bold;
     margin-bottom: 1em
@@ -42,6 +40,7 @@ div#book-inner{
     -moz-hyphens: none !important;
     -webkit-hyphens: none !important;
     hyphens: none !important;
+    text-align: center;
     font-size: 120%;
     font-weight: bold;
     margin-bottom: 1em
@@ -51,6 +50,7 @@ div#book-inner{
     -moz-hyphens: none !important;
     -webkit-hyphens: none !important;
     hyphens: none !important;
+    text-align: center;
     font-size: 120%;
     font-weight: bold;
     margin-bottom: 1em
@@ -63,7 +63,6 @@ div#book-inner{
     text-align: center;
     font-size: 120%;
     font-weight: bold;
-    text-align: center;
     margin-bottom: 1em
 }
 

@@ -574,8 +574,8 @@ func (p *Processor) KepubifyXHTML() error {
 		if f.ct == "application/xhtml+xml" && filepath.Ext(f.fname) == ".xhtml" && f.doc != nil {
 			if body := f.doc.FindElement("./html/body"); body != nil {
 				to := etree.NewElement("div")
-				to.CreateAttr("class", "book-columns")
-				inner := to.AddNext("div", attr("class", "book-inner"))
+				to.CreateAttr("id", "book-columns")
+				inner := to.AddNext("div", attr("id", "book-inner"))
 				children := body.ChildElements()
 				for i := 0; i < len(children); i++ {
 					inner.AddChild(body.RemoveChild(children[i]))
