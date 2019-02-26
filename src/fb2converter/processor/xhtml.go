@@ -372,6 +372,9 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 		// NOTE: There could be sections inside sections to no end, so we do not want to repeat this as it will break TOC on "strangly" formatted texts,
 		// we will just mark main section beginning with "section" css in case somebody wants to do some formatting there
 		if css == "section" {
+			if len(newid) == 0 {
+				newid = fmt.Sprintf("secref%d", p.ctx().findex)
+			}
 			to.AddNext(tag, attr("id", newid), attr("class", css), attr("href", href))
 		} else {
 			inner = to.AddNext(tag, attr("id", newid), attr("class", css), attr("href", href))
@@ -691,12 +694,25 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 	textLength := texter()
 
 	if len(p.ctx().bodyName) == 0 {
-		if hasTitle && textLength > 0 {
-			// only place vignette at the chapter end if it had it's own title and chapter has paragraphs with text
-			vignette := p.getVignetteFile(p.ctx().header.String("h"), config.VigChapterEnd)
-			if len(vignette) > 0 {
-				to.AddNext("p", attr("class", "vignette_chapter_end")).
-					AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))), attr("alt", config.VigChapterEnd))
+		if textLength > 0 {
+			if hasTitle {
+				// only place vignette at the chapter end if it had it's own title and chapter has paragraphs with text
+				vignette := p.getVignetteFile(p.ctx().header.String("h"), config.VigChapterEnd)
+				if len(vignette) > 0 {
+					to.AddNext("p", attr("class", "vignette_chapter_end")).
+						AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))), attr("alt", config.VigChapterEnd))
+				}
+			} else {
+				// section does not have a title - make sure TOC is not empty
+				if p.env.Cfg.Doc.TOC.NoTitleChapters {
+					p.Book.TOC = append(p.Book.TOC, &tocEntry{
+						ref:      p.ctx().fname + "#" + fmt.Sprintf("secref%d", p.ctx().findex),
+						title:    fmt.Sprintf("%d", p.ctx().findex),
+						level:    p.ctx().header,
+						bodyName: p.ctx().bodyName,
+					})
+					p.ctx().tocIndex++
+				}
 			}
 		}
 		to.AddNext("div", attr("class", "chapter_end"))

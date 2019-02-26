@@ -146,6 +146,8 @@
 		# page_title = "Content
 		#---- How many levels TOC page will have before flattening
 		# page_maxlevel = 2147483647
+		#---- Include chapter without title to TOC - this prevents empty TOC on "bad" books
+		include_chapters_without_title = true
 
 	[document.cover]
 		#---- If book does not have cover image - use default one. For Amazon formats always true

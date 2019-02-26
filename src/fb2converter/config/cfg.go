@@ -121,10 +121,11 @@ type Doc struct {
 		Title  string `json:"title"`
 	} `json:"annotation"`
 	TOC struct {
-		Type      string `json:"type"`
-		Title     string `json:"page_title"`
-		Placement string `json:"page_placement"`
-		MaxLevel  int    `json:"page_maxlevel"`
+		Type            string `json:"type"`
+		Title           string `json:"page_title"`
+		Placement       string `json:"page_placement"`
+		MaxLevel        int    `json:"page_maxlevel"`
+		NoTitleChapters bool   `json:"include_chapters_without_title"`
 	} `json:"toc"`
 	Cover struct {
 		Default   bool   `json:"default"`
@@ -220,7 +221,8 @@ var defaultConfig = []byte(`{
       "type": "normal",
       "page_title": "Content",
       "page_placement": "after",
-      "page_maxlevel": 2147483647
+      "page_maxlevel": 2147483647,
+      "include_chapters_without_title": true
     }
   },
   "logger": {

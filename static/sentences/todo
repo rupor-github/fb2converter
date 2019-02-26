@@ -2,6 +2,9 @@
 
 	curl -L https://api.github.com/repos/neurosnap/sentences/tarball | tar xz --wildcards '*/data/*.json' --strip-components=2
 
+
+Data for ruusssian pickle could be found here: https://github.com/Mottl/ru_punkt
+
 https://github.com/mhq/train_punkt contains training data sets for more languages in a form of python pickles. You could easily convert pickle to json by running:
 
 	 python3 convert.py | jq "." >russian.json
