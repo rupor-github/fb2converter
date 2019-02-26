@@ -334,11 +334,10 @@ func deleteSectionRange(data []byte, firstsec, lastsec int) []byte {
 		binary.Write(&datalst, binary.BigEndian, uint32(flgval))
 	}
 	for i := lastsec + 1; i < nsec; i++ {
-		ofs, flgval := getInt32(data, firstPdbRecord+i*8), getInt32(data, firstPdbRecord+i*8+4)
+		ofs := getInt32(data, firstPdbRecord+i*8)
 		ofs = ofs - dif
-		flgval = 2 * (i - (lastsec - firstsec + 1))
 		binary.Write(&datalst, binary.BigEndian, uint32(ofs))
-		binary.Write(&datalst, binary.BigEndian, uint32(flgval))
+		binary.Write(&datalst, binary.BigEndian, uint32(2*(i-(lastsec-firstsec+1))))
 	}
 	if lpad := newstart - (firstPdbRecord + 8*(nsec-(lastsec-firstsec+1))); lpad > 0 {
 		datalst.Write(bytes.Repeat([]byte{0}, lpad))

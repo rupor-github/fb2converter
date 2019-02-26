@@ -63,10 +63,7 @@ func (s *Splitter) SaveResult(fname string) error {
 	if len(s.result) == 0 {
 		return errors.New("nothing to save")
 	}
-	if err := ioutil.WriteFile(fname, s.result, 0644); err != nil {
-		return err
-	}
-	return nil
+	return ioutil.WriteFile(fname, s.result, 0644)
 }
 
 // SavePageMap saves combo mobi to the requested location.
@@ -87,11 +84,7 @@ func (s *Splitter) SavePageMap(fname string, eink bool) error {
 		}
 	}
 	base = base + ".apnx"
-
-	if err := ioutil.WriteFile(filepath.Join(dir, base), s.pagedata, 0644); err != nil {
-		return err
-	}
-	return nil
+	return ioutil.WriteFile(filepath.Join(dir, base), s.pagedata, 0644)
 }
 
 func (s *Splitter) produceCombo(data []byte, u uuid.UUID, nonPersonal bool) {

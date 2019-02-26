@@ -36,10 +36,7 @@ func (h *Hyphenator) LoadDictionary(language string, patterns, exceptions io.Rea
 	if err := h.loadPatterns(patterns); err != nil {
 		return err
 	}
-	if err := h.loadExceptions(exceptions); err != nil {
-		return err
-	}
-	return nil
+	return h.loadExceptions(exceptions)
 }
 
 func (h *Hyphenator) loadPatterns(reader io.Reader) error {
@@ -47,10 +44,7 @@ func (h *Hyphenator) loadPatterns(reader io.Reader) error {
 	for scanner.Scan() {
 		h.patterns.AddPatternString(scanner.Text())
 	}
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-	return nil
+	return scanner.Err()
 }
 
 func (h *Hyphenator) loadExceptions(reader io.Reader) error {
@@ -60,10 +54,7 @@ func (h *Hyphenator) loadExceptions(reader io.Reader) error {
 		key := strings.Replace(str, `-`, ``, -1)
 		h.exceptions[key] = str
 	}
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-	return nil
+	return scanner.Err()
 }
 
 func (h *Hyphenator) hyphenateWord(s, hyphen string) string {

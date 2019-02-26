@@ -167,7 +167,6 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 
 	in = p.doTextTransformations(in, paragraph, tail)
 
-	// prev                = to
 	var (
 		textOut             string
 		textOutLen          int  // before hyphenation
@@ -348,7 +347,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 				if n, ok := p.Book.Notes[noteID]; ok {
 					p.ctx().currentNotes = append(p.ctx().currentNotes, n)
 					tag = "span"
-					css = fmt.Sprintf("%sanchor", p.notesMode)
+					css = fmt.Sprintf("%sanchor", p.notesMode.String())
 					href = ""
 				}
 			default:

@@ -166,7 +166,7 @@ func Convert(ctx *cli.Context) (err error) {
 		}
 	}
 
-	format := processor.UnsupportedOutputFmt
+	var format processor.OutputFmt
 	if env.Mhl == config.MhlMobi {
 		format = processor.ParseFmtString(env.Cfg.Fb2Mobi.OutputFormat)
 		if format == processor.UnsupportedOutputFmt || format == processor.OEpub || format == processor.OKepub {

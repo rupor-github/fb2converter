@@ -280,7 +280,6 @@ func (p *Processor) generateNCX() error {
 
 	if p.tocPlacement == TOCAfter && len(p.Book.TOC) > 0 {
 		addNavPoint(to, index, p.env.Cfg.Doc.TOC.Title, "toc.xhtml")
-		index++
 	}
 	return nil
 }

@@ -39,7 +39,7 @@ func (p *Processor) getStylesheet() (*dataFile, error) {
 		}
 	} else {
 		if dir, err := static.AssetDir(DirProfile); err == nil {
-			name := fmt.Sprintf("default.%s.css", p.format)
+			name := fmt.Sprintf("default.%s.css", p.format.String())
 			for _, a := range dir {
 				if a == name {
 					fname = name

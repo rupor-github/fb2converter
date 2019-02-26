@@ -345,10 +345,7 @@ func (p *Processor) Process() error {
 	if err := p.generateMeta(); err != nil {
 		return err
 	}
-	if err := p.KepubifyXHTML(); err != nil {
-		return err
-	}
-	return nil
+	return p.KepubifyXHTML()
 }
 
 // Save makes the conversion results permanent by storing everything properly and cleaning temporary artifacts.

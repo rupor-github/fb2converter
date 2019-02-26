@@ -79,7 +79,7 @@ type confMetaOverwrite struct {
 	Meta MetaInfo `json:"meta"`
 }
 
-// IsValid checks if we have enough smtp parameters to attemp sending mail.
+// IsValid checks if we have enough smtp parameters to attempt sending mail.
 // It does not attempt actual connection.
 func (c *SMTPConfig) IsValid() bool {
 	return len(c.Server) > 0 && govalidator.IsDNSName(c.Server) &&

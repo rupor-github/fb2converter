@@ -1,4 +1,15 @@
-﻿## A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi).
+﻿<p align="center">
+    <h1 align="center">fb2converter</h1>
+    <p align="center">
+        converts fb2 files to epub, kepub, mobi, azw3
+    </p>
+    <p align="center">
+        <a href="https://goreportcard.com/report/github.com/rupor-github/fb2converter"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/rupor-github/fb2converter" /></a>
+    </p>
+    <hr>
+</p>
+
+### A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi).
  
   Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter)
   

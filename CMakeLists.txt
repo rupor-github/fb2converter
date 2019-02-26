@@ -76,11 +76,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
         execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/cmake/pre-commit ${PROJECT_SOURCE_DIR}/.git/hooks/. WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
     endif()
-    message(STATUS "Vendoring for go")
-    if(NOT EXISTS ${PROJECT_SOURCE_DIR}/src/fb2converter/go.mod)
-        message(FATAL_ERROR "Unable to find go.mod. Exiting...")
-    endif()
-    execute_process(COMMAND ${GO_EXECUTABLE} mod download WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
 endif()
 if(EXISTS "${PROJECT_SOURCE_DIR}/${KINDLEGEN}")
     execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/${KINDLEGEN} ${PROJECT_BINARY_DIR}/.)
@@ -230,15 +225,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     ########################################################################################################
     # Go dependency management
     ########################################################################################################
-
-    add_custom_target(deps_update
-        SOURCES ${PROJECT_SOURCE_DIR}/src/fb2converter/go.mod
-        # This what needs to be done (COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} clean -modcache fb2converter/cmd/fb2c), but removing directory is much faster
-        COMMAND ${CMAKE_COMMAND} -E remove_directory ${PROJECT_SOURCE_DIR}/pkg/mod
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} mod download
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter"
-        COMMENT "Updating ALL dependencies (go mod download)"
-        VERBATIM)
 
     add_custom_target(deps_print
         SOURCES ${PROJECT_SOURCE_DIR}/src/fb2converter/go.mod
