@@ -7,6 +7,7 @@ import (
 	"github.com/micro/go-config/loader"
 	"github.com/micro/go-config/reader"
 	"github.com/micro/go-config/source"
+	"github.com/micro/go-config/source/file"
 )
 
 // Config is an interface abstraction for dynamic configuration
@@ -83,4 +84,11 @@ func Load(source ...source.Source) error {
 // Watch a value for changes
 func Watch(path ...string) (Watcher, error) {
 	return DefaultConfig.Watch(path...)
+}
+
+// LoadFile is short hand for creating a file source and loading it
+func LoadFile(path string) error {
+	return Load(file.NewSource(
+		file.WithPath(path),
+	))
 }

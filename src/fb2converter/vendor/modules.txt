@@ -4,9 +4,9 @@ github.com/BurntSushi/toml
 github.com/asaskevich/govalidator
 # github.com/bitly/go-simplejson v0.5.0
 github.com/bitly/go-simplejson
-# github.com/disintegration/imaging v1.5.0
+# github.com/disintegration/imaging v1.6.0
 github.com/disintegration/imaging
-# github.com/fogleman/gg v1.1.0
+# github.com/fogleman/gg v1.2.0
 github.com/fogleman/gg
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
@@ -19,8 +19,11 @@ github.com/golang/freetype/raster
 github.com/google/uuid
 # github.com/gosimple/slug v1.4.2
 github.com/gosimple/slug
-# github.com/h2non/filetype v1.0.5
+# github.com/h2non/filetype v1.0.8
 github.com/h2non/filetype
+github.com/h2non/filetype/matchers
+github.com/h2non/filetype/types
+github.com/h2non/filetype/matchers/isobmff
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/ast
@@ -31,9 +34,9 @@ github.com/hashicorp/hcl/hcl/scanner
 github.com/hashicorp/hcl/hcl/strconv
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
-# github.com/imdario/mergo v0.3.6
+# github.com/imdario/mergo v0.3.7
 github.com/imdario/mergo
-# github.com/micro/go-config v0.10.1-0.20181129165621-83daaf1b00f2
+# github.com/micro/go-config v0.14.0
 github.com/micro/go-config
 github.com/micro/go-config/encoder
 github.com/micro/go-config/encoder/json
@@ -52,7 +55,7 @@ github.com/micro/go-config/encoder/xml
 github.com/oklog/ulid
 # github.com/pborman/uuid v1.2.0
 github.com/pborman/uuid
-# github.com/pkg/errors v0.8.0
+# github.com/pkg/errors v0.8.1
 github.com/pkg/errors
 # github.com/pkg/profile v1.2.1
 github.com/pkg/profile
@@ -74,9 +77,9 @@ go.uber.org/zap/zapcore
 go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
-# golang.org/x/crypto v0.0.0-20181112202954-3d3f9f413869
+# golang.org/x/crypto v0.0.0-20190225124518-7f87c0fbb88b
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/image v0.0.0-20181116024801-cd38e8056d9b
+# golang.org/x/image v0.0.0-20190220214146-31aff87c08e9
 golang.org/x/image/bmp
 golang.org/x/image/tiff
 golang.org/x/image/webp
@@ -89,11 +92,11 @@ golang.org/x/image/tiff/lzw
 golang.org/x/image/riff
 golang.org/x/image/vp8
 golang.org/x/image/vp8l
-# golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
+# golang.org/x/net v0.0.0-20190213061140-3a22650c66bd
 golang.org/x/net/html/charset
 golang.org/x/net/html
 golang.org/x/net/html/atom
-# golang.org/x/sys v0.0.0-20180906133057-8cf3aee42992
+# golang.org/x/sys v0.0.0-20190129075346-302c3dd5f1cc
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
 golang.org/x/sys/unix
@@ -116,16 +119,21 @@ golang.org/x/text/encoding/japanese
 golang.org/x/text/encoding/korean
 golang.org/x/text/encoding/simplifiedchinese
 golang.org/x/text/encoding/traditionalchinese
-# golang.org/x/tools v0.0.0-20181120234846-b5f2cae84da8
+# golang.org/x/tools v0.0.0-20190226205152-f727befe758c
 golang.org/x/tools/cmd/stringer
+golang.org/x/tools/go/packages
+golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/internal/cgo
+golang.org/x/tools/go/internal/packagesdriver
+golang.org/x/tools/internal/gopathwalk
+golang.org/x/tools/internal/semver
+golang.org/x/tools/go/internal/gcimporter
+golang.org/x/tools/internal/fastwalk
 # gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc
 gopkg.in/alexcesaro/quotedprintable.v3
 # gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 gopkg.in/gomail.v2
-# gopkg.in/h2non/filetype.v1 v1.0.5
-gopkg.in/h2non/filetype.v1/matchers
-gopkg.in/h2non/filetype.v1/types
 # gopkg.in/neurosnap/sentences.v1 v1.0.6
 gopkg.in/neurosnap/sentences.v1
-# gopkg.in/yaml.v2 v2.2.1
+# gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
