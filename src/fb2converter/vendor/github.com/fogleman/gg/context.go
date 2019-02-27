@@ -8,6 +8,7 @@ import (
 	"image/png"
 	"io"
 	"math"
+	"strings"
 
 	"github.com/golang/freetype/raster"
 	"golang.org/x/image/draw"
@@ -54,6 +55,7 @@ var (
 type Context struct {
 	width         int
 	height        int
+	rasterizer    *raster.Rasterizer
 	im            *image.RGBA
 	mask          *image.Alpha
 	color         color.Color
@@ -90,9 +92,12 @@ func NewContextForImage(im image.Image) *Context {
 // NewContextForRGBA prepares a context for rendering onto the specified image.
 // No copy is made.
 func NewContextForRGBA(im *image.RGBA) *Context {
+	w := im.Bounds().Size().X
+	h := im.Bounds().Size().Y
 	return &Context{
-		width:         im.Bounds().Size().X,
-		height:        im.Bounds().Size().Y,
+		width:         w,
+		height:        h,
+		rasterizer:    raster.NewRasterizer(w, h),
 		im:            im,
 		color:         color.Transparent,
 		fillPattern:   defaultFillStyle,
@@ -381,8 +386,9 @@ func (dc *Context) stroke(painter raster.Painter) {
 		// that result in rendering issues
 		path = rasterPath(flattenPath(path))
 	}
-	r := raster.NewRasterizer(dc.width, dc.height)
+	r := dc.rasterizer
 	r.UseNonZeroWinding = true
+	r.Clear()
 	r.AddStroke(path, fix(dc.lineWidth), dc.capper(), dc.joiner())
 	r.Rasterize(painter)
 }
@@ -394,8 +400,9 @@ func (dc *Context) fill(painter raster.Painter) {
 		copy(path, dc.fillPath)
 		path.Add1(dc.start.Fixed())
 	}
-	r := raster.NewRasterizer(dc.width, dc.height)
+	r := dc.rasterizer
 	r.UseNonZeroWinding = dc.fillRule == FillRuleWinding
+	r.Clear()
 	r.AddPath(path)
 	r.Rasterize(painter)
 }
@@ -404,7 +411,19 @@ func (dc *Context) fill(painter raster.Painter) {
 // line cap, line join and dash settings. The path is preserved after this
 // operation.
 func (dc *Context) StrokePreserve() {
-	painter := newPatternPainter(dc.im, dc.mask, dc.strokePattern)
+	var painter raster.Painter
+	if dc.mask == nil {
+		if pattern, ok := dc.strokePattern.(*solidPattern); ok {
+			// with a nil mask and a solid color pattern, we can be more efficient
+			// TODO: refactor so we don't have to do this type assertion stuff?
+			p := raster.NewRGBAPainter(dc.im)
+			p.SetColor(pattern.color)
+			painter = p
+		}
+	}
+	if painter == nil {
+		painter = newPatternPainter(dc.im, dc.mask, dc.strokePattern)
+	}
 	dc.stroke(painter)
 }
 
@@ -419,7 +438,19 @@ func (dc *Context) Stroke() {
 // FillPreserve fills the current path with the current color. Open subpaths
 // are implicity closed. The path is preserved after this operation.
 func (dc *Context) FillPreserve() {
-	painter := newPatternPainter(dc.im, dc.mask, dc.fillPattern)
+	var painter raster.Painter
+	if dc.mask == nil {
+		if pattern, ok := dc.fillPattern.(*solidPattern); ok {
+			// with a nil mask and a solid color pattern, we can be more efficient
+			// TODO: refactor so we don't have to do this type assertion stuff?
+			p := raster.NewRGBAPainter(dc.im)
+			p.SetColor(pattern.color)
+			painter = p
+		}
+	}
+	if painter == nil {
+		painter = newPatternPainter(dc.im, dc.mask, dc.fillPattern)
+	}
 	dc.fill(painter)
 }
 
@@ -464,6 +495,18 @@ func (dc *Context) AsMask() *image.Alpha {
 	mask := image.NewAlpha(dc.im.Bounds())
 	draw.Draw(mask, dc.im.Bounds(), dc.im, image.ZP, draw.Src)
 	return mask
+}
+
+// InvertMask inverts the alpha values in the current clipping mask such that
+// a fully transparent region becomes fully opaque and vice versa.
+func (dc *Context) InvertMask() {
+	if dc.mask == nil {
+		dc.mask = image.NewAlpha(dc.im.Bounds())
+	} else {
+		for i, a := range dc.mask.Pix {
+			dc.mask.Pix[i] = 255 - a
+		}
+	}
 }
 
 // Clip updates the clipping region by intersecting the current
@@ -695,8 +738,11 @@ func (dc *Context) DrawStringAnchored(s string, x, y, ax, ay float64) {
 // spacing and text alignment.
 func (dc *Context) DrawStringWrapped(s string, x, y, ax, ay, width, lineSpacing float64, align Align) {
 	lines := dc.WordWrap(s, width)
+
+	// sync h formula with MeasureMultilineString
 	h := float64(len(lines)) * dc.fontHeight * lineSpacing
 	h -= (lineSpacing - 1) * dc.fontHeight
+
 	x -= ax * width
 	y -= ay * h
 	switch align {
@@ -714,6 +760,29 @@ func (dc *Context) DrawStringWrapped(s string, x, y, ax, ay, width, lineSpacing 
 		dc.DrawStringAnchored(line, x, y, ax, ay)
 		y += dc.fontHeight * lineSpacing
 	}
+}
+
+func (dc *Context) MeasureMultilineString(s string, lineSpacing float64) (width, height float64) {
+	lines := strings.Split(s, "\n")
+
+	// sync h formula with DrawStringWrapped
+	height = float64(len(lines)) * dc.fontHeight * lineSpacing
+	height -= (lineSpacing - 1) * dc.fontHeight
+
+	d := &font.Drawer{
+		Face: dc.fontFace,
+	}
+
+	// max width from lines
+	for _, line := range lines {
+		adv := d.MeasureString(line)
+		currentWidth := float64(adv >> 6) // from gg.Context.MeasureString
+		if currentWidth > width {
+			width = currentWidth
+		}
+	}
+
+	return width, height
 }
 
 // MeasureString returns the rendered width and height of the specified text

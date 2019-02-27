@@ -171,18 +171,24 @@ func (m *memory) update() {
 
 // Snapshot returns a snapshot of the current loaded config
 func (m *memory) Snapshot() (*loader.Snapshot, error) {
-	m.RLock()
-	defer m.RUnlock()
-
 	if m.loaded() {
-		return m.snap, nil
+		m.RLock()
+		snap := loader.Copy(m.snap)
+		m.RUnlock()
+		return snap, nil
 	}
 
+	// not loaded, sync
 	if err := m.Sync(); err != nil {
 		return nil, err
 	}
 
-	return m.snap, nil
+	// make copy
+	m.RUnlock()
+	snap := loader.Copy(m.snap)
+	m.RUnlock()
+
+	return snap, nil
 }
 
 // Sync loads all the sources, calls the parser and updates the config

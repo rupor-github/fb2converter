@@ -2,6 +2,7 @@ package file
 
 import (
 	"errors"
+	"os"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/micro/go-config/source"
@@ -39,7 +40,15 @@ func (w *watcher) Next() (*source.ChangeSet, error) {
 
 	// try get the event
 	select {
-	case <-w.fw.Events:
+	case event, _ := <-w.fw.Events:
+		if event.Op == fsnotify.Rename {
+			// check existence of file, and add watch again
+			_, err := os.Stat(event.Name)
+			if err == nil || os.IsExist(err) {
+				w.fw.Add(event.Name)
+			}
+		}
+
 		c, err := w.f.Read()
 		if err != nil {
 			return nil, err
