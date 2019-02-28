@@ -10,6 +10,12 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Generator: ${CMAKE_GENERATOR}")
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "********************************************************************************")
+    message(STATUS "*** Do not forget to do \"make deps_vendor\" before switching to Release mode! ***")
+    message(STATUS "********************************************************************************")
+endif()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 # Release installation directory
@@ -40,7 +46,7 @@ else()
 endif()
 message(STATUS "Installation directory: ${DEST_DIR}")
 
-find_package(Go 1.11 REQUIRED)
+find_package(Go 1.12 REQUIRED)
 find_package(Git REQUIRED)
 
 # Project version number
@@ -82,16 +88,26 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/${KINDLEGEN}")
 endif()
 
 ########################################################################################################
+# Some contexts dependent settings
+########################################################################################################
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(TEST_RUN_ARGS "-v")
+else()
+    set(GO_MOD_ARGS "-mod=vendor")
+endif()
+
+########################################################################################################
 # main target - always out of date, "go build" will figure it out
 ########################################################################################################
 
 add_custom_target(bin_fb2c ALL
     DEPENDS ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
         ${PROJECT_SOURCE_DIR}/src/fb2converter/static/files.go
-    COMMAND GOPATH=${PROJECT_SOURCE_DIR} GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
+    COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
         ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}
         -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-        fb2converter/cmd/fb2c
+        ${GO_MOD_ARGS} fb2converter/cmd/fb2c
     COMMENT "Building fb2c..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
 
@@ -101,18 +117,18 @@ if(CROSS_GOOS STREQUAL "windows")
 
     # myhomelib suppport - Windows only
     add_custom_target(bin_fb2mobi ALL
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-            fb2converter/cmd/fb2mobi
+            ${GO_MOD_ARGS} fb2converter/cmd/fb2mobi
         COMMENT "Building fb2mobi..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2mobi CONFIGURATIONS Release)
     add_custom_target(bin_fb2epub ALL
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-            fb2converter/cmd/fb2epub
+            ${GO_MOD_ARGS} fb2converter/cmd/fb2epub
         COMMENT "Building fb2epub..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2epub CONFIGURATIONS Release)
@@ -128,34 +144,28 @@ endif()
 # Temporary directory for test results
 execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory tests_results)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(TEST_RUN_ARGS "-v")
-else()
-    set(TEST_RUN_ARGS "")
-endif()
-
-# add_custom_target(test_all
-#     DEPENDS test_processor test_hyphenator
-#     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/dimple
-#     COMMENT "Running ALL tests...")
+add_custom_target(test_all
+    DEPENDS test_processor test_hyphenator
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/src/dimple
+    COMMENT "Running ALL tests...")
 
 add_custom_target(test_processor
     DEPENDS ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
         ${PROJECT_SOURCE_DIR}/src/fb2converter/static/files.go
-    COMMAND GOPATH=${PROJECT_SOURCE_DIR}
+    COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_processor.out
-            fb2converter/processor
+            ${GO_MOD_ARGS} fb2converter/processor
     COMMENT "processor tests..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
 
 add_custom_target(test_hyphenator
     DEPENDS ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
         ${PROJECT_SOURCE_DIR}/src/fb2converter/static/files.go
-    COMMAND GOPATH=${PROJECT_SOURCE_DIR}
+    COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_hyphenator.out
-            fb2converter/hyphenator
+            ${GO_MOD_ARGS} fb2converter/hyphenator
     COMMENT "hyphenator tests..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
 
@@ -169,7 +179,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_custom_target(bin_fb2c_race
         DEPENDS ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
             ${PROJECT_SOURCE_DIR}/src/fb2converter/static/files.go
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -race -o ${PROJECT_BINARY_DIR}/fb2c_race${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
             fb2converter/cmd/fb2c
@@ -181,7 +191,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     ########################################################################################################
 
     add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/stringer
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR}
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/stringer
             golang.org/x/tools/cmd/stringer
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
@@ -192,7 +202,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
         DEPENDS ${PROJECT_BINARY_DIR}/stringer
             ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums.go
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR}
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on
         ${PROJECT_BINARY_DIR}/stringer -linecomment -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement
                 -output ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums_string.go
                 ${PROJECT_SOURCE_DIR}/src/fb2converter/processor/enums.go
@@ -200,7 +210,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMENT "Generating stringer interfaces")
 
     add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/go-bindata
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR}
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/go-bindata
             github.com/shuLhan/go-bindata/cmd/go-bindata
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter")
@@ -228,28 +238,28 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
     add_custom_target(deps_print
         SOURCES ${PROJECT_SOURCE_DIR}/src/fb2converter/go.mod
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} mod graph
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on ${GO_EXECUTABLE} mod graph
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter"
         COMMENT "Printing dependencies (go mod graph)"
         VERBATIM)
 
     add_custom_target(deps_tidy
         SOURCES ${PROJECT_SOURCE_DIR}/src/fb2converter/go.mod
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} mod tidy
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on ${GO_EXECUTABLE} mod tidy
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter"
         COMMENT "Printing dependencies (go mod tidy)"
         VERBATIM)
 
     add_custom_target(deps_verify
         SOURCES ${PROJECT_SOURCE_DIR}/src/fb2converter/go.mod
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} mod verify
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on ${GO_EXECUTABLE} mod verify
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter"
         COMMENT "Printing dependencies (go mod verify)"
         VERBATIM)
 
     add_custom_target(deps_vendor
         SOURCES ${PROJECT_SOURCE_DIR}/src/fb2converter/go.mod
-        COMMAND GOPATH=${PROJECT_SOURCE_DIR} ${GO_EXECUTABLE} mod vendor
+        COMMAND GOPATH=${PROJECT_SOURCE_DIR} GO111MODULE=on ${GO_EXECUTABLE} mod vendor
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/src/fb2converter"
         COMMENT "Creating vendor directory (go mod vendor)"
         VERBATIM)
