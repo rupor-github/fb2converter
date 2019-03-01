@@ -49,13 +49,13 @@ message(STATUS "Installation directory: ${DEST_DIR}")
 find_package(Go 1.12 REQUIRED)
 find_package(Git REQUIRED)
 
-# Project version number
-set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 6)
-
 ########################################################################################################
 # Setting up versioning
 ########################################################################################################
+
+# Project version number
+set(PRJ_VERSION_MAJOR 1)
+set(PRJ_VERSION_MINOR 7)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
