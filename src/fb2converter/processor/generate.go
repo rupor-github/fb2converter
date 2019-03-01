@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -454,8 +455,16 @@ func (p *Processor) generateOPF() error {
 		meta.AddNext("dc:description").SetText(p.Book.Annotation)
 	}
 
+	// Amazon and Apple like this, but its epub3
 	if len(p.Book.Cover) > 0 {
 		meta.AddNext("meta", attr("name", "cover"), attr("content", "book-cover-image"))
+	}
+	// Do not let series metadata to disappear, use calibre meta tags
+	if len(p.Book.SeqName) > 0 {
+		meta.AddNext("meta", attr("name", "calibre:series"), attr("content", p.Book.SeqName))
+		if p.Book.SeqNum > 0 {
+			meta.AddNext("meta", attr("name", "calibre:series_index"), attr("content", strconv.Itoa(p.Book.SeqNum)))
+		}
 	}
 
 	// Manifest generation
