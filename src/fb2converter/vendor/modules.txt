@@ -34,6 +34,9 @@ github.com/hashicorp/hcl/hcl/scanner
 github.com/hashicorp/hcl/hcl/strconv
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
+# github.com/hidez8891/zip v1.0.0-go1.11
+github.com/hidez8891/zip
+github.com/hidez8891/zip/internal/bytes
 # github.com/imdario/mergo v0.3.7
 github.com/imdario/mergo
 # github.com/micro/go-config v0.14.0

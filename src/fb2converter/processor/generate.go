@@ -96,7 +96,7 @@ func (p *Processor) generateCover() error {
 	kindle := p.format == OMobi || p.format == OAzw3
 	w, h := p.env.Cfg.Doc.Cover.Width, p.env.Cfg.Doc.Cover.Height
 
-	var cover *binary
+	var cover *binImage
 	for _, b := range p.Book.Images {
 		if b.id == p.Book.Cover {
 			cover = b

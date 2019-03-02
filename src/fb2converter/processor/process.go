@@ -81,7 +81,7 @@ type Processor struct {
 	doc *etree.Document
 	// parsing state and conversion results
 	Book     *Book
-	notFound *binary
+	notFound *binImage
 	// program environment
 	env             *state.LocalEnv
 	speechTransform *config.Transformation
@@ -788,7 +788,7 @@ func (p *Processor) processBinaries() error {
 
 		if strings.HasSuffix(strings.ToLower(declaredCT), "svg") {
 			// Special case - do not touch SVG
-			p.Book.Images = append(p.Book.Images, &binary{
+			p.Book.Images = append(p.Book.Images, &binImage{
 				log:     p.env.Log,
 				id:      id,
 				ct:      "image/svg+xml",
@@ -830,7 +830,7 @@ func (p *Processor) processBinaries() error {
 		}
 
 		// fill in image info
-		b := &binary{
+		b := &binImage{
 			log:     p.env.Log,
 			id:      id,
 			ct:      detectedCT,
@@ -912,7 +912,7 @@ func (p *Processor) processImages() error {
 					if p.metaOverwrite != nil && len(p.metaOverwrite.CoverImage) > 0 {
 						var (
 							err error
-							b   = &binary{log: p.env.Log, relpath: filepath.Join(DirContent, DirImages)}
+							b   = &binImage{log: p.env.Log, relpath: filepath.Join(DirContent, DirImages)}
 						)
 						fname := p.metaOverwrite.CoverImage
 						if !filepath.IsAbs(fname) {

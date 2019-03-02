@@ -11,6 +11,7 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/gosimple/slug v1.4.2
 	github.com/h2non/filetype v1.0.8
+	github.com/hidez8891/zip v1.0.0-go1.11
 	github.com/micro/go-config v0.14.0
 	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/oklog/ulid v1.3.1

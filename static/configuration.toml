@@ -35,7 +35,11 @@
 
 	#---- CSS stylesheet to use. If absent - default one will be supplied
 	# style = "profiles/default.css"
-	
+
+	#---- Some programs (CoolReader and some versions of FBReader) expect "old" zip format. We have this on by default, if
+	#---- you encounter unreadable epub/kepub files - turn it off
+	# fix_zip_format = true
+
 	# When true program removes transparency on PNG files - Kindle eInc devices do not handle it well
 	remove_png_transparency = false
 	#---- Forcefully resize all images (but cover) with specified ratio

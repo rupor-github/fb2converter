@@ -24,22 +24,22 @@ import (
 	"fb2converter/processor/internal/mobi"
 )
 
-type binaryProcessingFlags uint8
+type binImageProcessingFlags uint8
 
 const (
-	imageKindle binaryProcessingFlags = 1 << iota
+	imageKindle binImageProcessingFlags = 1 << iota
 	imageOpaquePNG
 	imageScale
 )
 
-type binary struct {
+type binImage struct {
 	log *zap.Logger
 	//
 	id          string
 	ct          string
 	fname       string
 	relpath     string // always relative to "root" directory - usually temporary working directory
-	flags       binaryProcessingFlags
+	flags       binImageProcessingFlags
 	scaleFactor float64
 	img         image.Image
 	imgType     string
@@ -47,7 +47,7 @@ type binary struct {
 }
 
 // flush is storing image to file
-func (b *binary) flush(path string) error {
+func (b *binImage) flush(path string) error {
 
 	// Sanity
 	if len(b.fname) == 0 || (len(b.data) == 0 && b.img == nil) {
