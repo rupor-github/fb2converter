@@ -5,29 +5,40 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
+	fixzip "github.com/hidez8891/zip"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
-// FinalizeEPUB produces epub file out of previously saved temporary files.
-func (p *Processor) FinalizeEPUB(fname string) error {
+func zipRemoveDataDescriptors(from, to string) error {
 
-	if _, err := os.Stat(fname); err == nil {
-		if !p.env.Debug && !p.overwrite {
-			return errors.Errorf("output file already exists: %s", fname)
-		}
-		p.env.Log.Warn("Overwriting existing file", zap.String("file", fname))
-		if err = os.Remove(fname); err != nil {
-			return err
-		}
-	} else if !os.IsNotExist(err) {
-		return err
-	} else {
-		if err := os.MkdirAll(filepath.Dir(fname), 0700); err != nil {
-			return errors.Wrap(err, "unable to create output directory")
-		}
+	out, err := os.Create(to)
+	if err != nil {
+		return errors.Wrapf(err, "unable to create EPUB: %s", to)
 	}
+
+	r, err := fixzip.OpenReader(from)
+	if err != nil {
+		return errors.Wrapf(err, "unable to read EPUB: %s", from)
+	}
+	defer r.Close()
+
+	w := fixzip.NewWriter(out)
+	defer w.Close()
+
+	for _, file := range r.File {
+		// unset data descriptor flag.
+		file.Flags &= ^fixzip.FlagDataDescriptor
+
+		// copy zip entry
+		w.CopyFile(file)
+	}
+	return nil
+}
+
+func (p *Processor) writeEPUB(fname string) error {
 
 	f, err := os.Create(fname)
 	if err != nil {
@@ -39,6 +50,8 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 	defer epub.Close()
 
 	var content bool
+	// fd, ft := timeToMsDosTime(time.Now())
+	t := time.Now()
 
 	saveFile := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -66,13 +79,18 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 		var w io.Writer
 		if !content {
 			if w, err = epub.CreateHeader(&zip.FileHeader{
-				Name:   info.Name(),
-				Method: zip.Store,
+				Name:     info.Name(),
+				Method:   zip.Store,
+				Modified: t,
 			}); err != nil {
 				return err
 			}
 		} else {
-			if w, err = epub.Create(rel); err != nil {
+			if w, err = epub.CreateHeader(&zip.FileHeader{
+				Name:     rel,
+				Method:   zip.Deflate,
+				Modified: t,
+			}); err != nil {
 				return err
 			}
 		}
@@ -103,6 +121,43 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 
 	if err = filepath.Walk(p.tmpDir, saveFile); err != nil {
 		return errors.Wrap(err, "unable to add file to EPUB")
+	}
+	return nil
+}
+
+// FinalizeEPUB produces epub file out of previously saved temporary files.
+func (p *Processor) FinalizeEPUB(fname string) error {
+
+	if _, err := os.Stat(fname); err == nil {
+		if !p.env.Debug && !p.overwrite {
+			return errors.Errorf("output file already exists: %s", fname)
+		}
+		p.env.Log.Warn("Overwriting existing file", zap.String("file", fname))
+		if err = os.Remove(fname); err != nil {
+			return err
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	} else {
+		if err := os.MkdirAll(filepath.Dir(fname), 0700); err != nil {
+			return errors.Wrap(err, "unable to create output directory")
+		}
+	}
+
+	if p.env.Cfg.Doc.FixZip {
+		_, tmp := filepath.Split(fname)
+		tmp = filepath.Join(p.tmpDir, tmp)
+
+		if err := p.writeEPUB(tmp); err != nil {
+			return err
+		}
+		if p.env.Cfg.Doc.FixZip {
+			return zipRemoveDataDescriptors(tmp, fname)
+		}
+	} else {
+		if err := p.writeEPUB(fname); err != nil {
+			return err
+		}
 	}
 	return nil
 }

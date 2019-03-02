@@ -50,8 +50,8 @@ type Book struct {
 	TOC            []*tocEntry       // collected TOC entries
 	Files          []*dataFile       // generated content
 	Pages          map[string]int    // additional pages per file (file -> pages)
-	Images         []*binary         // parsed <binary> tags - book images
-	Vignettes      []*binary         // used vignette images
+	Images         []*binImage       // parsed <binary> tags - book images
+	Vignettes      []*binImage       // used vignette images
 	LinksLocations map[string]string // link ID -> file (in what file link id is)
 	NoteBodyTitles map[string]*note  // body name -> (note title, parsed title body)
 	Notes          map[string]*note  // note ID -> (title, body)
@@ -235,13 +235,13 @@ func (b *Book) flushImages(path string) error {
 		wg        sync.WaitGroup
 	)
 
-	job := make(chan *binary, len(b.Images))
+	job := make(chan *binImage, len(b.Images))
 	res := make(chan error, len(b.Images))
 
 	// start processing pool
 	for i := 0; i < runtime.NumCPU(); i++ {
 		wg.Add(1)
-		go func(job <-chan *binary, res chan<- error) {
+		go func(job <-chan *binImage, res chan<- error) {
 			defer wg.Done()
 			for stop := false; !stop && atomic.LoadInt32(&haveError) == 0; {
 				select {

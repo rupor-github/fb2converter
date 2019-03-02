@@ -107,6 +107,7 @@ type Doc struct {
 	UseBrokenImages       bool    `json:"use_broken_images"`
 	FileNameFormat        string  `json:"file_name_format"`
 	FileNameTransliterate bool    `json:"file_name_transliterate"`
+	FixZip                bool    `json:"fix_zip_format"`
 	//
 	DropCaps struct {
 		Create        bool   `json:"create"`
@@ -183,6 +184,7 @@ var defaultConfig = []byte(`{
     "chapter_level": 2147483647,
     "series_number_positions": 2,
     "characters_per_page": 2300,
+	"fix_zip_format": true,
     "dropcaps": {
       "ignore_symbols": "'\"-.…0123456789‒–—«»“”\u003c\u003e"
     },

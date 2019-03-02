@@ -61,11 +61,11 @@ func (p *Processor) getStylesheet() (*dataFile, error) {
 }
 
 // getDefaultCover returns binary element for "default" cover image if one is configured or built in otherwise.
-func (p *Processor) getDefaultCover(i int) (*binary, error) {
+func (p *Processor) getDefaultCover(i int) (*binImage, error) {
 
 	var (
 		err error
-		b   = &binary{
+		b   = &binImage{
 			log:     p.env.Log,
 			relpath: filepath.Join(DirContent, DirImages),
 		}
@@ -103,11 +103,11 @@ func (p *Processor) getDefaultCover(i int) (*binary, error) {
 }
 
 // getNotFoundImage returns binary element for "not found" image.
-func (p *Processor) getNotFoundImage(i int) (*binary, error) {
+func (p *Processor) getNotFoundImage(i int) (*binImage, error) {
 
 	var (
 		err error
-		b   = &binary{
+		b   = &binImage{
 			log:     p.env.Log,
 			relpath: filepath.Join(DirContent, DirImages),
 		}
@@ -171,7 +171,7 @@ func (p *Processor) getVignetteFile(level, vignette string) string {
 		}
 	}
 
-	b := &binary{log: p.env.Log}
+	b := &binImage{log: p.env.Log}
 
 	var err error
 	if len(p.env.Cfg.Path) > 0 {
