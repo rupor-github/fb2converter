@@ -223,8 +223,7 @@ var defaultConfig = []byte(`{
       "type": "normal",
       "page_title": "Content",
       "page_placement": "after",
-      "page_maxlevel": 2147483647,
-      "include_chapters_without_title": true
+      "page_maxlevel": 2147483647
     }
   },
   "logger": {
