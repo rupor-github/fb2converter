@@ -683,6 +683,48 @@ func (p *Processor) processBodies() error {
 	return nil
 }
 
+func (p *Processor) parseNoteSection(el *etree.Element, name string) {
+
+	if el.Tag == "title" {
+		// Sometimes note section has separate title - we want to use it in TOC
+		t := SanitizeTitle(getTextFragment(el))
+		if len(t) > 0 {
+			ctx := p.ctxPush()
+			ctx.inHeader = true
+			if err := p.transfer(el, &ctx.out.Element, "div", "h0"); err != nil {
+				p.env.Log.Warn("Unable to parse notes body title", zap.String("path", el.GetPath()), zap.Error(err))
+			}
+			ctx.inHeader = false
+			p.ctxPop()
+
+			child := ctx.out.FindElement("./*")
+			p.Book.NoteBodyTitles[name] = &note{
+				title:  t,
+				body:   getTextFragment(child),
+				parsed: child.Copy(),
+			}
+		}
+	} else if el.Tag == "section" && getAttrValue(el, "id") != "" {
+		id := getAttrValue(el, "id")
+		note := &note{}
+		for _, c := range el.ChildElements() {
+			t := getTextFragment(c)
+			if c.Tag == "title" {
+				note.title = SanitizeTitle(t)
+			} else {
+				note.body += t
+			}
+		}
+		p.Book.NotesOrder = append(p.Book.NotesOrder, notelink{id: id, bodyName: name})
+		p.Book.Notes[id] = note
+	} else {
+		// Sometimes there are sections inside sections to no end...
+		for _, section := range el.ChildElements() {
+			p.parseNoteSection(section, name)
+		}
+	}
+}
+
 // processNotes processes notes bodies. We will need notes when main body is parsed.
 func (p *Processor) processNotes() error {
 
@@ -692,55 +734,17 @@ func (p *Processor) processNotes() error {
 		p.env.Log.Debug("Parsing notes - done",
 			zap.Duration("elapsed", time.Now().Sub(start)),
 			zap.Int("body titles", len(p.Book.NoteBodyTitles)),
+			zap.Int("notes", len(p.Book.NotesOrder)),
 		)
 	}(start)
 
 	for _, el := range p.doc.FindElements("./FictionBook/body[@name]") {
-
 		name := getAttrValue(el, "name")
 		if !IsOneOf(name, p.env.Cfg.Doc.Notes.BodyNames) {
 			continue
 		}
-
 		for _, section := range el.ChildElements() {
-
-			// Sometimes note section has separate title - we want to use it in TOC
-			if section.Tag == "title" {
-				t := SanitizeTitle(getTextFragment(section))
-				if len(t) > 0 {
-					ctx := p.ctxPush()
-					ctx.inHeader = true
-					if err := p.transfer(section, &ctx.out.Element, "div", "h0"); err != nil {
-						p.env.Log.Warn("Unable to parse notes body title", zap.String("path", section.GetPath()), zap.Error(err))
-					}
-					ctx.inHeader = false
-					p.ctxPop()
-
-					child := ctx.out.FindElement("./*")
-					p.Book.NoteBodyTitles[name] = &note{
-						title:  t,
-						body:   getTextFragment(child),
-						parsed: child.Copy(),
-					}
-				}
-				continue
-			}
-
-			if section.Tag == "section" && getAttrValue(section, "id") != "" {
-				id := getAttrValue(section, "id")
-				note := &note{}
-				for _, c := range section.ChildElements() {
-					t := getTextFragment(c)
-					if c.Tag == "title" {
-						note.title = SanitizeTitle(t)
-					} else {
-						note.body += t
-					}
-				}
-				p.Book.NotesOrder = append(p.Book.NotesOrder, notelink{id: id, bodyName: name})
-				p.Book.Notes[id] = note
-				continue
-			}
+			p.parseNoteSection(section, name)
 		}
 	}
 	return nil
