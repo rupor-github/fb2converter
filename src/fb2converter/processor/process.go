@@ -598,6 +598,17 @@ func (p *Processor) processDescription() error {
 						p.env.Log.Warn("Unable to parse annotation", zap.String("path", e.GetPath()), zap.Error(err))
 					} else {
 						p.Book.Files = append(p.Book.Files, f)
+						if p.env.Cfg.Doc.Annotation.AddToToc {
+							tocRefID := fmt.Sprintf("tocref%d", p.ctx().tocIndex)
+							inner.CreateAttr("id", tocRefID)
+							p.Book.TOC = append(p.Book.TOC, &tocEntry{
+								ref:      p.ctx().fname + "#" + tocRefID,
+								title:    p.env.Cfg.Doc.Annotation.Title,
+								level:    p.ctx().header,
+								bodyName: p.ctx().bodyName,
+							})
+							p.ctx().tocIndex++
+						}
 					}
 				}
 			}

@@ -118,8 +118,9 @@ type Doc struct {
 		Mode      string   `json:"mode"`
 	} `json:"notes"`
 	Annotation struct {
-		Create bool
-		Title  string `json:"title"`
+		Create   bool   `json:"create"`
+		AddToToc bool   `json:"add_to_toc"`
+		Title    string `json:"title"`
 	} `json:"annotation"`
 	TOC struct {
 		Type            string `json:"type"`
