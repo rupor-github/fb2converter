@@ -124,6 +124,8 @@
 		create = false
 		#---- And use provded annotation title
 		title = "Annotation"
+		#---- Show annotation in TOC
+		# add_to_toc = false
 
 	[document.notes]
 		#---- How to render notes in the book
