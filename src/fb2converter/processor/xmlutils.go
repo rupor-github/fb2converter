@@ -20,9 +20,13 @@ func getAttrValue(e *etree.Element, key string) string {
 func getTextFragment(e *etree.Element) string {
 	res := e.Text()
 	for _, c := range e.ChildElements() {
-		res = res + "\n" + getTextFragment(c)
+		if IsOneOf(c.Tag, []string{"p", "div"}) {
+			res += "\n" + getTextFragment(c)
+		} else {
+			res += getTextFragment(c)
+		}
 	}
-	res = res + e.Tail()
+	res += e.Tail()
 	return strings.TrimSpace(res)
 }
 
