@@ -467,9 +467,9 @@ func (p *Processor) prepareOutputName() string {
 
 	name := strings.TrimSuffix(filepath.Base(p.src), filepath.Ext(p.src))
 	if p.env.Cfg.Doc.FileNameTransliterate {
-		name = config.CleanFileName(slug.Make(name))
+		name = slug.Make(name)
 	}
-	outFile := name + "." + p.format.String()
+	outFile := config.CleanFileName(name) + "." + p.format.String()
 	if p.format == OKepub {
 		outFile += "." + OEpub.String()
 	}
@@ -478,9 +478,9 @@ func (p *Processor) prepareOutputName() string {
 		name = ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos))
 		if len(name) > 0 {
 			if p.env.Cfg.Doc.FileNameTransliterate {
-				name = config.CleanFileName(slug.Make(name))
+				name = slug.Make(name)
 			}
-			outFile = name + "." + p.format.String()
+			outFile = config.CleanFileName(name) + "." + p.format.String()
 			if p.format == OKepub {
 				outFile += "." + OEpub.String()
 			}
