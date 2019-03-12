@@ -123,11 +123,12 @@ type Doc struct {
 		Title    string `json:"title"`
 	} `json:"annotation"`
 	TOC struct {
-		Type            string `json:"type"`
-		Title           string `json:"page_title"`
-		Placement       string `json:"page_placement"`
-		MaxLevel        int    `json:"page_maxlevel"`
-		NoTitleChapters bool   `json:"include_chapters_without_title"`
+		Type              string `json:"type"`
+		Title             string `json:"page_title"`
+		Placement         string `json:"page_placement"`
+		MaxLevel          int    `json:"page_maxlevel"`
+		NoTitleChapters   bool   `json:"include_chapters_without_title"`
+		BookTitleFromMeta bool   `json:"book_title_from_meta"`
 	} `json:"toc"`
 	Cover struct {
 		Default   bool   `json:"default"`

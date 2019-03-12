@@ -18,6 +18,7 @@ type tocEntry struct {
 	title    string
 	level    htmlHeader
 	bodyName string
+	main     bool
 }
 
 // Notes collected during parsing.
