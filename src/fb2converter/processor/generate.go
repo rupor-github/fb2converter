@@ -62,15 +62,21 @@ func (p *Processor) generateTOCPage() error {
 			continue
 		}
 		inner := toc.AddNext("div", attr("class", "indent0")).AddNext("a", attr("href", te.ref))
-		var notFirst bool
-		for _, l := range strings.Split(te.title, "\n") {
-			t := strings.TrimSpace(l)
-			if len(t) > 0 {
-				if notFirst {
-					inner.AddNext("br").SetTail(t)
-				} else {
-					inner.SetText(t)
-					notFirst = true
+
+		if p.env.Cfg.Doc.TOC.BookTitleFromMeta && te.main {
+			inner.AddNext("span", attr("class", "toc_author")).SetText(strings.Join(p.Book.Authors, ", "))
+			inner.AddNext("span", attr("class", "toc_title")).SetText(p.Book.Title)
+		} else {
+			var notFirst bool
+			for _, l := range strings.Split(te.title, "\n") {
+				t := strings.TrimSpace(l)
+				if len(t) > 0 {
+					if notFirst {
+						inner.AddNext("br").SetTail(t)
+					} else {
+						inner.SetText(t)
+						notFirst = true
+					}
 				}
 			}
 		}

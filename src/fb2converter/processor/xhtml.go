@@ -609,6 +609,7 @@ func transferTitle(p *Processor, from, to *etree.Element) error {
 			title:    tocTitle,
 			level:    p.ctx().header,
 			bodyName: p.ctx().bodyName,
+			main:     p.ctx().firstBodyTitle,
 		})
 	} else {
 		div := to.AddNext("div", attr("id", tocRefID), attr("class", "titlenotes"))
@@ -662,6 +663,7 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 			title:    tocTitle,
 			level:    p.ctx().header,
 			bodyName: p.ctx().bodyName,
+			main:     p.ctx().firstBodyTitle,
 		})
 
 		p.ctx().firstBodyTitle = false

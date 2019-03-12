@@ -109,6 +109,20 @@
     margin-left: 40pt
 }
 
+.toc_author::after {
+    content: ":"
+}
+
+.toc_author {
+    font-size: 120%;
+    font-weight: bold;
+}
+
+.toc_title {
+    font-size: 120%;
+    font-weight: bold;
+}
+
 .anchor {
     vertical-align: super;
     font-size: 70%
