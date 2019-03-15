@@ -524,9 +524,6 @@ func (conf *Config) PrepareLog() (*zap.Logger, error) {
 
 	// File
 
-	ec = zap.NewDevelopmentEncoderConfig()
-	fileEncoder := zapcore.NewConsoleEncoder(ec)
-
 	opener := func(fname, mode string) (f *os.File, err error) {
 		flags := os.O_CREATE | os.O_WRONLY
 		if mode == "append" {
@@ -541,15 +538,18 @@ func (conf *Config) PrepareLog() (*zap.Logger, error) {
 	}
 
 	var (
+		fileEncoder  zapcore.Encoder
 		fileCore     zapcore.Core
 		logLevel     zap.AtomicLevel
 		logRequested bool
 	)
 	switch conf.FileLogger.Level {
 	case "debug":
+		fileEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 		logLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
 		logRequested = true
 	case "normal":
+		fileEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 		logLevel = zap.NewAtomicLevelAt(zap.InfoLevel)
 		logRequested = true
 	}
