@@ -1,6 +1,6 @@
 EXTH fields
 
-133 - ASIN
+113 - ASIN
 504 - CDE CONTENT KEY
 
 mobi (remove personal label False)
@@ -13,27 +13,27 @@ mobi (remove personal label False)
 mobi (remove personal label True)
 
     EBOK 
-        mobi_7 133
-        mobi_8 133
+        mobi_7 113
+        mobi_8 113
             eInk - pages, PC - no pages, eInk - no icon, dictionary, USB->EBOK
     EBOK
         mobi_7 
-        mobi_8  133
+        mobi_8  113
             eInk - pages, PC - no pages, eInk - icon, dictionary, USB->EBOK
     EBOK 
         mobi_7     504
-        mobi_8 133,504
+        mobi_8 113,504
             eInk - pages, PC - no pages, eInk - no icon, dictionary, USB->EBOK                      
     EBOK 
-        mobi_7 133,504
-        mobi_8 133,504
+        mobi_7 113,504
+        mobi_8 113,504
             eInk - pages, PC - no pages, eInk - no icon, dictionary, USB->EBOK
     EBOK 
-        mobi_7 133
+        mobi_7 113
         mobi_8
             eInk - pages, PC - pages, eInk - icon, no dictionary, USB->PDOC                 
     EBOK
-        mobi_7 133,504
+        mobi_7 113,504
         mobi_8     504
             eInk - pages, PC - pages, eInk - no icon, dictionary, USB->EBOK
     EBOK
@@ -41,7 +41,7 @@ mobi (remove personal label True)
         mobi_8     504
             eInk - pages, PC - pages, eInk - no icon, dictionary, USB->EBOK
     EBOK **************
-        mobi_7 133
+        mobi_7 113
         mobi_8     504
             eInk - pages, PC - pages, eInk - no icon, dictionary, USB->EBOK, STK->PDOC
 
@@ -49,21 +49,21 @@ azw3 (remove personal label False)
 
     PDOC
             eInk - pages, PC - pages, eInk - small icon, dictionary, USB->PDOC
-    PDOC    133
+    PDOC    113
             eInk - pages, PC - no pages, eInk - no icon, dictionary, USB->PDOC
-    PDOC    133, 504
+    PDOC    113, 504 (with force_asin_on_azw3 = true)
             eInk - pages, PC - no pages, eInk - no icon, dictionary, USB->PDOC
-    PDOC         504 *******************
+    PDOC         504 (with force_asin_on_azw3 = false) *******************
             eInk - pages, PC - pages, eInk - no icon, dictionary, USB->PDOC 
                         
 azw3 (remove personal label True)
 
     EBOK
             eInk - pages, PC - pages, eInk - small icon, no dictionary, USB->EBOK
-    EBOK    133
+    EBOK    113
             eInk - pages, PC - no pages, eInk - no icon, dictionary, USB->EBOK
-    EBOK    133, 504
+    EBOK    113, 504 (with force_asin_on_azw3 = true)
             eInk - pages, PC - no pages, eInk - no icon, dictionary, USB->EBOK
-    EBOK         504 *******************
+    EBOK         504 (with force_asin_on_azw3 = false) *******************
             eInk - pages, PC - pages, eInk - no icon, dictionary, USB->EBOK
 
