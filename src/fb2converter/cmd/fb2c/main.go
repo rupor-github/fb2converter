@@ -188,7 +188,7 @@ This command is a mere convenience wrapper to simplify transfer of files to Kind
 			ArgsUsage: "SOURCE",
 			CustomHelpTemplate: fmt.Sprintf(`%s
 SOURCE:
-	directory on mounted device to look for books
+	full path to file/directory on mounted device
 
 Synchronizes kindle thumbnails with books already in Kindle memory so Kindle home page looks better.
 `, cli.CommandHelpTemplate),
