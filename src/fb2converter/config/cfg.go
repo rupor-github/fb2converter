@@ -152,6 +152,7 @@ type Doc struct {
 		NoOptimization   bool   `json:"no_mobi_optimization"`
 		RemovePersonal   bool   `json:"remove_personal_label"`
 		PageMap          string `json:"generate_apnx"`
+		ForceASIN        bool   `json:"force_asin_on_azw3"`
 	} `json:"kindlegen"`
 }
 
