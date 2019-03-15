@@ -37,7 +37,7 @@ type Splitter struct {
 }
 
 // NewSplitter returns pointer to Slitter with parsed mobi file.
-func NewSplitter(fname string, u uuid.UUID, combo, nonPersonal bool, log *zap.Logger) (*Splitter, error) {
+func NewSplitter(fname string, u uuid.UUID, combo, nonPersonal, forceASIN bool, log *zap.Logger) (*Splitter, error) {
 
 	data, err := ioutil.ReadFile(fname)
 	if err != nil {
@@ -53,7 +53,7 @@ func NewSplitter(fname string, u uuid.UUID, combo, nonPersonal bool, log *zap.Lo
 	if combo {
 		s.produceCombo(data, u, nonPersonal)
 	} else {
-		s.produceKF8(data, u, nonPersonal)
+		s.produceKF8(data, u, nonPersonal, forceASIN)
 	}
 	return s, nil
 }
@@ -244,7 +244,7 @@ func (s *Splitter) produceCombo(data []byte, u uuid.UUID, nonPersonal bool) {
 	s.processPageData(pdata)
 }
 
-func (s *Splitter) produceKF8(data []byte, u uuid.UUID, nonPersonal bool) {
+func (s *Splitter) produceKF8(data []byte, u uuid.UUID, nonPersonal, forceASIN bool) {
 
 	rec0 := readSection(data, 0)
 	if a := getInt32(rec0, mobiVersion); a == 8 {
@@ -423,6 +423,12 @@ func (s *Splitter) produceKF8(data []byte, u uuid.UUID, nonPersonal bool) {
 		kfrec0 = addExth(kfrec0, exthCDEContentKey, s.cdekey)
 	} else {
 		s.cdekey = cdekey[0]
+	}
+	if forceASIN {
+		asin := readExth(kfrec0, exthASIN)
+		if len(asin) == 0 {
+			kfrec0 = addExth(kfrec0, exthASIN, s.cdekey)
+		}
 	}
 	s.result = writeSection(result, 0, kfrec0)
 
