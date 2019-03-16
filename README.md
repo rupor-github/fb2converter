@@ -26,7 +26,7 @@ better diagnostics and no installation required.
 - no "default" external configuration, path to configuration file has to be supplied
 - no overwriting of configuration parameters from command line, options either specified in configuration file or on command line
 - slightly different hyphenation algorithm (no hyphensReplaceNBSP)
-- fixes in toc.ncx generation
+- fixes and echancements in toc.ncx generation
 - epub processing was separated into its own command "transfer" and any attempts to process epub content were dropped
 - go differs in how it processes images, it is less forgiving than Python's PILLOW and do not have lazy decoding (see use_broken_images configuration option)
 - small changes in result formatting, for example:
@@ -36,6 +36,7 @@ better diagnostics and no installation required.
   - support for kepub format
   - ...
 - fb2c processes files, directories, zip archives and directories with zip archives - no special consideration is made for `.fb2.zip` files.
+- fb2c allows flexible output path/name formatting
 - fb2c could be build for any platform supported by [go language](https://golang.org/doc/install). If mobi or azw3 are required additional limitations are imposed by [Amazon's kindlegen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
 - fb2c has no dependencies and does not require installation or any kind
 
@@ -87,7 +88,7 @@ If you want resulting mobi files to be located alongside with original files, do
 
 ### MyHomeLib support:
 
-Windows builds come with full [MyHomeLib](https://myhomelib.org/) support. Just make sure that your `MyHomeLib\converters` directory does not contain old
+Windows builds come with full [MyHomeLib](https://myhomelib.org/) ([sources](https://github.com/OleksiyPenkov/myhomelib)) support. Just make sure that your `MyHomeLib\converters` directory does not contain old
 `fb2mobi` and/or `fb2epub` subdirectories and unpack `fb2c-win32.7z` or `fb2c-win64.7z` there. It is a drop-in replacement and
 should be functional out of the box. Note, that `fb2mobi.exe` looks for `fb2mobi.toml` in its directory (similarly `fb2epub.exe` looks for `fb2epub.toml`),
 so any additional customizations are easy.
