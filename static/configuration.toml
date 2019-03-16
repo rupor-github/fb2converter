@@ -68,7 +68,7 @@
 	author_format = "#l{ #f{ #m}}"
 
 	#---- Output file name pattern - output file will have name created using FB2 information
-	#---- NOTE: only file name - you cannot create directories using this
+	#---- NOTE: watch out for path separators, directories will be created!
 	#---- "#title"      - book title
 	#---- "#series"     - name of sequence book belongs to
 	#---- "#abbrseries" - abbreviated #series, lower case
