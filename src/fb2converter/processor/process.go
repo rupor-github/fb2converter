@@ -475,15 +475,40 @@ func (p *Processor) prepareOutputName() string {
 	}
 
 	if p.kind == InFb2 && len(p.env.Cfg.Doc.FileNameFormat) > 0 {
-		name = ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos))
+
+		insertDir := func(dirs []string, dir string) []string {
+			dirs = append(dirs, "")
+			copy(dirs[1:], dirs[0:])
+			dirs[0] = dir
+			return dirs
+		}
+
+		name = filepath.FromSlash(ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos)))
 		if len(name) > 0 {
-			if p.env.Cfg.Doc.FileNameTransliterate {
-				name = slug.Make(name)
+			first := true
+			dirs := make([]string, 0, 16)
+			for head, tail := filepath.Split(strings.TrimSuffix(name, string(os.PathSeparator))); ; head, tail = filepath.Split(strings.TrimSuffix(head, string(os.PathSeparator))) {
+				if first {
+					if p.env.Cfg.Doc.FileNameTransliterate {
+						tail = slug.Make(tail)
+					}
+					outFile = config.CleanFileName(tail) + "." + p.format.String()
+					if p.format == OKepub {
+						outFile += "." + OEpub.String()
+					}
+					first = false
+				} else {
+					if p.env.Cfg.Doc.FileNameTransliterate {
+						tail = slug.Make(tail)
+					}
+					dirs = insertDir(dirs, config.CleanFileName(tail))
+				}
+				if len(head) == 0 {
+					break
+				}
 			}
-			outFile = config.CleanFileName(name) + "." + p.format.String()
-			if p.format == OKepub {
-				outFile += "." + OEpub.String()
-			}
+			dirs = insertDir(dirs, outDir)
+			outDir = filepath.Join(dirs...)
 		}
 	}
 	return filepath.Join(outDir, outFile)
