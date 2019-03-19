@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/text/language"
 
+	"fb2converter/config"
 	"fb2converter/etree"
 )
 
@@ -42,7 +43,7 @@ type Book struct {
 	Lang       language.Tag
 	Cover      string
 	Genres     []string
-	Authors    []string
+	Authors    []*config.AuthorName
 	SeqName    string
 	SeqNum     int
 	Annotation string
@@ -81,18 +82,21 @@ func NewBook(u uuid.UUID, name string) *Book {
 }
 
 // BookAuthors returns authors as a single string.
-func (b *Book) BookAuthors(short bool) string {
-
+func (b *Book) BookAuthors(format string, short bool) string {
 	if len(b.Authors) == 0 {
 		return ""
 	}
 	if short && len(b.Authors) > 1 {
 		if b.Lang == language.Russian {
-			return b.Authors[0] + " и др"
+			return ReplaceKeywords(format, CreateAuthorKeywordsMap(b.Authors[0])) + " и др"
 		}
-		return b.Authors[0] + ", et al"
+		return ReplaceKeywords(format, CreateAuthorKeywordsMap(b.Authors[0])) + ", et al"
 	}
-	return strings.Join(b.Authors, ", ")
+	res := make([]string, 0, len(b.Authors))
+	for _, an := range b.Authors {
+		res = append(res, ReplaceKeywords(format, CreateAuthorKeywordsMap(an)))
+	}
+	return strings.Join(res, ", ")
 }
 
 // flushMeta saves all container meta files.

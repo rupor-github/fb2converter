@@ -64,7 +64,7 @@ func (p *Processor) generateTOCPage() error {
 		inner := toc.AddNext("div", attr("class", "indent0")).AddNext("a", attr("href", te.ref))
 
 		if p.env.Cfg.Doc.TOC.BookTitleFromMeta && te.main {
-			inner.AddNext("span", attr("class", "toc_author")).SetText(strings.Join(p.Book.Authors, ", "))
+			inner.AddNext("span", attr("class", "toc_author")).SetText(p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, false))
 			inner.AddNext("span", attr("class", "toc_title")).SetText(p.Book.Title)
 		} else {
 			var notFirst bool
@@ -444,7 +444,8 @@ func (p *Processor) generateOPF() error {
 	meta.AddNext("dc:language").SetText(p.Book.Lang.String())
 	meta.AddNext("dc:identifier", attr("id", "BookId"), attr("opf:scheme", "uuid")).SetText(fmt.Sprintf("urn:uuid:%s", p.Book.ID))
 
-	for _, a := range p.Book.Authors {
+	for _, an := range p.Book.Authors {
+		a := ReplaceKeywords(p.env.Cfg.Doc.AuthorFormatMeta, CreateAuthorKeywordsMap(an))
 		if p.env.Cfg.Doc.TransliterateMeta {
 			a = slug.Make(a)
 		}

@@ -61,17 +61,38 @@ type SMTPConfig struct {
 	To              string `json:"to_mail"`
 }
 
+// AuthorName is parsed author name from book metainfo.
+type AuthorName struct {
+	First  string `json:"first_name"`
+	Middle string `json:"middle_name"`
+	Last   string `json:"last_name"`
+}
+
+func (a *AuthorName) String() string {
+	var res string
+	if len(a.First) > 0 {
+		res = a.First
+	}
+	if len(a.Middle) > 0 {
+		res += " " + a.Middle
+	}
+	if len(a.Last) > 0 {
+		res += " " + a.Last
+	}
+	return res
+}
+
 // MetaInfo keeps book meta-info overwrites from configuration.
 type MetaInfo struct {
-	ID         string   `json:"id"`
-	Title      string   `json:"title"`
-	Lang       string   `json:"language"`
-	Genres     []string `json:"genres"`
-	Authors    []string `json:"authors"`
-	SeqName    string   `json:"sequence"`
-	SeqNum     int      `json:"sequence_number"`
-	Date       string   `json:"date"`
-	CoverImage string   `json:"cover_image"`
+	ID         string        `json:"id"`
+	Title      string        `json:"title"`
+	Lang       string        `json:"language"`
+	Genres     []string      `json:"genres"`
+	Authors    []*AuthorName `json:"authors"`
+	SeqName    string        `json:"sequence"`
+	SeqNum     int           `json:"sequence_number"`
+	Date       string        `json:"date"`
+	CoverImage string        `json:"cover_image"`
 }
 
 type confMetaOverwrite struct {
@@ -93,6 +114,8 @@ func (c *SMTPConfig) IsValid() bool {
 type Doc struct {
 	TitleFormat           string  `json:"title_format"`
 	AuthorFormat          string  `json:"author_format"`
+	AuthorFormatMeta      string  `json:"author_format_meta"`
+	AuthorFormatFileName  string  `json:"author_format_file_name"`
 	TransliterateMeta     bool    `json:"transliterate_meta"`
 	OpenFromCover         bool    `json:"open_from_cover"`
 	ChapterPerFile        bool    `json:"chapter_per_file"`
@@ -187,7 +210,7 @@ var defaultConfig = []byte(`{
     "chapter_level": 2147483647,
     "series_number_positions": 2,
     "characters_per_page": 2300,
-	"fix_zip_format": true,
+    "fix_zip_format": true,
     "dropcaps": {
       "ignore_symbols": "'\"-.…0123456789‒–—«»“”\u003c\u003e"
     },
@@ -338,6 +361,13 @@ func BuildConfig(fname string) (*Config, error) {
 	// some defaults
 	if conf.Doc.Kindlegen.CompressionLevel < 0 || conf.Doc.Kindlegen.CompressionLevel > 2 {
 		conf.Doc.Kindlegen.CompressionLevel = 1
+	}
+	// to keep old behavior
+	if len(conf.Doc.AuthorFormatMeta) == 0 {
+		conf.Doc.AuthorFormatMeta = conf.Doc.AuthorFormat
+	}
+	if len(conf.Doc.AuthorFormatFileName) == 0 {
+		conf.Doc.AuthorFormatFileName = conf.Doc.AuthorFormat
 	}
 	return &conf, nil
 }

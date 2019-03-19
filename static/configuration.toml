@@ -59,13 +59,15 @@
 	#---- How many positions padded series number will take
 	series_number_positions = 2
 
-	#---- Pattern to format author name.
+	#---- Patterns to format author name (#author, #autors) in different places
 	#---- "#f"  - first name
 	#---- "#fi" - first name initial (first letter)
 	#---- "#m"  - middle name
 	#---- "#mi" - middle name initial (first letter of middle name)
 	#---- "#l"  - last name
-	author_format = "#l{ #f{ #m}}"
+	author_format = "#l{ #f}{ #m}"
+	# author_format_meta = "#l{ #f}{ #m}"
+	# author_format_file_name = "#l{ #f}{ #m}"
 
 	#---- Output file name pattern - output file will have name created using FB2 information
 	#---- NOTE: watch out for path separators, directories will be created!
@@ -270,7 +272,10 @@
 #		language = "hu"
 #		title = "Global title"
 #		genres = ["sci_fy", "history"]
-#		authors = ["First Author", "Second Author"]
+#		authors = [
+#			{ first_name = "First", last_name = "Author" },
+#			{ first_name = "Second", last_name = "Author" }
+#		]
 #		sequence = "Super Series"
 #		sequence_number = 666
 #		date = "1984"

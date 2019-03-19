@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"fb2converter/etree"
+	"fb2converter/config"
 )
 
 const (
@@ -140,31 +140,22 @@ func ReplaceKeywords(in string, m map[string]string) string {
 }
 
 // CreateAuthorKeywordsMap prepares keywords map for replacement.
-func CreateAuthorKeywordsMap(e *etree.Element) map[string]string {
-
-	var f, m, l string
-
+func CreateAuthorKeywordsMap(an *config.AuthorName) map[string]string {
 	rd := make(map[string]string)
-	if n := e.SelectElement("first-name"); n != nil {
-		if f = strings.TrimSpace(n.Text()); len(f) > 0 {
-			rd["#f"], rd["#fi"] = f, GetFirstRuneString(f)+"."
-		} else {
-			rd["#f"], rd["#fi"] = "", ""
-		}
+	if len(an.First) > 0 {
+		rd["#f"], rd["#fi"] = an.First, GetFirstRuneString(an.First)+"."
+	} else {
+		rd["#f"], rd["#fi"] = "", ""
 	}
-	if n := e.SelectElement("middle-name"); n != nil {
-		if m = strings.TrimSpace(n.Text()); len(m) > 0 {
-			rd["#m"], rd["#mi"] = m, GetFirstRuneString(m)+"."
-		} else {
-			rd["#m"], rd["#mi"] = "", ""
-		}
+	if len(an.Middle) > 0 {
+		rd["#m"], rd["#mi"] = an.Middle, GetFirstRuneString(an.Middle)+"."
+	} else {
+		rd["#m"], rd["#mi"] = "", ""
 	}
-	if n := e.SelectElement("last-name"); n != nil {
-		if l = strings.TrimSpace(n.Text()); len(l) > 0 {
-			rd["#l"] = l
-		} else {
-			rd["#l"] = ""
-		}
+	if len(an.Last) > 0 {
+		rd["#l"] = an.Last
+	} else {
+		rd["#l"] = ""
 	}
 	return rd
 }
@@ -206,7 +197,7 @@ func CreateTitleKeywordsMap(b *Book, pos int) map[string]string {
 }
 
 // CreateFileNameKeywordsMap prepares keywords map for replacement.
-func CreateFileNameKeywordsMap(b *Book, pos int) map[string]string {
+func CreateFileNameKeywordsMap(b *Book, format string, pos int) map[string]string {
 	rd := make(map[string]string)
 	rd["#title"] = ""
 	if len(b.Title) > 0 {
@@ -234,8 +225,8 @@ func CreateFileNameKeywordsMap(b *Book, pos int) map[string]string {
 		rd["#number"] = fmt.Sprintf("%d", b.SeqNum)
 		rd["#padnumber"] = fmt.Sprintf(fmt.Sprintf("%%0%dd", pos), b.SeqNum)
 	}
-	rd["#authors"] = b.BookAuthors(false)
-	rd["#author"] = b.BookAuthors(true)
+	rd["#authors"] = b.BookAuthors(format, false)
+	rd["#author"] = b.BookAuthors(format, true)
 	rd["#bookid"] = b.ID.String()
 	return rd
 }

@@ -628,10 +628,7 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 		// keep structure uniform
 
 		tocRefID := fmt.Sprintf("tocref%d", p.ctx().tocIndex)
-		tocTitle := p.Book.Title
-		if len(p.Book.Authors) == 1 {
-			tocTitle = p.Book.Authors[0] + " " + p.Book.Title
-		}
+		tocTitle := p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, true) + " " + p.Book.Title
 
 		cls := "titleblock"
 		if p.ctx().header.Int() >= p.env.Cfg.Doc.ChapterLevel {
@@ -647,8 +644,8 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 		}
 
 		header := div.AddNext("div", attr("class", h))
-		for _, a := range p.Book.Authors {
-			header.AddNext("p", attr("class", "title")).SetText(a)
+		for _, an := range p.Book.Authors {
+			header.AddNext("p", attr("class", "title")).SetText(ReplaceKeywords(p.env.Cfg.Doc.AuthorFormat, CreateAuthorKeywordsMap(an)))
 		}
 		header.AddNext("p", attr("class", "title")).SetText(p.Book.Title)
 

@@ -483,7 +483,7 @@ func (p *Processor) prepareOutputName() string {
 			return dirs
 		}
 
-		name = filepath.FromSlash(ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos)))
+		name = filepath.FromSlash(ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.AuthorFormatFileName, p.env.Cfg.Doc.SeqNumPos)))
 		if len(name) > 0 {
 			first := true
 			dirs := make([]string, 0, 16)
@@ -527,7 +527,7 @@ func (p *Processor) processDescription() error {
 			zap.Stringer("lang", p.Book.Lang),
 			zap.String("cover", p.Book.Cover),
 			zap.Strings("genres", p.Book.Genres),
-			zap.Strings("authors", p.Book.Authors),
+			zap.String("authors", p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, false)),
 			zap.String("sequence", p.Book.SeqName),
 			zap.Int("sequence number", p.Book.SeqNum),
 			zap.String("date", p.Book.Date),
@@ -596,7 +596,31 @@ func (p *Processor) processDescription() error {
 				}
 			}
 			for _, e := range info.SelectElements("author") {
-				p.Book.Authors = append(p.Book.Authors, ReplaceKeywords(p.env.Cfg.Doc.AuthorFormat, CreateAuthorKeywordsMap(e)))
+				var (
+					an       = new(config.AuthorName)
+					notEmpty bool
+				)
+				if n := e.SelectElement("first-name"); n != nil {
+					if f := strings.TrimSpace(n.Text()); len(f) > 0 {
+						an.First = f
+						notEmpty = true
+					}
+				}
+				if n := e.SelectElement("middle-name"); n != nil {
+					if m := strings.TrimSpace(n.Text()); len(m) > 0 {
+						an.Middle = m
+						notEmpty = true
+					}
+				}
+				if n := e.SelectElement("last-name"); n != nil {
+					if l := strings.TrimSpace(n.Text()); len(l) > 0 {
+						an.Last = l
+						notEmpty = true
+					}
+				}
+				if notEmpty {
+					p.Book.Authors = append(p.Book.Authors, an)
+				}
 			}
 			if e := info.SelectElement("sequence"); e != nil {
 				var err error
@@ -676,14 +700,8 @@ func (p *Processor) processDescription() error {
 	if len(genres) > 0 {
 		p.Book.Genres = genres
 	}
-	var authors []string
-	for _, e := range p.metaOverwrite.Authors {
-		if a := strings.TrimSpace(e); len(a) > 0 {
-			authors = append(authors, a)
-		}
-	}
-	if len(authors) > 0 {
-		p.Book.Authors = authors
+	if len(p.metaOverwrite.Authors) > 0 {
+		p.Book.Authors = append([]*config.AuthorName{}, p.metaOverwrite.Authors...)
 	}
 	seq := strings.TrimSpace(p.metaOverwrite.SeqName)
 	if len(seq) > 0 {

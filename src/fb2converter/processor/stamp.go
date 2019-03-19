@@ -34,7 +34,7 @@ func (p *Processor) stampCover(im image.Image) (image.Image, error) {
 			titles = append(titles, series)
 		}
 	}
-	author := p.Book.BookAuthors(true)
+	author := p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, true)
 	if len(author) > 0 {
 		titles = append(titles, author)
 	}
