@@ -20,10 +20,10 @@ better diagnostics and no installation required.
 
 ### Essential differences:
 
-- no UI (WIP: being considered)
+- no UI: use [Libro](https://github.com/dnkorpushov/libro) or [MyHomeLib](https://github.com/OleksiyPenkov/myhomelib)
 - no XSL pre-processing (see document.transform configuration instead)
 - no XML configuration - use [TOML](https://github.com/toml-lang/toml), [YAML](https://yaml.org/) or [JSON](https://www.json.org/) format instead
-- no "default" external configuration, path to configuration file has to be supplied
+- no "default" external configuration, path to configuration file has to be supplied - always
 - no overwriting of configuration parameters from command line, options either specified in configuration file or on command line
 - slightly different hyphenation algorithm (no hyphensReplaceNBSP)
 - fixes and echancements in toc.ncx generation
@@ -33,10 +33,10 @@ better diagnostics and no installation required.
   - chapter-end vignette would not be added if chapter does not have text paragraphs
   - html tags unknown to fb2 spec may be dropped depending on context
   - page size is calculated based on proper Unicode code points rather than byte size
-  - support for kepub format
   - ...
-- fb2c processes files, directories, zip archives and directories with zip archives - no special consideration is made for `.fb2.zip` files.
-- fb2c allows flexible output path/name formatting
+- full support for kepub format
+- processing of files, directories, zip archives and directories with zip archives - no special consideration is made for `.fb2.zip` files.
+- flexible output path/name formatting
 - fb2c could be build for any platform supported by [go language](https://golang.org/doc/install). If mobi or azw3 are required additional limitations are imposed by [Amazon's kindlegen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
 - fb2c has no dependencies and does not require installation or any kind
 
@@ -88,7 +88,7 @@ If you want resulting mobi files to be located alongside with original files, do
 
 ### MyHomeLib support:
 
-Windows builds come with full [MyHomeLib](https://myhomelib.org/) ([sources](https://github.com/OleksiyPenkov/myhomelib)) support. Just make sure that your `MyHomeLib\converters` directory does not contain old
+Windows builds come with full [MyHomeLib](https://github.com/OleksiyPenkov/myhomelib) support. Just make sure that your `MyHomeLib\converters` directory does not contain old
 `fb2mobi` and/or `fb2epub` subdirectories and unpack `fb2c-win32.7z` or `fb2c-win64.7z` there. It is a drop-in replacement and
 should be functional out of the box. Note, that `fb2mobi.exe` looks for `fb2mobi.toml` in its directory (similarly `fb2epub.exe` looks for `fb2epub.toml`),
 so any additional customizations are easy.
