@@ -22,7 +22,7 @@ type appWrapper struct {
 	prof          interface{ Stop() }
 }
 
-func (w *appWrapper) beforeRun(c *cli.Context) error {
+func (w *appWrapper) beforeAppRun(c *cli.Context) error {
 
 	if c.NArg() == 0 {
 		return nil
@@ -49,15 +49,6 @@ func (w *appWrapper) beforeRun(c *cli.Context) error {
 		return cli.NewExitError(errors.Wrapf(err, "%sunable to build configuration", errPrefix), errCode)
 	}
 
-	// Prepare logs
-	env.Log, err = env.Cfg.PrepareLog()
-	if err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%sunable to create logs", errPrefix), errCode)
-	}
-
-	w.log = env.Log
-	w.stdlogRestore = zap.RedirectStdLog(env.Log)
-
 	// We may want to do some profiling
 	if p := c.String("cpuprofile"); len(p) > 0 {
 		w.prof = profile.Start(profile.CPUProfile, profile.ProfilePath(p))
@@ -71,14 +62,37 @@ func (w *appWrapper) beforeRun(c *cli.Context) error {
 		w.prof = profile.Start(profile.MutexProfile, profile.ProfilePath(p))
 	}
 
-	w.log.Debug("Program started", zap.Strings("args", os.Args), zap.String("ver", misc.GetVersion()+" ("+runtime.Version()+") : "+LastGitCommit))
-	if len(fconfig) == 0 {
-		w.log.Debug("Using defaults (no configuration file)")
-	}
 	return nil
 }
 
-func (w *appWrapper) afterRun(c *cli.Context) error {
+func (w *appWrapper) beforeCommandRun(c *cli.Context) error {
+
+	const (
+		errPrefix = "\n*** ERROR ***\n\npreparing: "
+		errCode   = 1
+	)
+	var err error
+
+	env := c.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+
+	// Prepare logs
+	env.Log, err = env.Cfg.PrepareLog()
+	if err != nil {
+		return cli.NewExitError(errors.Wrapf(err, "%sunable to create logs", errPrefix), errCode)
+	}
+
+	w.log = env.Log
+	w.stdlogRestore = zap.RedirectStdLog(env.Log)
+
+	w.log.Debug("Program started", zap.Strings("args", os.Args), zap.String("ver", misc.GetVersion()+" ("+runtime.Version()+") : "+LastGitCommit))
+	if len(c.GlobalString("config")) == 0 {
+		w.log.Info("Using defaults (no configuration file)")
+	}
+
+	return nil
+}
+
+func (w *appWrapper) afterAppRun(c *cli.Context) error {
 
 	if w.prof != nil {
 		w.prof.Stop()
@@ -108,8 +122,8 @@ func main() {
 	app.Version = misc.GetVersion() + " (" + runtime.Version() + ") : " + LastGitCommit
 
 	var wrap appWrapper
-	app.Before = wrap.beforeRun
-	app.After = wrap.afterRun
+	app.Before = wrap.beforeAppRun
+	app.After = wrap.afterAppRun
 
 	app.Flags = []cli.Flag{
 		// only one profile could be enables at a time - this is enforced by beforeRun
@@ -131,6 +145,7 @@ func main() {
 			Name:   "convert",
 			Usage:  "Converts FB2 file(s) to specified format",
 			Action: commands.Convert,
+			Before: wrap.beforeCommandRun,
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "to", Value: "epub", Usage: "conversion output `TYPE` (supported types: epub, kepub, azw3, mobi)"},
 				cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
@@ -156,6 +171,7 @@ DESTINATION:
 			Name:   "transfer",
 			Usage:  "Prepares EPUB file(s) for transfer (Kindle only!)",
 			Action: commands.Transfer,
+			Before: wrap.beforeCommandRun,
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "to", Value: "mobi", Usage: "conversion output `TYPE` (supported types: azw3, mobi)"},
 				cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
@@ -180,6 +196,7 @@ This command is a mere convenience wrapper to simplify transfer of files to Kind
 			Name:   "synccovers",
 			Usage:  "Extracts thumbnails from documents (Kindle only!)",
 			Action: commands.SyncCovers,
+			Before: wrap.beforeCommandRun,
 			Flags: []cli.Flag{
 				cli.IntFlag{Name: "width", Value: 330, Usage: "width of the resulting thumbnail (default: 330)"},
 				cli.IntFlag{Name: "height", Value: 470, Usage: "height of the resulting thumbnail (default: 470)"},
@@ -197,6 +214,7 @@ Synchronizes kindle thumbnails with books already in Kindle memory so Kindle hom
 			Name:      "dumpconfig",
 			Usage:     "Dumps active configuration (JSON)",
 			Action:    commands.DumpConfig,
+			Before:    wrap.beforeCommandRun,
 			ArgsUsage: "DESTINATION",
 			CustomHelpTemplate: fmt.Sprintf(`%s
 DESTINATION:
@@ -209,6 +227,7 @@ Produces file with actual configuration values to be used by the program. To see
 			Name:      "export",
 			Usage:     "Exports built-in resources for customization",
 			Action:    commands.ExportResources,
+			Before:    wrap.beforeCommandRun,
 			ArgsUsage: "DESTINATION",
 			CustomHelpTemplate: fmt.Sprintf(`%s
 DESTINATION:
