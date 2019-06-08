@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"fb2converter/config"
-	"fb2converter/misc"
+	"github.com/rupor-github/fb2converter/config"
+	"github.com/rupor-github/fb2converter/misc"
 )
 
 // params := Format('"%s" "%s"', [InpFile, ChangeFileExt(OutFile, '.epub')]);

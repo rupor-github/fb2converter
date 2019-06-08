@@ -13,10 +13,10 @@ import (
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 
-	"fb2converter/archive"
-	"fb2converter/config"
-	"fb2converter/processor"
-	"fb2converter/state"
+	"github.com/rupor-github/fb2converter/archive"
+	"github.com/rupor-github/fb2converter/config"
+	"github.com/rupor-github/fb2converter/processor"
+	"github.com/rupor-github/fb2converter/state"
 )
 
 // processBook processes single FB2 file. "src" is part of the source path (always including file name) relative to the original

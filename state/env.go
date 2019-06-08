@@ -3,7 +3,7 @@ package state
 import (
 	"go.uber.org/zap"
 
-	"fb2converter/config"
+	"github.com/rupor-github/fb2converter/config"
 )
 
 // LocalEnv keeps everything program needs in a single place.

@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"fb2converter/static"
+	"github.com/rupor-github/fb2converter/static"
 )
 
 func (p *Processor) getStylesheet() (*dataFile, error) {

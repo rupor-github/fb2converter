@@ -1,4 +1,4 @@
-module fb2converter
+module github.com/rupor-github/fb2converter
 
 go 1.12
 

@@ -144,7 +144,7 @@ if(CROSS_GOOS STREQUAL "windows")
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-            ${GO_MOD_ARGS} fb2converter/cmd/fb2mobi
+            ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/cmd/fb2mobi
         COMMENT "Building fb2mobi..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2mobi CONFIGURATIONS Release)
@@ -152,7 +152,7 @@ if(CROSS_GOOS STREQUAL "windows")
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-            ${GO_MOD_ARGS} fb2converter/cmd/fb2epub
+            ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/cmd/fb2epub
         COMMENT "Building fb2epub..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2epub CONFIGURATIONS Release)
@@ -179,7 +179,7 @@ add_custom_target(test_processor
     COMMAND GOPATH=${GO_PATH} GO111MODULE=on
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_processor.out
-            ${GO_MOD_ARGS} fb2converter/processor
+            ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/processor
     COMMENT "processor tests..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
@@ -189,7 +189,7 @@ add_custom_target(test_hyphenator
     COMMAND GOPATH=${GO_PATH} GO111MODULE=on
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_hyphenator.out
-            ${GO_MOD_ARGS} fb2converter/hyphenator
+            ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/hyphenator
     COMMENT "hyphenator tests..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
@@ -206,7 +206,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -race -o ${PROJECT_BINARY_DIR}/fb2c_race${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-            fb2converter/cmd/fb2c
+            github.com/rupor-github/fb2converter/cmd/fb2c
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Building fb2c with race detector...")
 
@@ -272,14 +272,14 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         SOURCES ${PROJECT_SOURCE_DIR}/go.mod
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on ${GO_EXECUTABLE} mod tidy
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        COMMENT "Printing dependencies (go mod tidy)"
+        COMMENT "Cleaning dependencies (go mod tidy)"
         VERBATIM)
 
     add_custom_target(deps_verify
         SOURCES ${PROJECT_SOURCE_DIR}/go.mod
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on ${GO_EXECUTABLE} mod verify
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        COMMENT "Printing dependencies (go mod verify)"
+        COMMENT "Verifying dependencies (go mod verify)"
         VERBATIM)
 
     add_custom_target(deps_vendor

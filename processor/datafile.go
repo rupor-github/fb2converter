@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"fb2converter/etree"
+	"github.com/rupor-github/fb2converter/etree"
 )
 
 type dataTransientFlags uint8

@@ -9,8 +9,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/text/language"
 
-	"fb2converter/hyphenator"
-	"fb2converter/static"
+	"github.com/rupor-github/fb2converter/hyphenator"
+	"github.com/rupor-github/fb2converter/static"
 )
 
 type hyph struct {

@@ -10,8 +10,8 @@ import (
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 
-	"fb2converter/processor"
-	"fb2converter/state"
+	"github.com/rupor-github/fb2converter/processor"
+	"github.com/rupor-github/fb2converter/state"
 )
 
 // SyncCovers reads books in Kindle formats and produces thumbnails for them. Very Kindle specific.

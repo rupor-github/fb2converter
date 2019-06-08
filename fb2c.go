@@ -10,10 +10,10 @@ import (
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 
-	"fb2converter/commands"
-	"fb2converter/config"
-	"fb2converter/misc"
-	"fb2converter/state"
+	"github.com/rupor-github/fb2converter/commands"
+	"github.com/rupor-github/fb2converter/config"
+	"github.com/rupor-github/fb2converter/misc"
+	"github.com/rupor-github/fb2converter/state"
 )
 
 type appWrapper struct {

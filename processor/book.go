@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/text/language"
 
-	"fb2converter/config"
-	"fb2converter/etree"
+	"github.com/rupor-github/fb2converter/config"
+	"github.com/rupor-github/fb2converter/etree"
 )
 
 // TOC entries collected during parsing.

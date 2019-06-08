@@ -11,7 +11,7 @@ import (
 	"github.com/golang/freetype/truetype"
 	"github.com/pkg/errors"
 
-	"fb2converter/static"
+	"github.com/rupor-github/fb2converter/static"
 )
 
 func (p *Processor) stampCover(im image.Image) (image.Image, error) {

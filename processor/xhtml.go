@@ -16,8 +16,8 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"fb2converter/config"
-	"fb2converter/etree"
+	"github.com/rupor-github/fb2converter/config"
+	"github.com/rupor-github/fb2converter/etree"
 )
 
 // processBody parses fb2 document body and produces formatted output.

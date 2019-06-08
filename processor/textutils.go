@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"fb2converter/config"
+	"github.com/rupor-github/fb2converter/config"
 )
 
 const (
