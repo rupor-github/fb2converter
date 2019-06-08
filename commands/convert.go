@@ -1,3 +1,4 @@
+// Package commands has top level command drivers.
 package commands
 
 import (

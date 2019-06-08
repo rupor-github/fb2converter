@@ -1,3 +1,4 @@
+// Package processor does actual work.
 package processor
 
 import (

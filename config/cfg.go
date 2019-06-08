@@ -1,3 +1,4 @@
+// Package config abstracts all program configuration.
 package config
 
 import (

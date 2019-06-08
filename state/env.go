@@ -1,3 +1,4 @@
+// Package state defines stared program state.
 package state
 
 import (

@@ -1,3 +1,4 @@
+// Package archive builds Walk abstraction on top of "archive/zip".
 package archive
 
 import (

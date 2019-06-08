@@ -1,3 +1,4 @@
+// Package hyphenator provides TeX-style hyphenation fro multiple languages.
 package hyphenator
 
 import (
