@@ -1,4 +1,4 @@
-// Package hyphenator provides TeX-style hyphenation fro multiple languages (forked from github.com/AlanQuatermain/go-hyphenator and modified).
+// Package hyphenator provides TeX-style hyphenation for multiple languages (forked from github.com/AlanQuatermain/go-hyphenator and modified).
 package hyphenator
 
 import (
