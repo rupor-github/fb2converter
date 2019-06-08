@@ -17,7 +17,6 @@
 [568vq].out
 
 .undodir/
-.glide/
 .idea/
 .vscode/
 build/
@@ -39,14 +38,11 @@ static/dictionaries/*.txt
 static/sentences/*.json
 
 # build specific
-src/**/*.pb.go
-src/**/*.twirp.go
-src/*/misc/version.go
-src/*/mysqlschema/schema.go
-src/*/psqlschema/schema.go
+misc/version.go
 
+# errors & profiles - github/pkg
 pkg/
-!src/**/pkg/
+!vendor/**/pkg/
 
 *.cgo1.go
 *.cgo2.c

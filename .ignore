@@ -1,6 +1,6 @@
-src/fb2converter/vendor/
-src/fb2converter/static/
-pkg/
+vvendor/
 static/
+pkg/
 CMakeLists.txt
+go.sum
 README.*
