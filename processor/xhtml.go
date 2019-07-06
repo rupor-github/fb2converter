@@ -110,7 +110,8 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 			if len(note.title) > 0 {
 				t = note.title + ")."
 			}
-			to.AddNext("p", attr("class", "floatnote")).AddNext("a", attr("href", backRef+"#"+backID), attr("id", nl.id)).SetText(t).SetTail(strNBSP + note.body)
+			to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).
+				AddNext("p", attr("class", "floatnote")).AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
 		}
 	}
 	return nil
@@ -371,12 +372,22 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 		// NOTE: There could be sections inside sections to no end, so we do not want to repeat this as it will break TOC on "strangly" formatted texts,
 		// we will just mark main section beginning with "section" css in case somebody wants to do some formatting there
 		if css == "section" {
-			if len(newid) == 0 {
-				newid = fmt.Sprintf("secref%d", p.ctx().findex)
+			attrs := make([]*etree.Attr, 2, 2)
+			attrs[0] = attr("class", css)
+			attrs[1] = attr("href", href)
+			if len(newid) != 0 {
+				attrs = append(attrs, attr("id", newid))
 			}
-			to.AddNext(tag, attr("id", newid), attr("class", css), attr("href", href))
+			to.AddNext(tag, attrs...)
 		} else {
-			inner = to.AddNext(tag, attr("id", newid), attr("class", css), attr("href", href))
+			attrs := make([]*etree.Attr, 3, 3)
+			attrs[0] = attr("id", newid)
+			attrs[1] = attr("class", css)
+			attrs[2] = attr("href", href)
+			if p.notesMode == NFloat && tag == "a" {
+				attrs = append(attrs, attr("epub:type", "noteref"))
+			}
+			inner = to.AddNext(tag, attrs...)
 		}
 		if tag == "p" {
 			p.ctx().inlineImage = true

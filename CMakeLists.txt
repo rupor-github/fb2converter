@@ -77,7 +77,7 @@ endif()
 
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 20)
+set(PRJ_VERSION_MINOR 21)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -105,7 +105,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
         execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/cmake/pre-commit ${PROJECT_SOURCE_DIR}/.git/hooks/. WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
     endif()
-    execute_process(COMMAND ${CMAKE_COMMAND} -E remove ${PROJECT_SOURCE_DIR}/static/files.go WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+    # execute_process(COMMAND ${CMAKE_COMMAND} -E remove ${PROJECT_SOURCE_DIR}/static/files.go WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 endif()
 if(EXISTS "${PROJECT_SOURCE_DIR}/${KINDLEGEN}")
     execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/${KINDLEGEN} ${PROJECT_BINARY_DIR}/.)
@@ -243,6 +243,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMENT "Building go-bindata executable...")
 
     file(GLOB_RECURSE SRCS_STATIC LIST_DIRECTORIES false ${PROJECT_SOURCE_DIR}/static/*)
+    list(REMOVE_ITEM SRCS_STATIC ${PROJECT_SOURCE_DIR}/static/files.go ${PROJECT_SOURCE_DIR}/static/doc.go)
     add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/static/files.go
         DEPENDS ${PROJECT_BINARY_DIR}/go-bindata ${SRCS_STATIC}
         # -nocompress

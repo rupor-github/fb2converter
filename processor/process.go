@@ -307,6 +307,19 @@ func (p *Processor) Process() error {
 	// Processing - order of steps and their presence are important as information and context
 	// being built and accumulated...
 
+	defer func() {
+		if p.env.Debug && p.kind == InFb2 {
+			// Dump processed book for debugging
+			dump, err := os.Create(filepath.Join(p.tmpDir, filepath.Base(p.src)+".dump"))
+			if err == nil {
+				p.Book.Dump(dump)
+				dump.Close()
+			} else {
+				p.env.Log.Debug("Unable to dump internal state", zap.Error(err))
+			}
+		}
+	}()
+
 	if err := p.processNotes(); err != nil {
 		return err
 	}
@@ -744,6 +757,11 @@ func (p *Processor) parseNoteSection(el *etree.Element, name string) {
 		// Sometimes note section has separate title - we want to use it in TOC
 		t := SanitizeTitle(getTextFragment(el))
 		if len(t) > 0 {
+			if _, ok := p.Book.NoteBodyTitles[name]; ok {
+				// second title section in the same notes body - ignore for now
+				p.env.Log.Debug("Attempt to stick different notes type/title into single document body. Ignoring...", zap.String("title", t))
+				return
+			}
 			ctx := p.ctxPush()
 			ctx.inHeader = true
 			if err := p.transfer(el, &ctx.out.Element, "div", "h0"); err != nil {
