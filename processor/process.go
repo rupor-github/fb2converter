@@ -3,6 +3,7 @@ package processor
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"fmt"
 	"image"
@@ -304,21 +305,32 @@ func (p *Processor) Process() error {
 		return nil
 	}
 
-	// Processing - order of steps and their presence are important as information and context
-	// being built and accumulated...
-
+	// Debugging
 	defer func() {
 		if p.env.Debug && p.kind == InFb2 {
 			// Dump processed book for debugging
-			dump, err := os.Create(filepath.Join(p.tmpDir, filepath.Base(p.src)+".dump"))
-			if err == nil {
-				p.Book.Dump(dump)
-				dump.Close()
-			} else {
-				p.env.Log.Debug("Unable to dump internal state", zap.Error(err))
+			bname := filepath.Base(p.src)
+			dump, err := os.Create(filepath.Join(p.tmpDir, strings.TrimSuffix(bname, filepath.Ext(p.src))+"-dump.gz"))
+			if err != nil {
+				p.env.Log.Debug("Unable to create file to dump internal state to", zap.Error(err))
+				return
 			}
+			defer dump.Close()
+
+			zdump, err := gzip.NewWriterLevel(dump, gzip.BestSpeed)
+			if err != nil {
+				p.env.Log.Debug("Unable to compress internal state dump", zap.Error(err))
+			}
+			defer zdump.Close()
+
+			zdump.Name = bname
+			zdump.Comment = "fb2c debug dump"
+			p.Book.Dump(zdump)
 		}
 	}()
+
+	// Processing - order of steps and their presence are important as information and context
+	// being built and accumulated...
 
 	if err := p.processNotes(); err != nil {
 		return err
