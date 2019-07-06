@@ -4,6 +4,8 @@ github.com/BurntSushi/toml
 github.com/asaskevich/govalidator
 # github.com/bitly/go-simplejson v0.5.0
 github.com/bitly/go-simplejson
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
 # github.com/disintegration/imaging v1.6.0
 github.com/disintegration/imaging
 # github.com/fogleman/gg v1.3.0
