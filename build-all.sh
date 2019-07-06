@@ -75,7 +75,7 @@ for _arch in ${ARCH_INSTALLS}; do
 	)
 	(
 		[ -f fb2c-${_arch}.7z ] && rm fb2c-${_arch}.7z
-        cd ${_dist}
+		cd ${_dist}
 		7z a -r ../fb2c-${_arch}
 	)
 done
