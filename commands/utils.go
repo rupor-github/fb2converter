@@ -51,10 +51,10 @@ func isEpubFile(fname string) (bool, error) {
 	return filetype.Is(header, "epub"), nil
 }
 
-type encoding int
+type srcEncoding int
 
 const (
-	encUnknown encoding = iota
+	encUnknown srcEncoding = iota
 	encUTF8
 	encUTF16BigEndian
 	encUTF16LittleEndian
@@ -63,7 +63,7 @@ const (
 )
 
 // selectReader handles various unicode encodings (with or without BOM).
-func selectReader(r io.Reader, enc encoding) io.Reader {
+func selectReader(r io.Reader, enc srcEncoding) io.Reader {
 	switch enc {
 	case encUnknown:
 		return r
@@ -102,7 +102,7 @@ func isUTF16LittleEndianBOM2(buf []byte) bool {
 	return buf[0] == 0xFF && buf[1] == 0xFE
 }
 
-func detectUTF(buf []byte) (enc encoding) {
+func detectUTF(buf []byte) (enc srcEncoding) {
 
 	if isUTF32BigEndianBOM4(buf) {
 		return encUTF32BigEndian
@@ -123,7 +123,7 @@ func detectUTF(buf []byte) (enc encoding) {
 }
 
 // isBookFile detects if file is fb2/xml file and if it is tries to detect its encoding.
-func isBookFile(fname string) (bool, encoding, error) {
+func isBookFile(fname string) (bool, srcEncoding, error) {
 
 	if !strings.EqualFold(filepath.Ext(fname), ".fb2") {
 		return false, encUnknown, nil
@@ -151,7 +151,7 @@ func isBookFile(fname string) (bool, encoding, error) {
 }
 
 // isBookInArchive detects if compressed file is fb2/xml file and if it is tries to detect its encoding.
-func isBookInArchive(f *zip.File) (bool, encoding, error) {
+func isBookInArchive(f *zip.File) (bool, srcEncoding, error) {
 
 	if !strings.EqualFold(filepath.Ext(f.FileHeader.Name), ".fb2") {
 		return false, encUnknown, nil

@@ -1,4 +1,4 @@
-vvendor/
+vendor/
 static/
 pkg/
 CMakeLists.txt

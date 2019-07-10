@@ -151,6 +151,7 @@ func main() {
 				cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
 				cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (mobi only)"},
 				cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},
+				cli.StringFlag{Name: "force-zip-cp", Usage: "Force `ENCODING` for ALL file names in archives (see IANA.org for character set names)"},
 			},
 			ArgsUsage: "SOURCE [DESTINATION]",
 			CustomHelpTemplate: fmt.Sprintf(`%sSOURCE:
