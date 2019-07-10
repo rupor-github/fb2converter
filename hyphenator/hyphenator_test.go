@@ -88,3 +88,17 @@ func TestHyphenatorRussian(t *testing.T) {
 		t.Fail()
 	}
 }
+
+const testStrSpecial = `сегодня? –`
+const hyphStrSpecial = `се­го­дня? –`
+
+func TestHyphenatorSpecial(t *testing.T) {
+	h := buildHyphenator(t, "ru")
+	hyphenated := h.Hyphenate(testStrSpecial, `­`)
+
+	t.Log(hyphenated)
+
+	if hyphenated != hyphStrSpecial {
+		t.Fail()
+	}
+}

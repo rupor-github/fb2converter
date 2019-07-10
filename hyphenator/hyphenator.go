@@ -126,13 +126,13 @@ func (h *Hyphenator) Hyphenate(s, hyphen string) string {
 			exc := h.exceptions[t]
 			if len(exc) != 0 {
 				if hyphen != `-` {
-					strings.Replace(exc, `-`, hyphen, -1)
+					exc = strings.Replace(exc, `-`, hyphen, -1)
 				}
-				return exc
+				outstr += exc
+			} else {
+				// not an exception, hyphenate normally
+				outstr += h.hyphenateWord(sc.TokenText(), hyphen)
 			}
-
-			// not an exception, hyphenate normally
-			outstr += h.hyphenateWord(sc.TokenText(), hyphen)
 		default:
 			// A Unicode rune to append to the output
 			p := make([]byte, utf8.UTFMax)
