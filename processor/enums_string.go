@@ -15,9 +15,9 @@ func (i OutputFmt) String() string {
 	return _OutputFmt_name[_OutputFmt_index[i]:_OutputFmt_index[i+1]]
 }
 
-const _NotesFmt_name = "defaultinlineblockfloat"
+const _NotesFmt_name = "defaultinlineblockfloatfloat-old"
 
-var _NotesFmt_index = [...]uint8{0, 7, 13, 18, 23, 23}
+var _NotesFmt_index = [...]uint8{0, 7, 13, 18, 23, 32, 32}
 
 func (i NotesFmt) String() string {
 	if i < 0 || i >= NotesFmt(len(_NotesFmt_index)-1) {

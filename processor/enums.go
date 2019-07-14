@@ -36,6 +36,7 @@ const (
 	NInline                             // inline
 	NBlock                              // block
 	NFloat                              // float
+	NFloatOld                           // float-old
 	UnsupportedNotesFmt                 //
 )
 

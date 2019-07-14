@@ -49,7 +49,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 		return p.transfer(from, to)
 	}
 
-	if p.notesMode != NFloat {
+	if p.notesMode != NFloat && p.notesMode != NFloatOld {
 		// NOTE: for block and inline notes we do not need to save XHTML, have nothing to put there
 		return nil
 	}
@@ -110,8 +110,17 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 			if len(note.title) > 0 {
 				t = note.title + ")."
 			}
-			to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).
-				AddNext("p", attr("class", "floatnote")).AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+
+			if p.notesMode == NFloatOld {
+				// old bi-directional mode
+				to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).
+					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+			} else {
+				// new "preffered" HTML5 method with "aside"
+				to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).
+					AddNext("p", attr("class", "floatnote")).
+					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+			}
 		}
 	}
 	return nil
@@ -334,13 +343,17 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			noteID = u.Fragment
 			switch p.notesMode {
 			case NDefault:
-				fallthrough
+				if _, ok := p.Book.Notes[noteID]; !ok {
+					css = "linkanchor"
+				}
 			case NFloat:
-				if _, ok := p.Book.Notes[noteID]; ok {
+				fallthrough
+			case NFloatOld:
+				if _, ok := p.Book.Notes[noteID]; !ok {
+					css = "linkanchor"
+				} else {
 					// NOTE: modifying attribute on SOURCE node!
 					from.CreateAttr("id", "back_"+noteID)
-				} else {
-					css = "linkanchor"
 				}
 			case NInline:
 				fallthrough
@@ -623,29 +636,6 @@ func transferTitle(p *Processor, from, to *etree.Element) error {
 			main:     p.ctx().firstBodyTitle,
 		})
 	} else {
-		if ref := from.Parent().SelectAttr("id"); ref != nil && len(ref.Value) > 0 {
-
-			// Try to convert title to link back to original note (or insert back reference into title if we cannot)
-
-			backID := "back_" + ref.Value
-			backRef, exists := p.Book.LinksLocations[backID]
-			if exists {
-				body := from.Copy()
-				par := body.SelectElement("p")
-				if par == nil {
-					body.AddNext("p", attr("class", "linkback")).
-						AddNext("a", attr("href", backRef+"#"+backID)).SetText(strNBSP + strRETURN)
-				} else {
-					t := par.Text()
-					par.SetText("")
-					par.AddNext("a", attr("href", backRef+"#"+backID)).SetText(t)
-				}
-				if err := p.transfer(body, to, "div", "titlenotes"); err != nil {
-					return err
-				}
-				return nil
-			}
-		}
 		if err := p.transfer(from, to, "div", "titlenotes"); err != nil {
 			return err
 		}

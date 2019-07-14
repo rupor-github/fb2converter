@@ -50,7 +50,6 @@ func (p *Processor) writeEPUB(fname string) error {
 	defer epub.Close()
 
 	var content bool
-	// fd, ft := timeToMsDosTime(time.Now())
 	t := time.Now()
 
 	saveFile := func(path string, info os.FileInfo, err error) error {
@@ -79,9 +78,9 @@ func (p *Processor) writeEPUB(fname string) error {
 		var w io.Writer
 		if !content {
 			if w, err = epub.CreateHeader(&zip.FileHeader{
-				Name:     info.Name(),
-				Method:   zip.Store,
-				Modified: t,
+				Name:   info.Name(),
+				Method: zip.Store,
+				// do not set time for mimetype, it spoils epubcheck magic
 			}); err != nil {
 				return err
 			}
