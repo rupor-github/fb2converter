@@ -623,8 +623,30 @@ func transferTitle(p *Processor, from, to *etree.Element) error {
 			main:     p.ctx().firstBodyTitle,
 		})
 	} else {
-		div := to.AddNext("div", attr("id", tocRefID), attr("class", "titlenotes"))
-		if err := p.transfer(from, div, "div"); err != nil {
+		if ref := from.Parent().SelectAttr("id"); ref != nil && len(ref.Value) > 0 {
+
+			// Try to convert title to link back to original note (or insert back reference into title if we cannot)
+
+			backID := "back_" + ref.Value
+			backRef, exists := p.Book.LinksLocations[backID]
+			if exists {
+				body := from.Copy()
+				par := body.SelectElement("p")
+				if par == nil {
+					body.AddNext("p", attr("class", "linkback")).
+						AddNext("a", attr("href", backRef+"#"+backID)).SetText(strNBSP + strRETURN)
+				} else {
+					t := par.Text()
+					par.SetText("")
+					par.AddNext("a", attr("href", backRef+"#"+backID)).SetText(t)
+				}
+				if err := p.transfer(body, to, "div", "titlenotes"); err != nil {
+					return err
+				}
+				return nil
+			}
+		}
+		if err := p.transfer(from, to, "div", "titlenotes"); err != nil {
 			return err
 		}
 	}

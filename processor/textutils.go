@@ -16,6 +16,7 @@ import (
 const (
 	strNBSP       = "\u00A0"
 	strSOFTHYPHEN = "\u00AD"
+	strRETURN     = "\u23CE"
 )
 
 type htmlHeader int
