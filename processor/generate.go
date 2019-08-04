@@ -332,6 +332,10 @@ func (p *Processor) prepareStylesheet() error {
 			d.relpath = filepath.Join(DirContent, DirFonts)
 			d.ct = "application/opentype"
 		} else {
+			if strings.EqualFold(filepath.Ext(fname), ".ttf") || strings.EqualFold(filepath.Ext(fname), ".otf") {
+				p.env.Log.Warn("Stylesheet font resource file format unrecognized (possibly wrong file extention). Skipping...", zap.String("url", name))
+				return name
+			}
 			d.id = fmt.Sprintf("css_data%d", index+1)
 			d.fname = "css_" + filepath.Base(fname)
 			d.relpath = filepath.Join(DirContent, DirImages)
