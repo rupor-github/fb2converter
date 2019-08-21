@@ -126,9 +126,9 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	return nil
 }
 
-func (p *Processor) doTextTransformations(text string, paragraph, tail bool) string {
+func (p *Processor) doTextTransformations(text string, tail bool) string {
 
-	if paragraph {
+	if p.ctx().inParagraph {
 		// normalize direct speech if requested
 		if !tail && p.speechTransform != nil {
 			from, to := p.speechTransform.From, p.speechTransform.To
@@ -173,9 +173,9 @@ func (p *Processor) doTextTransformations(text string, paragraph, tail bool) str
 }
 
 // formatText inserts page markers (for page map), kobo spans (if necessary) and hyphenates words if requested.
-func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Element) {
+func (p *Processor) formatText(in string, tail bool, to *etree.Element) {
 
-	in = p.doTextTransformations(in, paragraph, tail)
+	in = p.doTextTransformations(in, tail)
 
 	var (
 		textOut             string
@@ -206,7 +206,7 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 
 			dropIndex := 0
 			if k == 0 && i == 0 && wl > 0 && !dropcapFound && // worth looking and we still do not have it
-				paragraph && p.env.Cfg.Doc.DropCaps.Create && !tail &&
+				p.ctx().inParagraph && p.env.Cfg.Doc.DropCaps.Create && !tail &&
 				p.ctx().firstChapterLine && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 
 				for j, sym := range word {
@@ -248,24 +248,23 @@ func (p *Processor) formatText(in string, paragraph, tail bool, to *etree.Elemen
 				textOutLen++ // count extra space
 			}
 
-			if paragraph && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 {
+			if p.ctx().inParagraph && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 {
 				// to properly set chapter_end vignette we need to know if chapter has some text in it
 				p.ctx().sectionTextLength.add(textOutLen)
 			}
 
-			if insertMarkers && paragraph && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
+			if insertMarkers && p.ctx().inParagraph && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
 				if len(textOut) > 0 {
 					bufWriteString(textOut, kobo)
 				}
 				buf.WriteString(`<a class="pagemarker" id=` + fmt.Sprintf("\"page_%d\"/>", page))
-
 				p.ctx().pageLength, textOutLen, textOut = 0, 0, ""
 				page++
 			}
 		}
 		if len(textOut) > 0 {
-			p.ctx().pageLength += textOutLen
 			bufWriteString(textOut, kobo)
+			p.ctx().pageLength, textOutLen, textOut = p.ctx().pageLength+textOutLen, 0, ""
 		}
 	}
 
@@ -403,8 +402,8 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			inner = to.AddNext(tag, attrs...)
 		}
 		if tag == "p" {
-			p.ctx().inlineImage = true
-			defer func() { p.ctx().inlineImage = false }()
+			p.ctx().inParagraph = true
+			defer func() { p.ctx().inParagraph = false }()
 			p.ctx().paragraph++
 			p.ctx().sentence = 0
 		}
@@ -412,7 +411,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 
 	// add node text
 	if len(text) > 0 {
-		p.formatText(text, from.Tag == "p", false, inner)
+		p.formatText(text, false, inner)
 	}
 
 	// transfer children
@@ -464,7 +463,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 
 	// and do not forget node tail
 	if len(tail) > 0 {
-		p.formatText(tail, from.Tag == "p", true, inner)
+		p.formatText(tail, true, inner)
 	}
 	return nil
 }
@@ -514,13 +513,7 @@ func init() {
 			return p.transfer(from, to, "span")
 		},
 		"a": transferAnchor,
-		"p": func(p *Processor, from, to *etree.Element) error {
-			var css string
-			if p.ctx().inHeader {
-				css = "title"
-			}
-			return p.transfer(from, to, "p", css)
-		},
+		"p": transferParagraph,
 		"poem": func(p *Processor, from, to *etree.Element) error {
 			p.ctx().specialParagraph = true
 			defer func() { p.ctx().specialParagraph = false }()
@@ -561,6 +554,27 @@ func init() {
 		"td":    transferTableElement,
 		"th":    transferTableElement,
 	}
+}
+
+func transferParagraph(p *Processor, from, to *etree.Element) error {
+
+	// Split content if requested
+	if pages, ok := p.Book.Pages[p.ctx().fname]; ok && pages >= p.env.Cfg.Doc.PagesPerFile &&
+		!p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
+
+		// open next XHTML
+		var f *dataFile
+		to, f = p.ctx().createXHTML("")
+		// store it for future flushing
+		p.Book.Files = append(p.Book.Files, f)
+		p.Book.Pages[f.fname] = 0
+	}
+
+	var css string
+	if p.ctx().inHeader {
+		css = "title"
+	}
+	return p.transfer(from, to, "p", css)
 }
 
 func transferAnchor(p *Processor, from, to *etree.Element) error {
@@ -788,7 +802,7 @@ func transferImage(p *Processor, from, to *etree.Element) error {
 	}
 
 	out := to
-	if p.ctx().inlineImage {
+	if p.ctx().inParagraph {
 		if len(id) > 0 {
 			out.AddNext("img", attr("id", id), attr("src", path.Join(DirImages, fname)), attr("alt", alt))
 		} else {

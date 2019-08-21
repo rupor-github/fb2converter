@@ -21,7 +21,7 @@ type context struct {
 	sectionTextLength stackedInt  // has current section text length - paragraphs only
 	paragraph         int         // used for Kobo spans
 	sentence          int         // used for Kobo spans
-	inlineImage       bool
+	inParagraph       bool
 	inHeader          bool
 	inSubHeader       bool
 	header            htmlHeader

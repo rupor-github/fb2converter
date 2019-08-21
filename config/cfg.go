@@ -126,6 +126,7 @@ type Doc struct {
 	ImagesScaleFactor     float64 `json:"images_scale_factor"`
 	Stylesheet            string  `json:"style"`
 	CharsPerPage          int     `json:"characters_per_page"`
+	PagesPerFile          int     `json:"pages_per_file"`
 	Hyphenate             bool    `json:"insert_soft_hyphen"`
 	NoNBSP                bool    `json:"ignore_nonbreakable_space"`
 	UseBrokenImages       bool    `json:"use_broken_images"`
@@ -211,6 +212,7 @@ var defaultConfig = []byte(`{
     "chapter_level": 2147483647,
     "series_number_positions": 2,
     "characters_per_page": 2300,
+    "pages_per_file": 2147483647,
     "fix_zip_format": true,
     "dropcaps": {
       "ignore_symbols": "'\"-.…0123456789‒–—«»“”\u003c\u003e"

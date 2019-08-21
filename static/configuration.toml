@@ -113,6 +113,11 @@
 	#---- To generate epub page map we use very rough text processing, controlling approximate page size in Unicode code points
 	# characters_per_page = 2300
 
+	#---- Some devices (Kobo?) become very slow when epub XHTML content file becomes too big.
+	#---- When set program will split content into smaller files using number of pages (see characters_per_page).
+	#---- NOTE: does not respect original formatting
+	# pages_per_file = 2147483647
+
 	#---- Do not skip images which cannot be decoded by program. Use them without any processing, allowing reader to decide what to do.
 	#---- Not a good idea in general - for example kindlegen will likely drop them anyways
 	# use_broken_images = false
