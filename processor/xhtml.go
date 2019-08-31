@@ -126,9 +126,9 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	return nil
 }
 
-func (p *Processor) doTextTransformations(text string, tail bool) string {
+func (p *Processor) doTextTransformations(text string, breakable, tail bool) string {
 
-	if p.ctx().inParagraph {
+	if p.ctx().inParagraph && breakable {
 		// normalize direct speech if requested
 		if !tail && p.speechTransform != nil {
 			from, to := p.speechTransform.From, p.speechTransform.To
@@ -173,9 +173,9 @@ func (p *Processor) doTextTransformations(text string, tail bool) string {
 }
 
 // formatText inserts page markers (for page map), kobo spans (if necessary) and hyphenates words if requested.
-func (p *Processor) formatText(in string, tail bool, to *etree.Element) {
+func (p *Processor) formatText(in string, breakable, tail bool, to *etree.Element) {
 
-	in = p.doTextTransformations(in, tail)
+	in = p.doTextTransformations(in, breakable, tail)
 
 	var (
 		textOut             string
@@ -206,7 +206,7 @@ func (p *Processor) formatText(in string, tail bool, to *etree.Element) {
 
 			dropIndex := 0
 			if k == 0 && i == 0 && wl > 0 && !dropcapFound && // worth looking and we still do not have it
-				p.ctx().inParagraph && p.env.Cfg.Doc.DropCaps.Create && !tail &&
+				p.ctx().inParagraph && breakable && p.env.Cfg.Doc.DropCaps.Create && !tail &&
 				p.ctx().firstChapterLine && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 
 				for j, sym := range word {
@@ -253,7 +253,7 @@ func (p *Processor) formatText(in string, tail bool, to *etree.Element) {
 				p.ctx().sectionTextLength.add(textOutLen)
 			}
 
-			if insertMarkers && p.ctx().inParagraph && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
+			if insertMarkers && p.ctx().inParagraph && breakable && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
 				if len(textOut) > 0 {
 					bufWriteString(textOut, kobo)
 				}
@@ -411,7 +411,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 
 	// add node text
 	if len(text) > 0 {
-		p.formatText(text, false, inner)
+		p.formatText(text, from.Tag == "p", false, inner)
 	}
 
 	// transfer children
@@ -463,7 +463,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 
 	// and do not forget node tail
 	if len(tail) > 0 {
-		p.formatText(tail, true, inner)
+		p.formatText(tail, from.Tag == "p", true, inner)
 	}
 	return nil
 }
