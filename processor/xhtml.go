@@ -210,22 +210,14 @@ func (p *Processor) formatText(in string, breakable, tail bool, to *etree.Elemen
 				p.ctx().firstChapterLine && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 
 				for j, sym := range word {
-					if unicode.IsSpace(sym) {
-						dropIndex = j // Do not dropcap spaces
-						dropcapFound = true
+					if !strings.ContainsRune(p.env.Cfg.Doc.DropCaps.IgnoreSymbols, sym) {
+						// Do not dropcap spaces unless they are set as ignored
+						if !unicode.IsSpace(sym) {
+							dropIndex = j + utf8.RuneLen(sym)
+							dropcapFound = true
+						}
 						break
 					}
-					if strings.IndexRune(p.env.Cfg.Doc.DropCaps.IgnoreSymbols, sym) == -1 {
-						dropIndex = j + utf8.RuneLen(sym)
-						dropcapFound = true
-						break
-					}
-				}
-
-				if !dropcapFound {
-					// The whole word only has ignorable symbols - take the whole word and stop
-					dropIndex = len(word)
-					dropcapFound = true
 				}
 
 				if dropIndex > 0 {

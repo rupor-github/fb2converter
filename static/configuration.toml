@@ -106,8 +106,8 @@
 	#---- NOTE: modern day Kindles always have hyphenation on for Russian language (and off for English)
 	# insert_soft_hyphen = false
 
-	#---- Sometimes device hyphenation engines do not know what to do with NBSP, breaking hyphenation. This will replace all
-	#---- nbsp symbols with ordinary spaces, potentially breaking original formatting
+	#---- When breaking sentences into words nbsp symbols are considered to be part of the word. This will replace all
+	#---- nbsp symbols with ordinary spaces, potentially breaking original formatting and changing hyphenation
 	# ignore_nonbreakable_space = false
 
 	#---- To generate epub page map we use very rough text processing, controlling approximate page size in Unicode code points
