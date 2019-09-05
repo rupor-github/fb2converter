@@ -56,7 +56,7 @@ endif()
 set(DEST_DIR "${PROJECT_SOURCE_DIR}/bin_${MSYSTEM_NAME}")
 message(STATUS "Installation directory: ${DEST_DIR}")
 
-find_package(Go 1.12 REQUIRED)
+find_package(Go 1.13 REQUIRED)
 find_package(Git REQUIRED)
 
 # Make sure we setup go properly
@@ -77,7 +77,7 @@ endif()
 
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 29)
+set(PRJ_VERSION_MINOR 30)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -128,7 +128,7 @@ add_custom_target(bin_fb2c ALL
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
         ${PROJECT_SOURCE_DIR}/static/files.go
     COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
-        ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}
+        ${GO_EXECUTABLE} build -trimpath -o ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}
         -ldflags='-X main.LastGitCommit=${GIT_HASH}'
         ${GO_MOD_ARGS}
     COMMENT "Building fb2c..."
@@ -141,7 +141,7 @@ if(CROSS_GOOS STREQUAL "windows")
     # myhomelib suppport - Windows only
     add_custom_target(bin_fb2mobi ALL
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
-            ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
+            ${GO_EXECUTABLE} build -trimpath -o ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
             ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/cmd/fb2mobi
         COMMENT "Building fb2mobi..."
@@ -149,7 +149,7 @@ if(CROSS_GOOS STREQUAL "windows")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2mobi CONFIGURATIONS Release)
     add_custom_target(bin_fb2epub ALL
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
-            ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
+            ${GO_EXECUTABLE} build -trimpath -o ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
             ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/cmd/fb2epub
         COMMENT "Building fb2epub..."

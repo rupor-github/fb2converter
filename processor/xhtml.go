@@ -106,9 +106,9 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 			if !exists {
 				backRef = "nowhere"
 			}
-			t := "***)."
+			t := "***."
 			if len(note.title) > 0 {
-				t = note.title + ")."
+				t = note.title + "."
 			}
 
 			if p.notesMode == NFloatOld {

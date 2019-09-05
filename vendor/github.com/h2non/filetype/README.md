@@ -196,6 +196,7 @@ func main() {
 - **jxr** - `image/vnd.ms-photo`
 - **psd** - `image/vnd.adobe.photoshop`
 - **ico** - `image/x-icon`
+- **dwg** - `image/vnd.dwg`
 
 #### Video
 
@@ -208,6 +209,7 @@ func main() {
 - **wmv** - `video/x-ms-wmv`
 - **mpg** - `video/mpeg`
 - **flv** - `video/x-flv`
+- **3gp** - `video/3gpp`
 
 #### Audio
 
@@ -234,6 +236,7 @@ func main() {
 - **exe** - `application/x-msdownload`
 - **swf** - `application/x-shockwave-flash`
 - **rtf** - `application/rtf`
+- **iso** - `application/x-iso9660-image`
 - **eot** - `application/octet-stream`
 - **ps** - `application/postscript`
 - **sqlite** - `application/x-sqlite3`

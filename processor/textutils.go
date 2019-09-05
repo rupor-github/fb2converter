@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/rupor-github/fb2converter/config"
@@ -170,15 +171,7 @@ func CreateTitleKeywordsMap(b *Book, pos int) map[string]string {
 	rd["#series"], rd["#abbrseries"], rd["#ABBRseries"] = "", "", ""
 	if len(b.SeqName) > 0 {
 		rd["#series"] = b.SeqName
-		var abbr string
-		for _, w := range strings.Split(b.SeqName, " ") {
-			if len(w) > 0 {
-				r, l := utf8.DecodeRuneInString(w)
-				if r != utf8.RuneError && l > 0 {
-					abbr += string(r)
-				}
-			}
-		}
+		abbr := abbrSeq(b.SeqName)
 		if len(abbr) > 0 {
 			rd["#abbrseries"] = strings.ToLower(abbr)
 			rd["#ABBRseries"] = strings.ToUpper(abbr)
@@ -196,6 +189,20 @@ func CreateTitleKeywordsMap(b *Book, pos int) map[string]string {
 	return rd
 }
 
+func abbrSeq(seq string) (abbr string) {
+	for _, w := range strings.Split(seq, " ") {
+		for len(w) > 0 {
+			r, l := utf8.DecodeRuneInString(w)
+			if r != utf8.RuneError && unicode.IsLetter(r) {
+				abbr += string(r)
+				break
+			}
+			w = w[l:]
+		}
+	}
+	return
+}
+
 // CreateFileNameKeywordsMap prepares keywords map for replacement.
 func CreateFileNameKeywordsMap(b *Book, format string, pos int) map[string]string {
 	rd := make(map[string]string)
@@ -206,15 +213,7 @@ func CreateFileNameKeywordsMap(b *Book, format string, pos int) map[string]strin
 	rd["#series"], rd["#abbrseries"], rd["#ABBRseries"] = "", "", ""
 	if len(b.SeqName) > 0 {
 		rd["#series"] = b.SeqName
-		var abbr string
-		for _, w := range strings.Split(b.SeqName, " ") {
-			if len(w) > 0 {
-				r, l := utf8.DecodeRuneInString(w)
-				if r != utf8.RuneError && l > 0 {
-					abbr += string(r)
-				}
-			}
-		}
+		abbr := abbrSeq(b.SeqName)
 		if len(abbr) > 0 {
 			rd["#abbrseries"] = strings.ToLower(abbr)
 			rd["#ABBRseries"] = strings.ToUpper(abbr)

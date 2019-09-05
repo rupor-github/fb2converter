@@ -11,14 +11,14 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/micro/go-config"
-	"github.com/micro/go-config/encoder"
-	jsonenc "github.com/micro/go-config/encoder/json"
-	"github.com/micro/go-config/encoder/toml"
-	"github.com/micro/go-config/encoder/yaml"
-	"github.com/micro/go-config/source"
-	"github.com/micro/go-config/source/file"
-	"github.com/micro/go-config/source/memory"
+	"github.com/micro/go-micro/config"
+	"github.com/micro/go-micro/config/encoder"
+	jsonenc "github.com/micro/go-micro/config/encoder/json"
+	"github.com/micro/go-micro/config/encoder/toml"
+	"github.com/micro/go-micro/config/encoder/yaml"
+	"github.com/micro/go-micro/config/source"
+	"github.com/micro/go-micro/config/source/file"
+	"github.com/micro/go-micro/config/source/memory"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"go.uber.org/zap/buffer"
@@ -287,9 +287,9 @@ func BuildConfig(fname string) (*Config, error) {
 		}
 		err = c.Load(
 			// default values
-			memory.NewSource(memory.WithData(defaultConfig)),
+			memory.NewSource(memory.WithJSON(defaultConfig)),
 			// overwrite
-			memory.NewSource(memory.WithData(source)))
+			memory.NewSource(memory.WithJSON(source)))
 
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to read configuration from stdin")
@@ -312,7 +312,7 @@ func BuildConfig(fname string) (*Config, error) {
 		}
 		err := c.Load(
 			// default values
-			memory.NewSource(memory.WithData(defaultConfig)),
+			memory.NewSource(memory.WithJSON(defaultConfig)),
 			// overwrite
 			file.NewSource(file.WithPath(fname), source.WithEncoder(enc)))
 
@@ -324,7 +324,7 @@ func BuildConfig(fname string) (*Config, error) {
 		}
 	} else {
 		// default values
-		err := c.Load(memory.NewSource(memory.WithData(defaultConfig)))
+		err := c.Load(memory.NewSource(memory.WithJSON(defaultConfig)))
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to prepare default configuration")
 		}
