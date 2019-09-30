@@ -17,17 +17,24 @@ func getAttrValue(e *etree.Element, key string) string {
 	return a.Value
 }
 
-func getTextFragment(e *etree.Element) string {
+func extractText(e *etree.Element, head bool) string {
 	res := e.Text()
 	for _, c := range e.ChildElements() {
 		if IsOneOf(c.Tag, []string{"p", "div"}) {
-			res += "\n" + getTextFragment(c)
+			res += "\n" + extractText(c, false)
 		} else {
-			res += getTextFragment(c)
+			res += extractText(c, false)
 		}
 	}
 	res += e.Tail()
+	if !head {
+		return res
+	}
 	return strings.TrimSpace(res)
+}
+
+func getTextFragment(e *etree.Element) string {
+	return extractText(e, true)
 }
 
 func getXMLFragment(d *etree.Document) string {
