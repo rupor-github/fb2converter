@@ -108,7 +108,11 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 			}
 			t := "***."
 			if len(note.title) > 0 {
-				t = note.title + "."
+				t = note.title
+				// Sometimes authors put "." inside the note
+				if !strings.HasSuffix(t, ".") {
+					t += "."
+				}
 			}
 
 			if p.notesMode == NFloatOld {
