@@ -548,9 +548,22 @@ func (p *Processor) generateOPF() error {
 		guide.AddSame("reference", attr("type", "cover-page"), attr("href", "cover.xhtml"))
 	}
 
+	started := false
 	if len(p.Book.Cover) > 0 && p.env.Cfg.Doc.OpenFromCover && !kindle {
 		guide.AddSame("reference", attr("type", "text"), attr("title", "Starts here"), attr("href", "cover.xhtml"))
-	} else {
+		started = true
+	}
+	if !started && p.env.Cfg.Doc.OpenFromCover && kindle {
+		// find annotation file
+		for _, f := range p.Book.Files {
+			if strings.HasPrefix(f.fname, "annotation") {
+				guide.AddSame("reference", attr("type", "text"), attr("title", "Starts here"), attr("href", f.fname))
+				started = true
+				break
+			}
+		}
+	}
+	if !started {
 		// find first content file
 		for _, f := range p.Book.Files {
 			if strings.HasPrefix(f.fname, "index") {
@@ -559,6 +572,7 @@ func (p *Processor) generateOPF() error {
 			}
 		}
 	}
+
 	if p.tocPlacement != TOCNone {
 		guide.AddSame("reference", attr("type", "toc"), attr("title", "Table of Contents"), attr("href", "toc.xhtml"))
 	}

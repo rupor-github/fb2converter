@@ -98,7 +98,7 @@
 	# transliterate_meta = false
 
 	#---- On supported devices allows to open book from cover page, rather than from beginning of the text
-	#---- Kindles do not support this mode
+	#---- Kindles do not support this mode, instead if annotation page creation was specified book will open on annotation page
 	# open_from_cover = false
 
 	#---- Insert soft hyphen symbols '\u00AD' inside words - for devices which do not support proper hyphenation
