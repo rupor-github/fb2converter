@@ -186,11 +186,16 @@ func (p *Processor) generateIntermediateContent(fname string) (string, error) {
 			}
 			ws := ee.Sys().(syscall.WaitStatus)
 			switch ws.ExitStatus() {
-			case 0:
-				// success
 			case 1:
 				// warnings
 				p.env.Log.Warn("kindlegen has some warnings, see log for details")
+				fallthrough
+			case 0:
+				// success
+				if _, err := os.Stat(workFile); err != nil {
+					// kindlegen lied
+					return "", errors.Wrap(err, "kindlegen did not return an error, but there is no content")
+				}
 			case 2:
 				// error - unable to create mobi
 				fallthrough
