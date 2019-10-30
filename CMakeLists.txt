@@ -24,11 +24,13 @@ if(CMAKE_CROSSCOMPILING)
         set(KINDLEGEN "kindlegen/windows/kindlegen.exe")
         set(CROSS_GOOS windows)
         set(CROSS_GOARCH 386)
+        set(INSTALL_SUBDIR "/fb2converter")
         message(STATUS "Targeting 32 bits Windows executable")
     elseif(MSYSTEM_NAME STREQUAL "win64")
         set(KINDLEGEN "kindlegen/windows/kindlegen.exe")
         set(CROSS_GOOS windows)
         set(CROSS_GOARCH amd64)
+        set(INSTALL_SUBDIR "/fb2converter")
         message(STATUS "Targeting 64 bits Windows executable")
     elseif(MSYSTEM_NAME STREQUAL "darwin")
         set(KINDLEGEN "kindlegen/macos/kindlegen")
@@ -133,13 +135,12 @@ add_custom_target(bin_fb2c ALL
         ${GO_MOD_ARGS}
     COMMENT "Building fb2c..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}${INSTALL_SUBDIR} CONFIGURATIONS Release)
+    install(PROGRAMS ${PROJECT_SOURCE_DIR}/${KINDLEGEN} DESTINATION ${DEST_DIR}${INSTALL_SUBDIR} CONFIGURATIONS Release)
 
 if(CROSS_GOOS STREQUAL "windows")
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2converter CONFIGURATIONS Release)
-    install(PROGRAMS ${PROJECT_SOURCE_DIR}/${KINDLEGEN} DESTINATION ${DEST_DIR}/fb2converter CONFIGURATIONS Release)
-
     # myhomelib suppport - Windows only
-    add_custom_target(bin_fb2mobi ALL
+    add_custom_target(bin_fb2mobi
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -trimpath -o ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
@@ -147,7 +148,8 @@ if(CROSS_GOOS STREQUAL "windows")
         COMMENT "Building fb2mobi..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2mobi CONFIGURATIONS Release)
-    add_custom_target(bin_fb2epub ALL
+
+    add_custom_target(bin_fb2epub
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -trimpath -o ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
@@ -155,9 +157,6 @@ if(CROSS_GOOS STREQUAL "windows")
         COMMENT "Building fb2epub..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2epub CONFIGURATIONS Release)
-else()
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR} CONFIGURATIONS Release)
-    install(PROGRAMS ${PROJECT_SOURCE_DIR}/${KINDLEGEN} DESTINATION ${DEST_DIR} CONFIGURATIONS Release)
 endif()
 
 ########################################################################################################
@@ -175,7 +174,7 @@ add_custom_target(test_all
 add_custom_target(test_processor
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
         ${PROJECT_SOURCE_DIR}/static/files.go
-    COMMAND GOPATH=${GO_PATH} GO111MODULE=on
+    COMMAND GOPATH=${GO_PATH} GO111MODULE=on # GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_processor.out
             ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/processor
@@ -185,7 +184,7 @@ add_custom_target(test_processor
 add_custom_target(test_hyphenator
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
         ${PROJECT_SOURCE_DIR}/static/files.go
-    COMMAND GOPATH=${GO_PATH} GO111MODULE=on
+    COMMAND GOPATH=${GO_PATH} GO111MODULE=on # GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_hyphenator.out
             ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/hyphenator
@@ -217,16 +216,16 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/stringer
             golang.org/x/tools/cmd/stringer
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
-    add_custom_target(bin_stringer
-        DEPENDS ${PROJECT_BINARY_DIR}/stringer
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Building stringer executable...")
+    add_custom_target(bin_stringer
+        DEPENDS ${PROJECT_BINARY_DIR}/stringer)
 
     add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/processor/enums_string.go
         DEPENDS ${PROJECT_BINARY_DIR}/stringer
             ${PROJECT_SOURCE_DIR}/processor/enums.go
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on
-        ${PROJECT_BINARY_DIR}/stringer -linecomment -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement
+        ${PROJECT_BINARY_DIR}/stringer -linecomment -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement # ,KDFTable
                 -output ${PROJECT_SOURCE_DIR}/processor/enums_string.go
                 ${PROJECT_SOURCE_DIR}/processor/enums.go
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
@@ -236,10 +235,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on
             ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/go-bindata
             github.com/shuLhan/go-bindata/cmd/go-bindata
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
-    add_custom_target(bin_go-bindata
-        DEPENDS ${PROJECT_BINARY_DIR}/go-bindata
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Building go-bindata executable...")
+    add_custom_target(bin_go-bindata
+        DEPENDS ${PROJECT_BINARY_DIR}/go-bindata)
 
     file(GLOB_RECURSE SRCS_STATIC LIST_DIRECTORIES false ${PROJECT_SOURCE_DIR}/static/*)
     list(REMOVE_ITEM SRCS_STATIC ${PROJECT_SOURCE_DIR}/static/files.go ${PROJECT_SOURCE_DIR}/static/doc.go)
@@ -257,6 +256,39 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         # cannot do this due to the size COMMAND GOPATH=${GO_PATH} ${GO_EXECUTABLE} fmt static/files.go
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         COMMENT "Generating Go resources for static assets")
+
+    ########################################################################################################
+    # Go linter
+    ########################################################################################################
+
+    # Running linters on main target
+    find_program(GO_LINTER golangci-lint)
+    if(NOT GO_LINTER)
+        set(golangci-lint-ver "1.21.1")
+        message(STATUS "Preparing golangci-lint ${golangci-lint-ver}")
+        file(DOWNLOAD "https://github.com/golangci/golangci-lint/releases/download/v${golangci-lint-ver}/golangci-lint-${golangci-lint-ver}-linux-amd64.tar.gz" ${PROJECT_BINARY_DIR}/golangci-lint.tar.gz
+            INACTIVITY_TIMEOUT 60
+            TIMEOUT 300
+            STATUS DOWNLOAD_RES
+            EXPECTED_HASH SHA256=df1a3a634bff166cef10ddc24aa14dce8b16d7ded2e94ced971b98bb)
+        list(GET DOWNLOAD_RES 0 RES)
+        list(GET DOWNLOAD_RES 1 MSG)
+        if(RES)
+            message(FATAL_ERROR, ${MSG})
+        endif()
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf golangci-lint.tar.gz WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+        execute_process(COMMAND ${CMAKE_COMMAND} -E copy golangci-lint-${golangci-lint-ver}-linux-amd64/golangci-lint golangci-lint WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+        execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory golangci-lint-${golangci-lint-ver}-linux-amd64 WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+        execute_process(COMMAND ${CMAKE_COMMAND} -E remove golangci-lint.tar.gz WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+        set(GO_LINTER ${PROJECT_BINARY_DIR}/golangci-lint)
+    endif()
+
+    add_custom_target(lint
+        DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
+            ${PROJECT_SOURCE_DIR}/static/files.go
+        COMMAND GOPATH=${GO_PATH} GO111MODULE=on ${GO_LINTER} run
+        COMMENT "Mega-linting project with ${GO_LINTER}..."
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
     ########################################################################################################
     # Go dependency management

@@ -27,6 +27,7 @@ func ExportResources(ctx *cli.Context) error {
 	if len(fname) == 0 {
 		return cli.NewExitError(errors.New(errPrefix+"destination directory has not been specified"), errCode)
 	}
+	//nolint:gocritic
 	if info, err := os.Stat(fname); err != nil && !os.IsNotExist(err) {
 		return cli.NewExitError(errors.New(errPrefix+"unable to access destination directory"), errCode)
 	} else if err != nil {

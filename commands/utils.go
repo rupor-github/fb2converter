@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/h2non/filetype"
+	"github.com/pkg/errors"
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/encoding/unicode/utf32"
 	"golang.org/x/text/transform"
@@ -26,9 +27,12 @@ func isArchiveFile(fname string) (bool, error) {
 	}
 	defer file.Close()
 
-	header := make([]byte, 261)
-	file.Read(header)
-
+	header := make([]byte, 262)
+	if count, err := file.Read(header); err != nil {
+		return false, err
+	} else if count < 262 {
+		return false, nil
+	}
 	return filetype.Is(header, "zip"), nil
 }
 
@@ -45,9 +49,12 @@ func isEpubFile(fname string) (bool, error) {
 	}
 	defer file.Close()
 
-	header := make([]byte, 261)
-	file.Read(header)
-
+	header := make([]byte, 262)
+	if count, err := file.Read(header); err != nil {
+		return false, err
+	} else if count < 262 {
+		return false, nil
+	}
 	return filetype.Is(header, "epub"), nil
 }
 
@@ -141,7 +148,11 @@ func isBookFile(fname string) (bool, srcEncoding, error) {
 		return false, encUnknown, err
 	}
 	enc := detectUTF(buf)
-	file.Seek(0, 0)
+	if ref, err := file.Seek(0, 0); err != nil {
+		return false, encUnknown, err
+	} else if ref != 0 {
+		return false, encUnknown, errors.Errorf("unable reset file: %s", fname)
+	}
 
 	header := make([]byte, 512)
 	if _, err := selectReader(file, enc).Read(header); err != nil {

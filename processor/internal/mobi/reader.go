@@ -100,7 +100,7 @@ func (r *Reader) produceThumbnail(data []byte) {
 		if sym == 0 {
 			return -1
 		}
-		if strings.IndexRune(alphabet, sym) != -1 {
+		if strings.ContainsRune(alphabet, sym) {
 			return sym
 		}
 		return '_'

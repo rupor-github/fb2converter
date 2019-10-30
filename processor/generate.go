@@ -30,7 +30,7 @@ func (p *Processor) generateTOCPage() error {
 	p.env.Log.Debug("Generating TOC page - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Generating TOC page - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 		)
 	}(start)
 
@@ -95,7 +95,7 @@ func (p *Processor) generateCover() error {
 	p.env.Log.Debug("Generating cover page - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Generating cover page - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 		)
 	}(start)
 
@@ -133,11 +133,12 @@ func (p *Processor) generateCover() error {
 
 	// stamp cover if requested
 	if p.stampPlacement != StampNone {
-		if img, err := p.stampCover(cover.img); err != nil {
+		switch img, err := p.stampCover(cover.img); {
+		case err != nil:
 			p.env.Log.Warn("Unable to stamp cover image, using as is", zap.Error(err))
-		} else if err == nil && img == nil {
+		case img == nil:
 			// nothing to do
-		} else {
+		default:
 			cover.img = img
 			cover.flags |= imageKindle
 		}
@@ -188,7 +189,7 @@ func (ts *stackTOC) push(level int, value *etree.Element) {
 	ts.data = append(ts.data, &stackItem{level, value})
 }
 
-func (ts *stackTOC) pop() (int, *etree.Element) {
+func (ts *stackTOC) pop() (int, *etree.Element) { //nolint:unparam
 	value := ts.data[len(ts.data)-1]
 	ts.data[len(ts.data)-1] = nil
 	ts.data = ts.data[:len(ts.data)-1]
@@ -210,7 +211,7 @@ func (p *Processor) generateNCX() error {
 	p.env.Log.Debug("Generating NCX - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Generating NCX - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 		)
 	}(start)
 
@@ -256,29 +257,26 @@ func (p *Processor) generateNCX() error {
 	)
 
 	for _, e := range p.Book.TOC {
-		if prev == nil {
-			// first time
+		switch {
+		case prev == nil: // first time
 			history.push(e.level.Int(), addNavPoint(to, index, AllLines(e.title), e.ref))
-		} else if prev.level.Int() < e.level.Int() {
-			// going in
+		case prev.level.Int() < e.level.Int(): // going in
 			if e.level.Int() < level || history.depth() > barrier {
 				history.pop()
 			}
 			_, inner := history.peek(to)
 			history.push(e.level.Int(), addNavPoint(inner, index, AllLines(e.title), e.ref))
-		} else if prev.level.Int() == e.level.Int() {
-			// same level
+		case prev.level.Int() == e.level.Int(): // same level
 			history.pop()
 			_, inner := history.peek(to)
 			history.push(e.level.Int(), addNavPoint(inner, index, AllLines(e.title), e.ref))
-		} else if prev.level.Int() > e.level.Int() {
-			// going out
+		case prev.level.Int() > e.level.Int(): // going out
 			for l, elem := history.peek(nil); elem != nil && l >= e.level.Int(); l, elem = history.peek(nil) {
 				history.pop()
 			}
 			_, inner := history.peek(to)
 			history.push(e.level.Int(), addNavPoint(inner, index, AllLines(e.title), e.ref))
-		} else {
+		default:
 			panic("bad toc, should never happen")
 		}
 		prev = e
@@ -298,7 +296,7 @@ func (p *Processor) prepareStylesheet() error {
 	p.env.Log.Debug("Processing stylesheet - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Processing stylesheet - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 		)
 	}(start)
 
@@ -321,19 +319,20 @@ func (p *Processor) prepareStylesheet() error {
 		}
 
 		d := &dataFile{data: data}
-		if isTTFFontFile(fname, data) {
+		switch {
+		case isTTFFontFile(fname, data):
 			d.id = fmt.Sprintf("font%d", index+1)
 			d.fname = filepath.Base(fname)
 			d.relpath = filepath.Join(DirContent, DirFonts)
 			d.ct = "application/x-font-ttf"
-		} else if isOTFFontFile(fname, data) {
+		case isOTFFontFile(fname, data):
 			d.id = fmt.Sprintf("font%d", index+1)
 			d.fname = filepath.Base(fname)
 			d.relpath = filepath.Join(DirContent, DirFonts)
 			d.ct = "application/opentype"
-		} else {
+		default:
 			if strings.EqualFold(filepath.Ext(fname), ".ttf") || strings.EqualFold(filepath.Ext(fname), ".otf") {
-				p.env.Log.Warn("Stylesheet font resource file format unrecognized (possibly wrong file extention). Skipping...", zap.String("url", name))
+				p.env.Log.Warn("Stylesheet font resource file format unrecognized (possibly wrong file extension). Skipping...", zap.String("url", name))
 				return name
 			}
 			d.id = fmt.Sprintf("css_data%d", index+1)
@@ -341,7 +340,6 @@ func (p *Processor) prepareStylesheet() error {
 			d.relpath = filepath.Join(DirContent, DirImages)
 			d.ct = mime.TypeByExtension(filepath.Ext(fname))
 		}
-
 		p.Book.Data = append(p.Book.Data, d)
 		return path.Join(DirFonts, d.fname)
 	}
@@ -355,13 +353,14 @@ func (p *Processor) prepareStylesheet() error {
 	allIndexes := pattern.FindAllSubmatchIndex(d.data, -1)
 	for i, loc := range allIndexes {
 		var b, e int
-		if loc[2] > 0 && loc[3] > 0 {
+		switch {
+		case loc[2] > 0 && loc[3] > 0:
 			// first group
 			b, e = loc[2], loc[3]
-		} else if loc[4] > 0 && loc[5] > 0 {
+		case loc[4] > 0 && loc[5] > 0:
 			// second group
 			b, e = loc[4], loc[5]
-		} else {
+		default:
 			continue
 		}
 		result += string(d.data[lastIndex:b]) + processURL(i, string(d.data[b:e]))
@@ -382,7 +381,7 @@ func (p *Processor) generatePagemap() error {
 	p.env.Log.Debug("Generating page map - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Generating page map - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 		)
 	}(start)
 
@@ -418,7 +417,7 @@ func (p *Processor) generateOPF() error {
 	p.env.Log.Debug("Generating OPF - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Generating OPF - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 		)
 	}(start)
 

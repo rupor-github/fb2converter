@@ -1,3 +1,4 @@
+//nolint:goconst
 package processor
 
 import (
@@ -107,8 +108,8 @@ func (b *binImage) flush(path string) error {
 			if !opaque {
 				b.log.Debug("Removing PNG transparency", zap.String("id", b.id))
 				opaqueImg := image.NewRGBA(b.img.Bounds())
-				draw.Draw(opaqueImg, b.img.Bounds(), &image.Uniform{color.RGBA{255, 255, 255, 255}}, image.ZP, draw.Src)
-				draw.Draw(opaqueImg, b.img.Bounds(), b.img, image.ZP, draw.Over)
+				draw.Draw(opaqueImg, b.img.Bounds(), &image.Uniform{color.RGBA{255, 255, 255, 255}}, image.Point{}, draw.Src)
+				draw.Draw(opaqueImg, b.img.Bounds(), b.img, image.Point{}, draw.Over)
 				b.img = opaqueImg
 			}
 		}
@@ -127,7 +128,8 @@ func (b *binImage) flush(path string) error {
 
 		// Serialize the results
 		var buf = new(bytes.Buffer)
-		if targetType == "png" {
+		switch targetType {
+		case "png":
 			if err := imaging.Encode(buf, b.img, imaging.PNG); err != nil {
 				b.log.Error("Unable to encode processed PNG, skipping",
 					zap.String("id", b.id),
@@ -136,8 +138,7 @@ func (b *binImage) flush(path string) error {
 			}
 			b.imgType = "png"
 			b.ct = "image/png"
-		} else if targetType == "jpeg" {
-
+		case "jpeg":
 			if err := imaging.Encode(buf, b.img, imaging.JPEG, imaging.JPEGQuality(75)); err != nil {
 				b.log.Error("Unable to encode processed image, skipping",
 					zap.String("id", b.id),
@@ -152,8 +153,7 @@ func (b *binImage) flush(path string) error {
 			if jfifAdded {
 				b.log.Debug("Inserting jpeg JFIF APP0 marker segment", zap.String("id", b.id))
 			}
-
-		} else {
+		default:
 			b.log.Warn("Unable to process image - unsupported format, skipping",
 				zap.String("id", b.id),
 				zap.String("type", b.imgType))

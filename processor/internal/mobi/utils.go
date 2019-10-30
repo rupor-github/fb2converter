@@ -1,3 +1,4 @@
+//nolint:errcheck
 package mobi
 
 import (
@@ -6,6 +7,7 @@ import (
 	"math/big"
 )
 
+//nolint
 const (
 	// important  pdb header offsets
 	uniqueIDSseed      = 68
@@ -95,6 +97,7 @@ func getInt32(data []byte, ofs int) int {
 	return int(int32(binary.BigEndian.Uint32(data[ofs:])))
 }
 
+//nolint:deadcode,unused
 func putInt16(data []byte, ofs, val int) []byte {
 	buf := make([]byte, 2)
 	binary.BigEndian.PutUint16(buf, uint16(int16(val)))
@@ -156,7 +159,7 @@ func readExth(rec0 []byte, recnum int) [][]byte {
 			values = append(values, rec0[ebase+8:ebase+exthLen])
 		}
 		enum--
-		ebase = ebase + exthLen
+		ebase += exthLen
 	}
 	return values
 }
@@ -188,7 +191,7 @@ func writeExth(rec0 []byte, recnum int, data []byte) []byte {
 			return newrec0.Bytes()
 		}
 		enumIdx--
-		ebaseIdx = ebaseIdx + getInt32(rec0, ebaseIdx+4)
+		ebaseIdx += getInt32(rec0, ebaseIdx+4)
 	}
 	return rec0
 }
@@ -329,13 +332,13 @@ func deleteSectionRange(data []byte, firstsec, lastsec int) []byte {
 
 	for i := 0; i < firstsec; i++ {
 		ofs, flgval := getInt32(data, firstPdbRecord+i*8), getInt32(data, firstPdbRecord+i*8+4)
-		ofs = ofs - 8*(lastsec-firstsec+1)
+		ofs -= 8 * (lastsec - firstsec + 1)
 		binary.Write(&datalst, binary.BigEndian, uint32(ofs))
 		binary.Write(&datalst, binary.BigEndian, uint32(flgval))
 	}
 	for i := lastsec + 1; i < nsec; i++ {
 		ofs := getInt32(data, firstPdbRecord+i*8)
-		ofs = ofs - dif
+		ofs -= dif
 		binary.Write(&datalst, binary.BigEndian, uint32(ofs))
 		binary.Write(&datalst, binary.BigEndian, uint32(2*(i-(lastsec-firstsec+1))))
 	}
@@ -413,7 +416,7 @@ func SetJpegDPI(buf *bytes.Buffer, dpit JpegDPIType, xdensity, ydensity int16) (
 	data := buf.Bytes()
 
 	// If JFIF APP0 segment is there - do not do anything
-	if bytes.Compare(data[2:4], marker) == 0 {
+	if bytes.Equal(data[2:4], marker) {
 		return buf, false
 	}
 

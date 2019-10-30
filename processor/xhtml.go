@@ -36,7 +36,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	p.env.Log.Debug("Parsing body - start", zap.String("name", p.ctx().bodyName))
 	defer func(start time.Time) {
 		p.env.Log.Debug("Parsing body - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 			zap.String("name", p.ctx().bodyName),
 		)
 	}(start)
@@ -139,7 +139,7 @@ func (p *Processor) doTextTransformations(text string, breakable, tail bool) str
 			cutIndex := 0
 			for i, sym := range text {
 				if i == 0 {
-					if strings.IndexRune(from, sym) == -1 {
+					if !strings.ContainsRune(from, sym) {
 						break
 					}
 					cutIndex += utf8.RuneLen(sym)
@@ -163,7 +163,7 @@ func (p *Processor) doTextTransformations(text string, breakable, tail bool) str
 			for i := 0; i < len(runes); i++ {
 				if i > 0 && unicode.IsSpace(runes[i-1]) &&
 					i < len(runes)-1 && unicode.IsSpace(runes[i+1]) &&
-					strings.IndexRune(p.dashTransform.From, runes[i]) != -1 {
+					strings.ContainsRune(p.dashTransform.From, runes[i]) {
 
 					b.WriteString(p.dashTransform.To)
 					continue
@@ -315,11 +315,12 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	// See if decorations are requested
 	var tag, css, href string
 	for i, p := range decorations {
-		if i == 0 {
+		switch {
+		case i == 0:
 			tag = p
-		} else if i == 1 {
+		case i == 1:
 			css = p
-		} else if i == 2 {
+		case i == 2:
 			href = p
 		}
 	}
@@ -380,7 +381,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 		// NOTE: There could be sections inside sections to no end, so we do not want to repeat this as it will break TOC on "strangly" formatted texts,
 		// we will just mark main section beginning with "section" css in case somebody wants to do some formatting there
 		if css == "section" {
-			attrs := make([]*etree.Attr, 2, 2)
+			attrs := make([]*etree.Attr, 2)
 			attrs[0] = attr("class", css)
 			attrs[1] = attr("href", href)
 			if len(newid) != 0 {
@@ -388,7 +389,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			}
 			to.AddNext(tag, attrs...)
 		} else {
-			attrs := make([]*etree.Attr, 3, 3)
+			attrs := make([]*etree.Attr, 3)
 			attrs[0] = attr("id", newid)
 			attrs[1] = attr("class", css)
 			attrs[2] = attr("href", href)
@@ -524,7 +525,7 @@ func init() {
 		"cite": func(p *Processor, from, to *etree.Element) error {
 			return p.transfer(from, to, "div", "cite")
 		},
-		"empty-line": func(p *Processor, from, to *etree.Element) error {
+		"empty-line": func(_ *Processor, _, to *etree.Element) error { //nolint:unparam
 			to.AddNext("div", attr("class", "emptyline"))
 			return nil
 		},
@@ -645,10 +646,8 @@ func transferTitle(p *Processor, from, to *etree.Element) error {
 			bodyName: p.ctx().bodyName,
 			main:     p.ctx().firstBodyTitle,
 		})
-	} else {
-		if err := p.transfer(from, to, "div", "titlenotes"); err != nil {
-			return err
-		}
+	} else if err := p.transfer(from, to, "div", "titlenotes"); err != nil {
+		return err
 	}
 	return nil
 }
@@ -733,17 +732,15 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 					to.AddNext("p", attr("class", "vignette_chapter_end")).
 						AddNext("img", attr("src", path.Join("vignettes", filepath.Base(vignette))), attr("alt", config.VigChapterEnd))
 				}
-			} else {
+			} else if p.env.Cfg.Doc.TOC.NoTitleChapters {
 				// section does not have a title - make sure TOC is not empty
-				if p.env.Cfg.Doc.TOC.NoTitleChapters {
-					p.Book.TOC = append(p.Book.TOC, &tocEntry{
-						ref:      p.ctx().fname + "#" + fmt.Sprintf("secref%d", p.ctx().findex),
-						title:    fmt.Sprintf("%d", p.ctx().findex),
-						level:    p.ctx().header,
-						bodyName: p.ctx().bodyName,
-					})
-					p.ctx().tocIndex++
-				}
+				p.Book.TOC = append(p.Book.TOC, &tocEntry{
+					ref:      p.ctx().fname + "#" + fmt.Sprintf("secref%d", p.ctx().findex),
+					title:    fmt.Sprintf("%d", p.ctx().findex),
+					level:    p.ctx().header,
+					bodyName: p.ctx().bodyName,
+				})
+				p.ctx().tocIndex++
 			}
 		}
 		to.AddNext("div", attr("class", "chapter_end"))

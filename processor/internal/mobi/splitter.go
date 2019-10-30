@@ -1,3 +1,4 @@
+//nolint:errcheck
 package mobi
 
 // Despite obvious ineffectiveness I decided to repeat python code "ad verbum" for now, it is very time
@@ -83,7 +84,7 @@ func (s *Splitter) SavePageMap(fname string, eink bool) error {
 			return errors.Wrap(err, "unable to create pagemap directory")
 		}
 	}
-	base = base + ".apnx"
+	base += ".apnx"
 	return ioutil.WriteFile(filepath.Join(dir, base), s.pagedata, 0644)
 }
 
@@ -116,7 +117,7 @@ func (s *Splitter) produceCombo(data []byte, u uuid.UUID, nonPersonal bool) {
 		if sym == 0 {
 			return -1
 		}
-		if strings.IndexRune(alphabet, sym) != -1 {
+		if strings.ContainsRune(alphabet, sym) {
 			return sym
 		}
 		return '_'
@@ -128,7 +129,7 @@ func (s *Splitter) produceCombo(data []byte, u uuid.UUID, nonPersonal bool) {
 	if srcs >= 0 && numSrcs > 0 {
 		for i := srcs; i < numSrcs; i++ {
 			d := readSection(data, i)
-			if bytes.Compare(d[0:4], []byte("PAGE")) == 0 {
+			if bytes.Equal(d[0:4], []byte("PAGE")) {
 				pdata = d
 			}
 		}
@@ -280,7 +281,7 @@ func (s *Splitter) produceKF8(data []byte, u uuid.UUID, nonPersonal, forceASIN b
 		if sym == 0 {
 			return -1
 		}
-		if strings.IndexRune(alphabet, sym) != -1 {
+		if strings.ContainsRune(alphabet, sym) {
 			return sym
 		}
 		return '_'
@@ -292,7 +293,7 @@ func (s *Splitter) produceKF8(data []byte, u uuid.UUID, nonPersonal, forceASIN b
 	if srcs >= 0 && numSrcs > 0 {
 		for i := srcs; i < numSrcs; i++ {
 			d := readSection(data, i)
-			if bytes.Compare(d[0:4], []byte("PAGE")) == 0 {
+			if bytes.Equal(d[0:4], []byte("PAGE")) {
 				pdata = d
 			}
 		}
@@ -336,7 +337,7 @@ func (s *Splitter) produceKF8(data []byte, u uuid.UUID, nonPersonal, forceASIN b
 	// 0x0040 = exth exists
 	// 0x0010 = Not sure but this is always set so far
 	fval := binary.BigEndian.Uint32(kfrec0[0x80:])
-	fval = fval & 0x1FFF
+	fval &= 0x1FFF
 	fval |= 0x0800
 
 	var buf bytes.Buffer

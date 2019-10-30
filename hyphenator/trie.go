@@ -1,6 +1,7 @@
 package hyphenator
 
 import (
+	"io"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -24,7 +25,7 @@ func NewTrie() *Trie {
 
 // Internal function: adds items to the trie, reading runes from a strings.Reader.  It returns
 // the leaf node at which the addition ends.
-func (p *Trie) addRunes(r *strings.Reader) *Trie {
+func (p *Trie) addRunes(r io.RuneReader) *Trie {
 	sym, _, err := r.ReadRune()
 	if err != nil {
 		p.leaf = true
@@ -64,7 +65,7 @@ func (p *Trie) AddValue(s string, v interface{}) {
 }
 
 // Internal string removal function. Returns true if this node is empty following the removal.
-func (p *Trie) removeRunes(r *strings.Reader) bool {
+func (p *Trie) removeRunes(r io.RuneReader) bool {
 	sym, _, err := r.ReadRune()
 	if err != nil {
 		// remove value, remove leaf flag
@@ -93,7 +94,7 @@ func (p *Trie) Remove(s string) bool {
 }
 
 // Internal string inclusion function.
-func (p *Trie) includes(r *strings.Reader) *Trie {
+func (p *Trie) includes(r io.RuneReader) *Trie {
 	rune, _, err := r.ReadRune()
 	if err != nil {
 		if p.leaf {

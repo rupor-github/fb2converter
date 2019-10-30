@@ -33,9 +33,9 @@ func processBook(r io.Reader, enc srcEncoding, src, dst string, nodirs, stk, ove
 	env.Log.Info("Conversion starting", zap.String("from", src))
 	defer func(start time.Time) {
 		if r := recover(); r != nil {
-			env.Log.Error("Conversion ended with panic", zap.Duration("elapsed", time.Now().Sub(start)), zap.String("to", fname), zap.ByteString("stack", debug.Stack()))
+			env.Log.Error("Conversion ended with panic", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.ByteString("stack", debug.Stack()))
 		} else {
-			env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Now().Sub(start)), zap.String("to", fname))
+			env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname))
 		}
 	}(start)
 
@@ -126,8 +126,6 @@ func processArchive(path, pathIn, pathOut string, format processor.OutputFmt, no
 					zap.Error(err))
 			} else {
 				defer r.Close()
-
-				// TODO: should we split pathOut into parts and decode each one separatly here?
 				path := filepath.Join(pathOut, f.FileHeader.Name)
 				if cpage != nil && f.FileHeader.NonUTF8 {
 					// forcing zip file name encoding
@@ -182,26 +180,26 @@ func Convert(ctx *cli.Context) (err error) {
 	}
 
 	var format processor.OutputFmt
-	if env.Mhl == config.MhlMobi {
+	switch env.Mhl {
+	case config.MhlMobi:
 		format = processor.ParseFmtString(env.Cfg.Fb2Mobi.OutputFormat)
 		if format == processor.UnsupportedOutputFmt || format == processor.OEpub || format == processor.OKepub {
 			env.Log.Warn("Unknown output format in MHL mode requested, switching to mobi", zap.String("format", env.Cfg.Fb2Mobi.OutputFormat))
 			format = processor.OMobi
 		}
-	} else if env.Mhl == config.MhlEpub {
+	case config.MhlEpub:
 		format = processor.ParseFmtString(env.Cfg.Fb2Epub.OutputFormat)
 		if format == processor.UnsupportedOutputFmt || format == processor.OMobi || format == processor.OAzw3 {
 			env.Log.Warn("Unknown output format in MHL mode requested, switching to epub", zap.String("format", env.Cfg.Fb2Epub.OutputFormat))
 			format = processor.OEpub
 		}
-	} else {
+	default:
 		format = processor.ParseFmtString(ctx.String("to"))
 		if format == processor.UnsupportedOutputFmt {
 			env.Log.Warn("Unknown output format requested, switching to epub", zap.String("format", ctx.String("to")))
 			format = processor.OEpub
 		}
 	}
-
 	nodirs := ctx.Bool("nodirs")
 	overwrite := ctx.Bool("ow")
 
@@ -231,7 +229,7 @@ func Convert(ctx *cli.Context) (err error) {
 	start := time.Now()
 	env.Log.Info("Processing starting", zap.String("source", src), zap.String("destination", dst), zap.Stringer("format", format))
 	defer func(start time.Time) {
-		env.Log.Info("Processing completed", zap.Duration("elapsed", time.Now().Sub(start)))
+		env.Log.Info("Processing completed", zap.Duration("elapsed", time.Since(start)))
 	}(start)
 
 	var head, tail string

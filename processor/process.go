@@ -1,4 +1,5 @@
 // Package processor does actual work.
+//nolint:goconst
 package processor
 
 import (
@@ -383,7 +384,7 @@ func (p *Processor) Save() (string, error) {
 		zap.String("content", DirContent),
 	)
 	defer func(start time.Time) {
-		p.env.Log.Debug("Saving content - done", zap.Duration("elapsed", time.Now().Sub(start)))
+		p.env.Log.Debug("Saving content - done", zap.Duration("elapsed", time.Since(start)))
 	}(start)
 
 	if p.kind == InFb2 {
@@ -439,7 +440,7 @@ func (p *Processor) SendToKindle(fname string) error {
 		zap.String("file", fname),
 	)
 	defer func(start time.Time) {
-		p.env.Log.Debug("Sending content to Kindle - done", zap.Duration("elapsed", time.Now().Sub(start)))
+		p.env.Log.Debug("Sending content to Kindle - done", zap.Duration("elapsed", time.Since(start)))
 	}(start)
 
 	m := gomail.NewMessage()
@@ -547,7 +548,7 @@ func (p *Processor) processDescription() error {
 	p.env.Log.Debug("Parsing description - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Parsing description - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 			zap.Stringer("id", p.Book.ID),
 			zap.String("title", p.Book.Title),
 			zap.Stringer("lang", p.Book.Lang),
@@ -750,7 +751,7 @@ func (p *Processor) processBodies() error {
 	p.env.Log.Debug("Parsing bodies - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Parsing bodies - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 		)
 	}(start)
 
@@ -765,7 +766,8 @@ func (p *Processor) processBodies() error {
 
 func (p *Processor) parseNoteSection(el *etree.Element, name string) {
 
-	if el.Tag == "title" {
+	switch {
+	case el.Tag == "title":
 		// Sometimes note section has separate title - we want to use it in TOC
 		t := SanitizeTitle(getTextFragment(el))
 		if len(t) > 0 {
@@ -789,7 +791,7 @@ func (p *Processor) parseNoteSection(el *etree.Element, name string) {
 				parsed: child.Copy(),
 			}
 		}
-	} else if el.Tag == "section" && getAttrValue(el, "id") != "" {
+	case el.Tag == "section" && getAttrValue(el, "id") != "":
 		id := getAttrValue(el, "id")
 		note := &note{}
 		for _, c := range el.ChildElements() {
@@ -802,7 +804,7 @@ func (p *Processor) parseNoteSection(el *etree.Element, name string) {
 		}
 		p.Book.NotesOrder = append(p.Book.NotesOrder, notelink{id: id, bodyName: name})
 		p.Book.Notes[id] = note
-	} else {
+	default:
 		// Sometimes there are sections inside sections to no end...
 		for _, section := range el.ChildElements() {
 			p.parseNoteSection(section, name)
@@ -817,7 +819,7 @@ func (p *Processor) processNotes() error {
 	p.env.Log.Debug("Parsing notes - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Parsing notes - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 			zap.Int("body titles", len(p.Book.NoteBodyTitles)),
 			zap.Int("notes", len(p.Book.NotesOrder)),
 		)
@@ -842,7 +844,7 @@ func (p *Processor) processBinaries() error {
 	p.env.Log.Debug("Parsing images - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Parsing images - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 			zap.Int("images", len(p.Book.Images)),
 		)
 	}(start)
@@ -955,7 +957,7 @@ func (p *Processor) processLinks() error {
 	p.env.Log.Debug("Processing links - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Processing links - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 		)
 	}(start)
 
@@ -983,7 +985,7 @@ func (p *Processor) processImages() error {
 	p.env.Log.Debug("Processing images - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Processing images - done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 		)
 	}(start)
 

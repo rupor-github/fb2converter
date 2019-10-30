@@ -279,7 +279,8 @@ func BuildConfig(fname string) (*Config, error) {
 	var base string
 
 	c := config.NewConfig()
-	if fname == "-" {
+	switch {
+	case fname == "-":
 		// stdin - json format ONLY
 		source, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
@@ -297,7 +298,7 @@ func BuildConfig(fname string) (*Config, error) {
 		if base, err = os.Getwd(); err != nil {
 			return nil, errors.Wrap(err, "unable to get working directory")
 		}
-	} else if len(fname) > 0 {
+	case len(fname) > 0:
 		// from file
 		var enc encoder.Encoder
 		switch strings.ToLower(filepath.Ext(fname)) {
@@ -322,7 +323,7 @@ func BuildConfig(fname string) (*Config, error) {
 		if base, err = filepath.Abs(filepath.Dir(fname)); err != nil {
 			return nil, errors.Wrap(err, "unable to get configuration directory")
 		}
-	} else {
+	default:
 		// default values
 		err := c.Load(memory.NewSource(memory.WithJSON(defaultConfig)))
 		if err != nil {
@@ -565,7 +566,7 @@ func (conf *Config) PrepareLog() (*zap.Logger, error) {
 		} else {
 			flags |= os.O_TRUNC
 		}
-		if f, err = os.OpenFile(conf.FileLogger.Destination, flags, 0644); err != nil {
+		if f, err = os.OpenFile(fname, flags, 0644); err != nil {
 			return nil, err
 		}
 		return f, nil

@@ -55,7 +55,7 @@ func GetFirstRuneString(in string) string {
 // GenSafeName takes a string and generates file name form it which is safe to use everywhere.
 func GenSafeName(name string) string {
 	h := md5.New()
-	io.WriteString(h, name)
+	_, _ = io.WriteString(h, name)
 	return fmt.Sprintf("zz%x", h.Sum(nil))
 }
 
@@ -91,7 +91,7 @@ func FirstLine(in string) string {
 func ReplaceKeywords(in string, m map[string]string) string {
 
 	expandKeyword := func(in, key, value string) (string, bool) {
-		if strings.Index(in, key) != -1 {
+		if strings.Contains(in, key) {
 			return strings.Replace(in, key, value, -1), len(value) > 0
 		}
 		return in, false

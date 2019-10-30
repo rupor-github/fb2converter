@@ -33,7 +33,9 @@ func zipRemoveDataDescriptors(from, to string) error {
 		file.Flags &= ^fixzip.FlagDataDescriptor
 
 		// copy zip entry
-		w.CopyFile(file)
+		if err := w.CopyFile(file); err != nil {
+			return errors.Wrapf(err, "unable to write EPUB: %s", to)
+		}
 	}
 	return nil
 }
@@ -137,10 +139,8 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 		}
 	} else if !os.IsNotExist(err) {
 		return err
-	} else {
-		if err := os.MkdirAll(filepath.Dir(fname), 0700); err != nil {
-			return errors.Wrap(err, "unable to create output directory")
-		}
+	} else if err := os.MkdirAll(filepath.Dir(fname), 0700); err != nil {
+		return errors.Wrap(err, "unable to create output directory")
 	}
 
 	if p.env.Cfg.Doc.FixZip {
@@ -153,10 +153,8 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 		if p.env.Cfg.Doc.FixZip {
 			return zipRemoveDataDescriptors(tmp, fname)
 		}
-	} else {
-		if err := p.writeEPUB(fname); err != nil {
-			return err
-		}
+	} else if err := p.writeEPUB(fname); err != nil {
+		return err
 	}
 	return nil
 }

@@ -187,7 +187,7 @@ func (ctx *context) createOCF(name string) (*etree.Element, *dataFile) {
 		doc:       ctx.out,
 	}
 
-	ctx.out.Element.AddNext("container",
+	ocf := ctx.out.Element.AddNext("container",
 		attr("version", "1.0"),
 		attr("xmlns", `urn:oasis:names:tc:opendocument:xmlns:container`)).
 		AddNext("rootfiles").
@@ -195,7 +195,7 @@ func (ctx *context) createOCF(name string) (*etree.Element, *dataFile) {
 			attr("full-path", filepath.ToSlash(filepath.Join(DirContent, "content.opf"))),
 			attr("media-type", "application/oebps-package+xml"))
 
-	return nil, f
+	return ocf, f
 }
 
 // Stacked variables allow context to keep values localized within come arbitrary boundaries, rather than using stack form function calls. This is
@@ -205,6 +205,7 @@ type stackedBool struct {
 	ptr *bool
 }
 
+//nolint:unused
 func (pb *stackedBool) val() bool {
 	return *pb.ptr
 }
@@ -232,10 +233,12 @@ type stackedInt struct {
 	ptr *int
 }
 
+//nolint:unused
 func (pi *stackedInt) val() int {
 	return *pi.ptr
 }
 
+//nolint:unused
 func (pi *stackedInt) set(val int) {
 	*pi.ptr = val
 }

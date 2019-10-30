@@ -35,10 +35,8 @@ func (p *Processor) FinalizeMOBI(fname string) error {
 		}
 	} else if !os.IsNotExist(err) {
 		return err
-	} else {
-		if err := os.MkdirAll(filepath.Dir(fname), 0700); err != nil {
-			return errors.Wrap(err, "unable to create output directory")
-		}
+	} else if err := os.MkdirAll(filepath.Dir(fname), 0700); err != nil {
+		return errors.Wrap(err, "unable to create output directory")
 	}
 
 	if p.env.Cfg.Doc.Kindlegen.NoOptimization {
@@ -89,10 +87,8 @@ func (p *Processor) FinalizeAZW3(fname string) error {
 		}
 	} else if !os.IsNotExist(err) {
 		return err
-	} else {
-		if err := os.MkdirAll(filepath.Dir(fname), 0700); err != nil {
-			return errors.Wrap(err, "unable to create output directory")
-		}
+	} else if err := os.MkdirAll(filepath.Dir(fname), 0700); err != nil {
+		return errors.Wrap(err, "unable to create output directory")
 	}
 
 	if p.env.Cfg.Doc.Kindlegen.NoOptimization {
@@ -130,14 +126,12 @@ func (p *Processor) generateIntermediateContent(fname string) (string, error) {
 
 	workDir := filepath.Join(p.tmpDir, DirContent)
 	if p.kind == InEpub {
-		// TODO: for now - I do not even want to unpack epubs
 		workDir = p.tmpDir
 	}
 	workFile := strings.TrimSuffix(filepath.Base(fname), filepath.Ext(fname)) + ".mobi"
 
 	args := make([]string, 0, 10)
 	if p.kind == InEpub {
-		// TODO: for now - I do not even want to unpack epubs
 		args = append(args, filepath.Join(p.tmpDir, filepath.Base(p.src)))
 	} else {
 		args = append(args, filepath.Join(workDir, "content.opf"))
@@ -155,7 +149,7 @@ func (p *Processor) generateIntermediateContent(fname string) (string, error) {
 	p.env.Log.Debug("kindlegen staring")
 	defer func(start time.Time) {
 		p.env.Log.Debug("kindlegen done",
-			zap.Duration("elapsed", time.Now().Sub(start)),
+			zap.Duration("elapsed", time.Since(start)),
 			zap.String("path", cmd.Path),
 			zap.Strings("args", args),
 		)

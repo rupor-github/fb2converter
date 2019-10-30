@@ -37,6 +37,7 @@ func getTextFragment(e *etree.Element) string {
 	return extractText(e, true)
 }
 
+//nolint:deadcode,unused
 func getXMLFragment(d *etree.Document) string {
 	d.IndentTabs()
 	s, err := d.WriteToString()

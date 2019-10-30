@@ -4,6 +4,7 @@
 
 // Package etree provides XML services through an Element Tree
 // abstraction (forked from https://github.com/beevik/etree and modified).
+//nolint:errcheck
 package etree
 
 import (
@@ -336,7 +337,7 @@ func (e *Element) Text() string {
 			if text == "" {
 				text = cd.Data
 			} else {
-				text = text + cd.Data
+				text += cd.Data
 			}
 		} else {
 			break
@@ -741,9 +742,7 @@ func (e *Element) dup(parent *Element) Token {
 	for i, t := range e.Child {
 		ne.Child[i] = t.dup(ne)
 	}
-	for i, a := range e.Attr {
-		ne.Attr[i] = a
-	}
+	copy(ne.Attr, e.Attr)
 	return ne
 }
 
@@ -869,7 +868,8 @@ func (e *Element) RemoveAttr(key string) *Attr {
 	for i, a := range e.Attr {
 		if space == a.Space && skey == a.Key {
 			e.Attr = append(e.Attr[0:i], e.Attr[i+1:]...)
-			return &a
+			res := a
+			return &res
 		}
 	}
 	return nil
@@ -948,11 +948,6 @@ func (c *CharData) dup(parent *Element) Token {
 		whitespace: c.whitespace,
 		parent:     parent,
 	}
-}
-
-// setIndent stores values necessary to properly indent output if requested.
-func (c *CharData) setIndent(_ int, _ indentFunc) {
-	// do nothing - noop
 }
 
 // setTail sets Token tail

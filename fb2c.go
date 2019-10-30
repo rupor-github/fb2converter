@@ -103,7 +103,7 @@ func (w *appWrapper) afterAppRun(c *cli.Context) error {
 		w.log.Debug("Program ended", zap.Strings("parsed args", c.Args()))
 
 		w.stdlogRestore()
-		w.log.Sync()
+		_ = w.log.Sync()
 	}
 	return nil
 }
@@ -242,7 +242,7 @@ Exports built-in resources (example configuration, style sheets, fonts, etc.) fo
 	if err := app.Run(os.Args); err != nil {
 		if wrap.log != nil {
 			// wrap.log.Error("unable to continue", zap.Error(err))
-			wrap.log.Sync()
+			_ = wrap.log.Sync()
 		}
 		os.Exit(1)
 	}

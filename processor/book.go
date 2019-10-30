@@ -145,15 +145,15 @@ func (b *Book) flushData(path string) error {
 		wg.Add(1)
 		go func(job <-chan *dataFile, res chan<- error) {
 			defer wg.Done()
-			for stop := false; !stop && atomic.LoadInt32(&haveError) == 0; {
-				select {
-				case f := <-job:
-					if f == nil {
-						stop = true
-					} else if err := f.flush(path); err != nil {
-						res <- err
-						atomic.AddInt32(&haveError, 1)
-					}
+			for f := range job {
+				if f == nil || atomic.LoadInt32(&haveError) != 0 {
+					break
+				}
+				err := f.flush(path)
+				if err != nil {
+					atomic.AddInt32(&haveError, 1)
+					res <- err
+					break
 				}
 			}
 		}(job, res)
@@ -201,15 +201,15 @@ func (b *Book) flushXHTML(path string) error {
 		wg.Add(1)
 		go func(job <-chan *dataFile, res chan<- error) {
 			defer wg.Done()
-			for stop := false; !stop && atomic.LoadInt32(&haveError) == 0; {
-				select {
-				case f := <-job:
-					if f == nil {
-						stop = true
-					} else if err := f.flush(path); err != nil {
-						res <- err
-						atomic.AddInt32(&haveError, 1)
-					}
+			for f := range job {
+				if f == nil || atomic.LoadInt32(&haveError) != 0 {
+					break
+				}
+				err := f.flush(path)
+				if err != nil {
+					atomic.AddInt32(&haveError, 1)
+					res <- err
+					break
 				}
 			}
 		}(job, res)
@@ -259,15 +259,15 @@ func (b *Book) flushImages(path string) error {
 		wg.Add(1)
 		go func(job <-chan *binImage, res chan<- error) {
 			defer wg.Done()
-			for stop := false; !stop && atomic.LoadInt32(&haveError) == 0; {
-				select {
-				case f := <-job:
-					if f == nil {
-						stop = true
-					} else if err := f.flush(path); err != nil {
-						res <- err
-						atomic.AddInt32(&haveError, 1)
-					}
+			for f := range job {
+				if f == nil || atomic.LoadInt32(&haveError) != 0 {
+					break
+				}
+				err := f.flush(path)
+				if err != nil {
+					atomic.AddInt32(&haveError, 1)
+					res <- err
+					break
 				}
 			}
 		}(job, res)

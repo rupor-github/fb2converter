@@ -25,7 +25,7 @@ func processEpub(r io.Reader, src, dst string, nodirs, stk, overwrite bool, form
 	start := time.Now()
 	env.Log.Info("Transfer starting", zap.String("from", src))
 	defer func(start time.Time) {
-		env.Log.Info("Transfer completed", zap.Duration("elapsed", time.Now().Sub(start)), zap.String("to", fname))
+		env.Log.Info("Transfer completed", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname))
 	}(start)
 
 	p, err := processor.NewEPUB(r, src, dst, nodirs, stk, overwrite, format, env)
@@ -92,7 +92,7 @@ func Transfer(ctx *cli.Context) (err error) {
 	start := time.Now()
 	env.Log.Info("Processing starting", zap.String("source", src), zap.String("destination", dst), zap.Stringer("format", format))
 	defer func(start time.Time) {
-		env.Log.Info("Processing completed", zap.Duration("elapsed", time.Now().Sub(start)))
+		env.Log.Info("Processing completed", zap.Duration("elapsed", time.Since(start)))
 	}(start)
 
 	fi, err := os.Stat(src)
@@ -100,7 +100,8 @@ func Transfer(ctx *cli.Context) (err error) {
 		return cli.NewExitError(errors.Errorf("%sinput source was not found (%s)", errPrefix, src), errCode)
 	}
 
-	if fi.Mode().IsDir() {
+	switch mode := fi.Mode(); {
+	case mode.IsDir():
 		count := 0
 		if err = filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -131,7 +132,7 @@ func Transfer(ctx *cli.Context) (err error) {
 		if count == 0 {
 			env.Log.Debug("Nothing to process", zap.String("dir", src))
 		}
-	} else if fi.Mode().IsRegular() {
+	case mode.IsRegular():
 		if ok, err := isEpubFile(src); err != nil {
 			// checking format - but cannot open target file
 			return cli.NewExitError(errors.Wrapf(err, "%sunable to check file type", errPrefix), errCode)
@@ -147,7 +148,7 @@ func Transfer(ctx *cli.Context) (err error) {
 				env.Log.Error("Unable to process file", zap.String("file", src), zap.Error(err))
 			}
 		}
-	} else {
+	default:
 		return cli.NewExitError(errors.Errorf("%sunsupported type of input source (%s)", errPrefix, src), errCode)
 	}
 	return nil
