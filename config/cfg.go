@@ -113,26 +113,27 @@ func (c *SMTPConfig) IsValid() bool {
 
 // Doc format configuration for book processor.
 type Doc struct {
-	TitleFormat           string  `json:"title_format"`
-	AuthorFormat          string  `json:"author_format"`
-	AuthorFormatMeta      string  `json:"author_format_meta"`
-	AuthorFormatFileName  string  `json:"author_format_file_name"`
-	TransliterateMeta     bool    `json:"transliterate_meta"`
-	OpenFromCover         bool    `json:"open_from_cover"`
-	ChapterPerFile        bool    `json:"chapter_per_file"`
-	ChapterLevel          int     `json:"chapter_level"`
-	SeqNumPos             int     `json:"series_number_positions"`
-	RemovePNGTransparency bool    `json:"remove_png_transparency"`
-	ImagesScaleFactor     float64 `json:"images_scale_factor"`
-	Stylesheet            string  `json:"style"`
-	CharsPerPage          int     `json:"characters_per_page"`
-	PagesPerFile          int     `json:"pages_per_file"`
-	Hyphenate             bool    `json:"insert_soft_hyphen"`
-	NoNBSP                bool    `json:"ignore_nonbreakable_space"`
-	UseBrokenImages       bool    `json:"use_broken_images"`
-	FileNameFormat        string  `json:"file_name_format"`
-	FileNameTransliterate bool    `json:"file_name_transliterate"`
-	FixZip                bool    `json:"fix_zip_format"`
+	TitleFormat           string   `json:"title_format"`
+	AuthorFormat          string   `json:"author_format"`
+	AuthorFormatMeta      string   `json:"author_format_meta"`
+	AuthorFormatFileName  string   `json:"author_format_file_name"`
+	TransliterateMeta     bool     `json:"transliterate_meta"`
+	OpenFromCover         bool     `json:"open_from_cover"`
+	ChapterPerFile        bool     `json:"chapter_per_file"`
+	ChapterLevel          int      `json:"chapter_level"`
+	SeqNumPos             int      `json:"series_number_positions"`
+	RemovePNGTransparency bool     `json:"remove_png_transparency"`
+	ImagesScaleFactor     float64  `json:"images_scale_factor"`
+	Stylesheet            string   `json:"style"`
+	CharsPerPage          int      `json:"characters_per_page"`
+	PagesPerFile          int      `json:"pages_per_file"`
+	ChapterDividers       []string `json:"chapter_subtitle_dividers"`
+	Hyphenate             bool     `json:"insert_soft_hyphen"`
+	NoNBSP                bool     `json:"ignore_nonbreakable_space"`
+	UseBrokenImages       bool     `json:"use_broken_images"`
+	FileNameFormat        string   `json:"file_name_format"`
+	FileNameTransliterate bool     `json:"file_name_transliterate"`
+	FixZip                bool     `json:"fix_zip_format"`
 	//
 	DropCaps struct {
 		Create        bool   `json:"create"`

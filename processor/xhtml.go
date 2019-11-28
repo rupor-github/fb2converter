@@ -472,15 +472,11 @@ func init() {
 	// all tags mentioned in "http://www.gribuser.ru/xml/fictionbook/2.2/xsd/FictionBook2.2.xsd" and then some
 	supportedTransfers = map[string]func(p *Processor, from, to *etree.Element) error{
 
-		"title":   transferTitle,
-		"image":   transferImage,
-		"section": transferSection,
-		"span":    transferSpan,
-		"subtitle": func(p *Processor, from, to *etree.Element) error {
-			p.ctx().inSubHeader = true
-			defer func() { p.ctx().inSubHeader = false }()
-			return p.transfer(from, to, "p", "subtitle")
-		},
+		"title":    transferTitle,
+		"image":    transferImage,
+		"section":  transferSection,
+		"span":     transferSpan,
+		"subtitle": transferSubtitle,
 		"epigraph": func(p *Processor, from, to *etree.Element) error {
 			p.ctx().specialParagraph = true
 			defer func() { p.ctx().specialParagraph = false }()
@@ -551,6 +547,28 @@ func init() {
 		"td":    transferTableElement,
 		"th":    transferTableElement,
 	}
+}
+
+func transferSubtitle(p *Processor, from, to *etree.Element) error {
+
+	t := from.Text()
+	if len(t) != 0 {
+		for _, dv := range p.env.Cfg.Doc.ChapterDividers {
+			if t == dv && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
+
+				// open next XHTML
+				var f *dataFile
+				to, f = p.ctx().createXHTML("")
+				// store it for future flushing
+				p.Book.Files = append(p.Book.Files, f)
+				p.Book.Pages[f.fname] = 0
+			}
+		}
+	}
+
+	p.ctx().inSubHeader = true
+	defer func() { p.ctx().inSubHeader = false }()
+	return p.transfer(from, to, "p", "subtitle")
 }
 
 func transferParagraph(p *Processor, from, to *etree.Element) error {
