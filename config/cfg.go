@@ -161,7 +161,7 @@ type Doc struct {
 		ImagePath string `json:"image_path"`
 		Width     int    `json:"width"`
 		Height    int    `json:"height"`
-		Resize    bool   `json:"resize_cover"`
+		Resize    bool   `json:"resize"`
 		Placement string `json:"stamp_placement"`
 		Font      string `json:"stamp_font"`
 	} `json:"cover"`

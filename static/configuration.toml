@@ -179,7 +179,7 @@
 		width = 1264
 		height = 1680
 		#---- For kindle cover image always resized to screen dimensions, if you want similar behavior for other formats, specify if below.
-		resize_cover = false
+		resize = false
 		#---- Places stamp with title, author and book sequence on cover image (if default cover used - it always will be stamped)
 		#---- "none" - no stamping
 		#---- "top" - stamp at the top of cover
