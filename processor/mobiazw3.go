@@ -173,6 +173,7 @@ func (p *Processor) generateIntermediateContent(fname string) (string, error) {
 		return "", errors.Wrap(err, "kindlegen stdout pipe broken")
 	}
 
+	result := filepath.Join(workDir, workFile)
 	if err := cmd.Wait(); err != nil {
 		if ee, ok := err.(*exec.ExitError); ok {
 			if len(ee.Stderr) > 0 {
@@ -186,9 +187,9 @@ func (p *Processor) generateIntermediateContent(fname string) (string, error) {
 				fallthrough
 			case 0:
 				// success
-				if _, err := os.Stat(workFile); err != nil {
+				if _, err := os.Stat(result); err != nil {
 					// kindlegen lied
-					return "", errors.Wrap(err, "kindlegen did not return an error, but there is no content")
+					return "", errors.Wrapf(err, "kindlegen did not return an error, but there is no content (%s)", result)
 				}
 			case 2:
 				// error - unable to create mobi
@@ -200,5 +201,5 @@ func (p *Processor) generateIntermediateContent(fname string) (string, error) {
 			return "", errors.Wrap(err, "kindlegen returned error")
 		}
 	}
-	return filepath.Join(workDir, workFile), nil
+	return result, nil
 }

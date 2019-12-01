@@ -442,10 +442,14 @@ func (s *Splitter) processPageData(data []byte) {
 		return
 	}
 
-	revlen := getInt32(data, 0x10)
+	// NOTE: In some cases kindlegen puts additional word in the header, which looks like length of the offset map.
+	// So far this only happens during "transfer" on foreign epub files. We will ignore it for now, but have to
+	// account for it to avoid panic. KindleUnpack does not seem to know about it yet.
+	ver := getInt16(data, 0x0A)
+	revlen := getInt32(data, 0x10+(ver-1)*4)
 
 	// skip over header, revision string length data, and revision string
-	ofs := 0x14 + revlen
+	ofs := 0x14 + (ver-1)*4 + revlen
 	pmlen, pmnn, pmbits := getInt16(data, ofs+2), getInt16(data, ofs+4), getInt16(data, ofs+6)
 
 	pmstr, pmoff := data[ofs+8:ofs+8+pmlen], data[ofs+8+pmlen:]

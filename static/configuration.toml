@@ -175,10 +175,12 @@
 		# default = false
 		#---- Will be used as default cover image. If not specified - one will be provided by the program
 		# image_path = "default_cover.jpeg"
-		#---- Specify device screen size so cover image could be adjusted properly. Defaults to Oasis 2
+		#---- Specify device screen size so cover image could be adjusted properly. It defaults to Oasis 2 (width = 1264, height = 1680)
 		width = 1264
 		height = 1680
-		#---- Places stamp with title, author and book sequence on cover image (if default cover used - it alwaays will be stamped)
+		#---- For kindle cover image always resized to screen dimensions, if you want similar behavior for other formats, specify if below.
+		resize_cover = false
+		#---- Places stamp with title, author and book sequence on cover image (if default cover used - it always will be stamped)
 		#---- "none" - no stamping
 		#---- "top" - stamp at the top of cover
 		#---- "middle" - stamp in the middle of cover

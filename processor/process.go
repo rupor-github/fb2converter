@@ -241,15 +241,30 @@ func NewEPUB(r io.Reader, src, dst string, nodirs, stk, overwrite bool, format O
 
 	var err error
 
+	var apnx APNXGeneration
+	if format == OAzw3 || format == OMobi {
+		if stk && format == OMobi && env.Cfg.SMTPConfig.IsValid() && env.Cfg.SMTPConfig.DeleteOnSuccess {
+			// Do not create pagemap - we do not need it
+			apnx = APNXNone
+		} else {
+			apnx = ParseAPNXGenerationSring(env.Cfg.Doc.Kindlegen.PageMap)
+			if apnx == UnsupportedAPNXGeneration {
+				env.Log.Warn("Unknown APNX generation option requested, turning off", zap.String("apnx", env.Cfg.Doc.Kindlegen.PageMap))
+				apnx = APNXNone
+			}
+		}
+	}
+
 	p := &Processor{
-		kind:      InEpub,
-		src:       src,
-		dst:       dst,
-		nodirs:    nodirs,
-		stk:       stk,
-		overwrite: overwrite,
-		format:    format,
-		env:       env,
+		kind:          InEpub,
+		src:           src,
+		dst:           dst,
+		nodirs:        nodirs,
+		stk:           stk,
+		kindlePageMap: apnx,
+		overwrite:     overwrite,
+		format:        format,
+		env:           env,
 	}
 
 	// Fail early
