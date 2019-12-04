@@ -79,7 +79,7 @@ endif()
 
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 35)
+set(PRJ_VERSION_MINOR 36)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -225,7 +225,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         DEPENDS ${PROJECT_BINARY_DIR}/stringer
             ${PROJECT_SOURCE_DIR}/processor/enums.go
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on
-        ${PROJECT_BINARY_DIR}/stringer -linecomment -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement # ,KDFTable
+        ${PROJECT_BINARY_DIR}/stringer -linecomment -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement,CoverProcessing
                 -output ${PROJECT_SOURCE_DIR}/processor/enums_string.go
                 ${PROJECT_SOURCE_DIR}/processor/enums.go
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"

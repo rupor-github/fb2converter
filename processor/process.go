@@ -78,6 +78,7 @@ type Processor struct {
 	tocType        TOCType
 	kindlePageMap  APNXGeneration
 	stampPlacement StampPlacement
+	coverResize    CoverProcessing
 	// working directory
 	tmpDir string
 	// input document
@@ -138,6 +139,14 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 			env.Log.Warn("Unknown stamp placement requested, using default (none - if book has cover, middle - otherwise)", zap.String("placement", env.Cfg.Doc.Cover.Placement))
 		}
 	}
+	var resize CoverProcessing
+	if len(env.Cfg.Doc.Cover.Resize) > 0 {
+		resize = ParseCoverProcessingString(env.Cfg.Doc.Cover.Resize)
+		if resize == UnsupportedCoverProcessing {
+			env.Log.Warn("Unknown cover resizing mode requested, using default", zap.String("resize", env.Cfg.Doc.Cover.Resize))
+			resize = CoverNone
+		}
+	}
 
 	p := &Processor{
 		kind:            InFb2,
@@ -152,6 +161,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		tocPlacement:    place,
 		kindlePageMap:   apnx,
 		stampPlacement:  stamp,
+		coverResize:     resize,
 		doc:             etree.NewDocument(),
 		Book:            NewBook(u, filepath.Base(src)),
 		env:             env,

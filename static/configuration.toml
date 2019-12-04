@@ -178,8 +178,11 @@
 		#---- Specify device screen size so cover image could be adjusted properly. It defaults to Oasis 2 (width = 1264, height = 1680)
 		width = 1264
 		height = 1680
-		#---- For kindle cover image always resized to screen dimensions, if you want similar behavior for other formats, specify if below.
-		resize = false
+		#---- Specifies how to additionally process cover image.
+		#---- "none" - do nothing for non-Kindle formats, for Kindle if image height is less than specified above, resize to specified height keeping aspect ratio
+		#---- "keepAR" - unconditionally resize to specified height keeping aspect ratio
+		#---- "stretch" - unconditionally resize to specified width and height
+		resize = "none"
 		#---- Places stamp with title, author and book sequence on cover image (if default cover used - it always will be stamped)
 		#---- "none" - no stamping
 		#---- "top" - stamp at the top of cover

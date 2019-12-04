@@ -139,3 +139,25 @@ func ParseStampPlacementString(format string) StampPlacement {
 	}
 	return UnsupportedStampPlacement
 }
+
+// CoverProcessing specifies how cover image would be processed (if applicable)
+type CoverProcessing int
+
+// Supported processing modes
+const (
+	CoverNone                  CoverProcessing = iota // none
+	CoverKeepAR                                       // keepAR
+	CoverStretch                                      // stretch
+	UnsupportedCoverProcessing                        //
+)
+
+// ParseCoverProcessingString converts string to enum value. Case insensitive.
+func ParseCoverProcessingString(format string) CoverProcessing {
+
+	for i := CoverNone; i < UnsupportedCoverProcessing; i++ {
+		if strings.EqualFold(i.String(), format) {
+			return i
+		}
+	}
+	return UnsupportedCoverProcessing
+}
