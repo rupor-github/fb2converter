@@ -44,8 +44,8 @@ func (w *appWrapper) beforeAppRun(c *cli.Context) error {
 	}
 
 	// Prepare configuration
-	fconfig := c.GlobalString("config")
-	if env.Cfg, err = config.BuildConfig(fconfig); err != nil {
+	fconfig := c.GlobalStringSlice("config")
+	if env.Cfg, err = config.BuildConfig(fconfig...); err != nil {
 		return cli.NewExitError(errors.Wrapf(err, "%sunable to build configuration", errPrefix), errCode)
 	}
 
@@ -136,7 +136,7 @@ func main() {
 		cli.GenericFlag{Name: state.FlagName, Hidden: true, Usage: "--internal--", Value: state.NewLocalEnv()},
 		cli.IntFlag{Name: "mhl", Value: config.MhlNone, Hidden: true, Usage: "--internal--"},
 
-		cli.StringFlag{Name: "config, c", Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
+		cli.StringSliceFlag{Name: "config, c", Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
 		cli.BoolFlag{Name: "debug, d", Usage: "leave behind various artifacts for debugging (do not delete intermediate results)"},
 	}
 

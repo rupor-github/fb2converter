@@ -575,6 +575,7 @@ func (p *Processor) processDescription() error {
 		p.env.Log.Debug("Parsing description - done",
 			zap.Duration("elapsed", time.Since(start)),
 			zap.Stringer("id", p.Book.ID),
+			zap.String("asin", p.Book.ASIN),
 			zap.String("title", p.Book.Title),
 			zap.Stringer("lang", p.Book.Lang),
 			zap.String("cover", p.Book.Cover),
@@ -719,7 +720,7 @@ func (p *Processor) processDescription() error {
 		}
 	}
 
-	// Let's see if we need to correct any meta information
+	// Let's see if we need to correct any meta information - always comes last
 	if p.metaOverwrite == nil {
 		return nil
 	}
@@ -727,16 +728,23 @@ func (p *Processor) processDescription() error {
 	if len(p.metaOverwrite.ID) > 0 {
 		if u, err := uuid.Parse(strings.TrimSpace(p.metaOverwrite.ID)); err == nil {
 			p.Book.ID = u
+			p.env.Log.Info("Meta overwrite", zap.Stringer("id", p.Book.ID))
 		}
+	}
+	if len(p.metaOverwrite.ASIN) == 10 && govalidator.IsAlphanumeric(p.metaOverwrite.ASIN) {
+		p.Book.ASIN = p.metaOverwrite.ASIN
+		p.env.Log.Info("Meta overwrite", zap.String("asin", p.Book.ASIN))
 	}
 	title := strings.TrimSpace(p.metaOverwrite.Title)
 	if len(title) > 0 {
 		p.Book.Title = title
+		p.env.Log.Info("Meta overwrite", zap.String("title", p.Book.Title))
 	}
 	if len(p.metaOverwrite.Lang) > 0 {
 		if l := strings.TrimSpace(p.metaOverwrite.Lang); len(l) > 0 {
 			if t, err := language.Parse(l); err == nil {
 				p.Book.Lang = t
+				p.env.Log.Info("Meta overwrite", zap.Stringer("lang", p.Book.Lang))
 				if p.env.Cfg.Doc.Hyphenate {
 					p.Book.hyph = newHyph(t, p.env.Log)
 				}
@@ -751,20 +759,25 @@ func (p *Processor) processDescription() error {
 	}
 	if len(genres) > 0 {
 		p.Book.Genres = genres
+		p.env.Log.Info("Meta overwrite", zap.Strings("genres", p.Book.Genres))
 	}
 	if len(p.metaOverwrite.Authors) > 0 {
 		p.Book.Authors = append([]*config.AuthorName{}, p.metaOverwrite.Authors...)
+		p.env.Log.Info("Meta overwrite", zap.String("authors", p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, false)))
 	}
 	seq := strings.TrimSpace(p.metaOverwrite.SeqName)
 	if len(seq) > 0 {
 		p.Book.SeqName = seq
+		p.env.Log.Info("Meta overwrite", zap.String("sequence", p.Book.SeqName))
 	}
 	if p.metaOverwrite.SeqNum > 0 {
 		p.Book.SeqNum = p.metaOverwrite.SeqNum
+		p.env.Log.Info("Meta overwrite", zap.Int("sequence number", p.Book.SeqNum))
 	}
 	date := strings.TrimSpace(p.metaOverwrite.Date)
 	if len(date) > 0 {
 		p.Book.Date = date
+		p.env.Log.Info("Meta overwrite", zap.String("date", p.Book.Date))
 	}
 	return nil
 }
@@ -1039,6 +1052,7 @@ func (p *Processor) processImages() error {
 								b.ct = mime.TypeByExtension("." + b.imgType)
 								b.fname = strings.TrimSuffix(p.Book.Images[i].fname, filepath.Ext(p.Book.Images[i].fname)) + "." + b.imgType
 								p.Book.Images[i] = b
+								p.env.Log.Info("Meta overwrite", zap.String("cover", fname))
 							}
 						}
 					}

@@ -38,7 +38,7 @@ type Splitter struct {
 }
 
 // NewSplitter returns pointer to Slitter with parsed mobi file.
-func NewSplitter(fname string, u uuid.UUID, combo, nonPersonal, forceASIN bool, log *zap.Logger) (*Splitter, error) {
+func NewSplitter(fname string, u uuid.UUID, asin string, combo, nonPersonal, forceASIN bool, log *zap.Logger) (*Splitter, error) {
 
 	data, err := ioutil.ReadFile(fname)
 	if err != nil {
@@ -51,10 +51,17 @@ func NewSplitter(fname string, u uuid.UUID, combo, nonPersonal, forceASIN bool, 
 		contentGUID: strings.Replace(u.String(), "-", "", -1)[:8],
 	}
 
-	if combo {
-		s.produceCombo(data, u, nonPersonal)
+	var id []byte
+	if len(asin) == 0 {
+		id = convertToRadix32(strings.Replace(u.String(), "-", "", -1), 10)
 	} else {
-		s.produceKF8(data, u, nonPersonal, forceASIN)
+		id = []byte(asin)
+	}
+
+	if combo {
+		s.produceCombo(data, id, nonPersonal)
+	} else {
+		s.produceKF8(data, id, nonPersonal, forceASIN)
 	}
 	return s, nil
 }
@@ -88,7 +95,7 @@ func (s *Splitter) SavePageMap(fname string, eink bool) error {
 	return ioutil.WriteFile(filepath.Join(dir, base), s.pagedata, 0644)
 }
 
-func (s *Splitter) produceCombo(data []byte, u uuid.UUID, nonPersonal bool) {
+func (s *Splitter) produceCombo(data []byte, u []byte, nonPersonal bool) {
 
 	rec0 := readSection(data, 0)
 	if a := getInt32(rec0, mobiVersion); a == 8 {
@@ -150,7 +157,7 @@ func (s *Splitter) produceCombo(data []byte, u uuid.UUID, nonPersonal bool) {
 
 	asin := readExth(rec0, exthASIN)
 	if len(asin) == 0 {
-		s.asin = convertToRadix32(strings.Replace(u.String(), "-", "", -1), 10)
+		s.asin = u
 	} else {
 		s.asin = asin[0]
 	}
@@ -227,7 +234,7 @@ func (s *Splitter) produceCombo(data []byte, u uuid.UUID, nonPersonal bool) {
 
 	cdekey := readExth(kfrec0, exthCDEContentKey)
 	if len(cdekey) == 0 {
-		s.cdekey = convertToRadix32(strings.Replace(u.String(), "-", "", -1), 10)
+		s.cdekey = u
 	} else {
 		s.cdekey = cdekey[0]
 	}
@@ -245,7 +252,7 @@ func (s *Splitter) produceCombo(data []byte, u uuid.UUID, nonPersonal bool) {
 	s.processPageData(pdata)
 }
 
-func (s *Splitter) produceKF8(data []byte, u uuid.UUID, nonPersonal, forceASIN bool) {
+func (s *Splitter) produceKF8(data []byte, u []byte, nonPersonal, forceASIN bool) {
 
 	rec0 := readSection(data, 0)
 	if a := getInt32(rec0, mobiVersion); a == 8 {
@@ -270,7 +277,7 @@ func (s *Splitter) produceKF8(data []byte, u uuid.UUID, nonPersonal, forceASIN b
 
 	asin := readExth(rec0, exthASIN)
 	if len(asin) == 0 {
-		s.asin = convertToRadix32(strings.Replace(u.String(), "-", "", -1), 10)
+		s.asin = u
 	} else {
 		s.asin = asin[0]
 	}
@@ -420,7 +427,7 @@ func (s *Splitter) produceKF8(data []byte, u uuid.UUID, nonPersonal, forceASIN b
 	}
 	cdekey := readExth(kfrec0, exthCDEContentKey)
 	if len(cdekey) == 0 {
-		s.cdekey = convertToRadix32(strings.Replace(u.String(), "-", "", -1), 10)
+		s.cdekey = u
 		kfrec0 = addExth(kfrec0, exthCDEContentKey, s.cdekey)
 	} else {
 		s.cdekey = cdekey[0]

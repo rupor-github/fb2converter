@@ -1,6 +1,10 @@
 #-----------------------------------------------------------------------------------------------------------------------------
 #---- fb2converter engine configuration.
 #---- This should be UTF-8 only!
+#----
+#---- NOTE: you could specify multiple sources of configuration by providing multiple --config arguments. They are processed
+#---- in order of occurrence. Only one source could be read from "stdin"
+#----
 #-----------------------------------------------------------------------------------------------------------------------------
 
 [logger]
@@ -266,7 +270,7 @@
 
 #-----------------------------------------------------------------------------------------------------------------------------
 #---- Sometimes external processors will need to overwrite some or all of book meta-data and or cover image. You could specify
-#---- array of overwrites here
+#---- array of overwrites.
 #----
 #---- "name" specifies to which book overwrite is applicable, "*" means to all converted books, name could specify part of the
 #---- file path (relative to source path), for example "aaa/bbb.fb2" will cause meta data for all "bbb.fb2" files found under
@@ -276,13 +280,15 @@
 #-----
 #---- "meta" section could have any or all of following tags: "id", "language", "title", "genres", "authors", "sequence",
 #---- "sequence_number", "date" and "cover_image", where genres and authors are arrays of strings and cover_image is a path
-#---- to valid image. If any of the tags are wrong (file does not exists or bad, sequence number is negative, etc.) - they
-#---- will be dropped silently and no overwrite will be performed.
+#---- to valid image. Additional "asin" tag (10 alphanumeric characters) could be used for kindle formats providing GoodReads
+#---- integration on devices. If any of the tags are wrong (file does not exists or bad, sequence number is negative, etc.) -
+#---- they will be dropped silently and no overwrite will be performed.
 #-----------------------------------------------------------------------------------------------------------------------------
 #[[overwrites]]
 #	name = "*"
 #	[overwrites.meta]
 #		id = "250ddd1e-86e8-41c0-a881-0e0c96c4da7c"
+#		asin = "B06XWTFSKH"
 #		language = "hu"
 #		title = "Global title"
 #		genres = ["sci_fy", "history"]

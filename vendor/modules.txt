@@ -4,6 +4,8 @@ github.com/BurntSushi/toml
 github.com/asaskevich/govalidator
 # github.com/bitly/go-simplejson v0.5.0
 github.com/bitly/go-simplejson
+# github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d
+github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/disintegration/imaging v1.6.1
@@ -64,10 +66,14 @@ github.com/pkg/errors
 github.com/pkg/profile
 # github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be
 github.com/rainycape/unidecode
+# github.com/russross/blackfriday/v2 v2.0.1
+github.com/russross/blackfriday/v2
 # github.com/shuLhan/go-bindata v3.4.0+incompatible
 github.com/shuLhan/go-bindata
 github.com/shuLhan/go-bindata/cmd/go-bindata
-# github.com/urfave/cli v1.21.0
+# github.com/shurcooL/sanitized_anchor_name v1.0.0
+github.com/shurcooL/sanitized_anchor_name
+# github.com/urfave/cli v1.22.2
 github.com/urfave/cli
 # go.uber.org/atomic v1.4.0
 go.uber.org/atomic

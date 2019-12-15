@@ -53,7 +53,7 @@ func (p *Processor) FinalizeMOBI(fname string) error {
 		} else {
 			u = p.Book.ID
 		}
-		splitter, err := mobi.NewSplitter(tmp, u, true, p.env.Cfg.Doc.Kindlegen.RemovePersonal, false, p.env.Log)
+		splitter, err := mobi.NewSplitter(tmp, u, p.Book.ASIN, true, p.env.Cfg.Doc.Kindlegen.RemovePersonal, false, p.env.Log)
 		if err != nil {
 			return errors.Wrap(err, "unable to parse intermediate content file")
 		}
@@ -105,7 +105,7 @@ func (p *Processor) FinalizeAZW3(fname string) error {
 		} else {
 			u = p.Book.ID
 		}
-		splitter, err := mobi.NewSplitter(tmp, u, false, p.env.Cfg.Doc.Kindlegen.RemovePersonal, p.env.Cfg.Doc.Kindlegen.ForceASIN, p.env.Log)
+		splitter, err := mobi.NewSplitter(tmp, u, p.Book.ASIN, false, p.env.Cfg.Doc.Kindlegen.RemovePersonal, p.env.Cfg.Doc.Kindlegen.ForceASIN, p.env.Log)
 		if err != nil {
 			return errors.Wrap(err, "unable to parse intermediate content file")
 		}

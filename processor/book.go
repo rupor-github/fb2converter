@@ -41,6 +41,7 @@ type notelink struct {
 type Book struct {
 	// description
 	ID         uuid.UUID
+	ASIN       string
 	Title      string
 	Lang       language.Tag
 	Cover      string
