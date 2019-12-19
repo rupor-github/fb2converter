@@ -4,6 +4,7 @@ package commands
 import (
 	"archive/zip"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -202,6 +203,10 @@ func Convert(ctx *cli.Context) (err error) {
 	}
 	nodirs := ctx.Bool("nodirs")
 	overwrite := ctx.Bool("ow")
+
+	if !env.Cfg.Doc.ChapterPerFile && (env.Cfg.Doc.PagesPerFile != math.MaxInt32 || len(env.Cfg.Doc.ChapterDividers) > 0) {
+		env.Log.Warn("With chapter_per_file=false settings to control resulting content size (ex: pages_per_file, chapter_subtitle_dividers) will be ignored")
+	}
 
 	var cpage encoding.Encoding
 

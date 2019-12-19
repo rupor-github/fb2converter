@@ -93,6 +93,7 @@
 	#---- Place book chapters in separate files. On most reading devices it also means starting
 	#---- chapter on a new page. This mode usually provides faster reading experience as most readers
 	#---- keep only current content file in memory.
+	#---- NOTE: when this is "false" other settings controlling size of the resulting content are ignored.
 	chapter_per_file = true
 
 	#---- Determines on what level fb2 <section> becomes book chapter
@@ -119,10 +120,10 @@
 
 	#---- Some devices (definitely Kobo) become very slow when epub XHTML content file becomes too big.
 	#---- When set program will split content into smaller files using number of pages (see characters_per_page).
-	#---- NOTE: does not respect original formatting
+	#---- NOTE: does not respect original formatting, ignored when chapter_per_file set to "false"
 	# pages_per_file = 2147483647
 	#---- or you could specify subtitles on which chapter would be broken into smaller files. This setting is off by default - it has no default value.
-	#---- NOTE: it rarely makes sense to have both pages_per_file and chapter_subtitle_dividers active at the same time.
+	#---- NOTE: it rarely makes sense to have both pages_per_file and chapter_subtitle_dividers active at the same time, ignored when chapter_per_file set to "false".
 	# chapter_subtitle_dividers = [ "* * *", "///" ]
 
 	#---- Do not skip images which cannot be decoded by program. Use them without any processing, allowing reader to decide what to do.

@@ -551,17 +551,19 @@ func init() {
 
 func transferSubtitle(p *Processor, from, to *etree.Element) error {
 
-	t := from.Text()
-	if len(t) != 0 {
-		for _, dv := range p.env.Cfg.Doc.ChapterDividers {
-			if t == dv && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
+	if p.env.Cfg.Doc.ChapterPerFile {
+		t := from.Text()
+		if len(t) != 0 {
+			for _, dv := range p.env.Cfg.Doc.ChapterDividers {
+				if t == dv && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 
-				// open next XHTML
-				var f *dataFile
-				to, f = p.ctx().createXHTML("")
-				// store it for future flushing
-				p.Book.Files = append(p.Book.Files, f)
-				p.Book.Pages[f.fname] = 0
+					// open next XHTML
+					var f *dataFile
+					to, f = p.ctx().createXHTML("")
+					// store it for future flushing
+					p.Book.Files = append(p.Book.Files, f)
+					p.Book.Pages[f.fname] = 0
+				}
 			}
 		}
 	}
@@ -573,16 +575,18 @@ func transferSubtitle(p *Processor, from, to *etree.Element) error {
 
 func transferParagraph(p *Processor, from, to *etree.Element) error {
 
-	// Split content if requested
-	if pages, ok := p.Book.Pages[p.ctx().fname]; ok && pages >= p.env.Cfg.Doc.PagesPerFile &&
-		!p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
+	if p.env.Cfg.Doc.ChapterPerFile {
+		// Split content if requested
+		if pages, ok := p.Book.Pages[p.ctx().fname]; ok && pages >= p.env.Cfg.Doc.PagesPerFile &&
+			!p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 
-		// open next XHTML
-		var f *dataFile
-		to, f = p.ctx().createXHTML("")
-		// store it for future flushing
-		p.Book.Files = append(p.Book.Files, f)
-		p.Book.Pages[f.fname] = 0
+			// open next XHTML
+			var f *dataFile
+			to, f = p.ctx().createXHTML("")
+			// store it for future flushing
+			p.Book.Files = append(p.Book.Files, f)
+			p.Book.Pages[f.fname] = 0
+		}
 	}
 
 	var css string
@@ -720,8 +724,8 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 	p.ctx().header.Inc()
 	defer p.ctx().header.Dec()
 
-	if len(p.ctx().bodyName) == 0 && p.ctx().header.Int() < p.env.Cfg.Doc.ChapterLevel {
-		if p.env.Cfg.Doc.ChapterPerFile {
+	if p.env.Cfg.Doc.ChapterPerFile {
+		if len(p.ctx().bodyName) == 0 && p.ctx().header.Int() < p.env.Cfg.Doc.ChapterLevel {
 			// open next XHTML
 			var f *dataFile
 			to, f = p.ctx().createXHTML("")
