@@ -49,7 +49,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 		return p.transfer(from, to)
 	}
 
-	if p.notesMode != NFloat && p.notesMode != NFloatOld {
+	if p.notesMode != NFloat && p.notesMode != NFloatOld && p.notesMode != NFloatNew {
 		// NOTE: for block and inline notes we do not need to save XHTML, have nothing to put there
 		return nil
 	}
@@ -115,14 +115,14 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 				}
 			}
 
-			if p.notesMode == NFloatOld {
-				// old bi-directional mode
-				to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).
-					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
-			} else {
+			if p.notesMode == NFloatNew {
 				// new "preffered" HTML5 method with "aside"
 				to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).
 					AddNext("p", attr("class", "floatnote")).
+					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+			} else {
+				// old bi-directional mode
+				to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).
 					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
 			}
 		}
@@ -345,6 +345,8 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			case NFloat:
 				fallthrough
 			case NFloatOld:
+				fallthrough
+			case NFloatNew:
 				if _, ok := p.Book.Notes[noteID]; !ok {
 					css = "linkanchor"
 				} else {
@@ -393,7 +395,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			attrs[0] = attr("id", newid)
 			attrs[1] = attr("class", css)
 			attrs[2] = attr("href", href)
-			if p.notesMode == NFloat && tag == "a" {
+			if p.notesMode == NFloatNew && tag == "a" {
 				attrs = append(attrs, attr("epub:type", "noteref"))
 			}
 			inner = to.AddNext(tag, attrs...)

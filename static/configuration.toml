@@ -149,8 +149,9 @@
 		#---- "default"   - notes are links
 		#---- "inline"    - note is shown "in-place" and could be styled via css
 		#---- "block"     - motes are shown "in-place" at the paragraph end and could be styled via css
-		#---- "float"     - special mode for Kindle devices, pop up notes using "preferred" method - HTML5 with <aside>
-		#---- "float-old" - special mode for Kobo devices and such, pop up notes using "bi-directional links" method
+		#---- "float"     - pop up notes using "bi-directional links" method
+		#---- "float-old" - same as "float", pop up notes using "bi-directional links" method
+		#---- "float-new" - pop up notes using "preferred" method - HTML5 with <aside> recommended by Amazon publishing guidelines
 		mode = "default"
 		#---- Names of the <body> tags in fb2 document to consider for notes processing
 		body_names = [ "notes", "comments" ]
