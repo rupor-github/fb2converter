@@ -821,9 +821,9 @@ func transferImage(p *Processor, from, to *etree.Element) error {
 	out := to
 	if p.ctx().inParagraph {
 		if len(id) > 0 {
-			out.AddNext("img", attr("id", id), attr("src", path.Join(DirImages, fname)), attr("alt", alt))
+			out.AddNext("img", attr("id", id), attr("class", "inlineimage"), attr("src", path.Join(DirImages, fname)), attr("alt", alt)).SetTail(from.Tail())
 		} else {
-			out.AddNext("img", attr("class", "inlineimage"), attr("src", path.Join(DirImages, fname)), attr("alt", alt))
+			out.AddNext("img", attr("class", "inlineimage"), attr("src", path.Join(DirImages, fname)), attr("alt", alt)).SetTail(from.Tail())
 		}
 	} else {
 		if len(id) > 0 {
@@ -831,9 +831,9 @@ func transferImage(p *Processor, from, to *etree.Element) error {
 		} else {
 			out = out.AddNext("div", attr("class", "image"))
 		}
-		out.AddNext("img", attr("src", path.Join(DirImages, fname)), attr("alt", alt))
+		out.AddNext("img", attr("src", path.Join(DirImages, fname)), attr("alt", alt)).SetTail(from.Tail())
 	}
-	return p.transfer(from, to)
+	return nil
 }
 
 func transferSpan(p *Processor, from, to *etree.Element) error {
