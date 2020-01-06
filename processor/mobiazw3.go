@@ -45,15 +45,18 @@ func (p *Processor) FinalizeMOBI(fname string) error {
 		}
 	} else {
 		var u uuid.UUID
+		var asin string
 		if p.Book == nil {
 			u, err = uuid.NewRandom()
 			if err != nil {
 				return errors.Wrap(err, "unable to generate UUID")
 			}
+			asin = ""
 		} else {
 			u = p.Book.ID
+			asin = p.Book.ASIN
 		}
-		splitter, err := mobi.NewSplitter(tmp, u, p.Book.ASIN, true, p.env.Cfg.Doc.Kindlegen.RemovePersonal, false, p.env.Log)
+		splitter, err := mobi.NewSplitter(tmp, u, asin, true, p.env.Cfg.Doc.Kindlegen.RemovePersonal, false, p.env.Log)
 		if err != nil {
 			return errors.Wrap(err, "unable to parse intermediate content file")
 		}
@@ -97,15 +100,18 @@ func (p *Processor) FinalizeAZW3(fname string) error {
 		}
 	} else {
 		var u uuid.UUID
+		var asin string
 		if p.Book == nil {
 			u, err = uuid.NewRandom()
 			if err != nil {
 				return errors.Wrap(err, "unable to generate UUID")
 			}
+			asin = ""
 		} else {
 			u = p.Book.ID
+			asin = p.Book.ASIN
 		}
-		splitter, err := mobi.NewSplitter(tmp, u, p.Book.ASIN, false, p.env.Cfg.Doc.Kindlegen.RemovePersonal, p.env.Cfg.Doc.Kindlegen.ForceASIN, p.env.Log)
+		splitter, err := mobi.NewSplitter(tmp, u, asin, false, p.env.Cfg.Doc.Kindlegen.RemovePersonal, p.env.Cfg.Doc.Kindlegen.ForceASIN, p.env.Log)
 		if err != nil {
 			return errors.Wrap(err, "unable to parse intermediate content file")
 		}
