@@ -109,6 +109,9 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		env.Log.Warn("Unknown notes mode requested, switching to default", zap.String("mode", env.Cfg.Doc.Notes.Mode))
 		notes = NDefault
 	}
+	if notes != NFloat && notes != NFloatOld && notes != NFloatNew && env.Cfg.Doc.Notes.Renumber {
+		env.Log.Warn("Notes can be renumbered in floating modes only, ignoring", zap.String("mode", env.Cfg.Doc.Notes.Mode))
+	}
 	toct := ParseTOCTypeString(env.Cfg.Doc.TOC.Type)
 	if toct == UnsupportedTOCType {
 		env.Log.Warn("Unknown TOC type requested, switching to normal", zap.String("type", env.Cfg.Doc.TOC.Type))
@@ -802,7 +805,7 @@ func (p *Processor) processBodies() error {
 	return nil
 }
 
-func (p *Processor) parseNoteSection(el *etree.Element, name string) {
+func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, notesPerBody map[string]int) {
 
 	switch {
 	case el.Tag == "title":
@@ -824,14 +827,21 @@ func (p *Processor) parseNoteSection(el *etree.Element, name string) {
 
 			child := ctx.out.FindElement("./*")
 			p.Book.NoteBodyTitles[name] = &note{
-				title:  t,
-				body:   getTextFragment(child),
-				parsed: child.Copy(),
+				title:      t,
+				body:       getTextFragment(child),
+				bodyName:   name,
+				bodyNumber: len(notesPerBody),
+				parsed:     child.Copy(),
 			}
 		}
 	case el.Tag == "section" && getAttrValue(el, "id") != "":
 		id := getAttrValue(el, "id")
-		note := &note{}
+		notesPerBody[name]++
+		note := &note{
+			number:     notesPerBody[name],
+			bodyName:   name,
+			bodyNumber: len(notesPerBody),
+		}
 		for _, c := range el.ChildElements() {
 			t := getTextFragment(c)
 			if c.Tag == "title" {
@@ -845,7 +855,7 @@ func (p *Processor) parseNoteSection(el *etree.Element, name string) {
 	default:
 		// Sometimes there are sections inside sections to no end...
 		for _, section := range el.ChildElements() {
-			p.parseNoteSection(section, name)
+			p.parseNoteSectionElement(section, name, notesPerBody)
 		}
 	}
 }
@@ -859,19 +869,23 @@ func (p *Processor) processNotes() error {
 		p.env.Log.Debug("Parsing notes - done",
 			zap.Duration("elapsed", time.Since(start)),
 			zap.Int("body titles", len(p.Book.NoteBodyTitles)),
+			zap.Int("notes bodies", p.Book.NotesBodies),
 			zap.Int("notes", len(p.Book.NotesOrder)),
 		)
 	}(start)
 
+	notesPerBody := make(map[string]int)
 	for _, el := range p.doc.FindElements("./FictionBook/body[@name]") {
 		name := getAttrValue(el, "name")
 		if !IsOneOf(name, p.env.Cfg.Doc.Notes.BodyNames) {
 			continue
 		}
+		notesPerBody[name] = 0
 		for _, section := range el.ChildElements() {
-			p.parseNoteSection(section, name)
+			p.parseNoteSectionElement(section, name, notesPerBody)
 		}
 	}
+	p.Book.NotesBodies = len(notesPerBody)
 	return nil
 }
 

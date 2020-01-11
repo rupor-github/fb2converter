@@ -106,15 +106,19 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 			if !exists {
 				backRef = "nowhere"
 			}
-			t := "***."
-			if len(note.title) > 0 {
-				t = note.title
-				// Sometimes authors put "." inside the note
-				if !strings.HasSuffix(t, ".") {
-					t += "."
+			var t string
+			if p.env.Cfg.Doc.Notes.Renumber {
+				t = strconv.Itoa(note.number) + "."
+			} else {
+				t = "***."
+				if len(note.title) > 0 {
+					t = note.title
+					// Sometimes authors put "." inside the note
+					if !strings.HasSuffix(t, ".") {
+						t += "."
+					}
 				}
 			}
-
 			if p.notesMode == NFloatNew {
 				// new "preffered" HTML5 method with "aside"
 				to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).
@@ -328,6 +332,8 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	text := from.Text()
 	tail := from.Tail()
 
+	processChildren := true
+
 	// links are notes - probably
 	if tag == "a" && len(href) > 0 {
 		var noteID string
@@ -342,17 +348,6 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 				if _, ok := p.Book.Notes[noteID]; !ok {
 					css = "linkanchor"
 				}
-			case NFloat:
-				fallthrough
-			case NFloatOld:
-				fallthrough
-			case NFloatNew:
-				if _, ok := p.Book.Notes[noteID]; !ok {
-					css = "linkanchor"
-				} else {
-					// NOTE: modifying attribute on SOURCE node!
-					from.CreateAttr("id", "back_"+noteID)
-				}
 			case NInline:
 				fallthrough
 			case NBlock:
@@ -361,6 +356,31 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 					tag = "span"
 					css = fmt.Sprintf("%sanchor", p.notesMode.String())
 					href = ""
+				}
+			case NFloat:
+				fallthrough
+			case NFloatOld:
+				fallthrough
+			case NFloatNew:
+				if note, ok := p.Book.Notes[noteID]; !ok {
+					css = "linkanchor"
+				} else {
+					if p.env.Cfg.Doc.Notes.Renumber {
+						var name string
+						if t, ok := p.Book.NoteBodyTitles[note.bodyName]; ok {
+							name = t.title
+						} else {
+							name = strings.Title(note.bodyName)
+						}
+						var bodyNumber int
+						if p.Book.NotesBodies > 1 {
+							bodyNumber = note.bodyNumber
+						}
+						text = ReplaceKeywords(p.env.Cfg.Doc.Notes.Format, CreateAnchorLinkKeywordsMap(name, bodyNumber, note.number))
+						processChildren = false
+					}
+					// NOTE: modifying attribute on SOURCE node!
+					from.CreateAttr("id", "back_"+noteID)
 				}
 			default:
 				return errors.New("unknown notes mode - this should never happen")
@@ -413,29 +433,31 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 		p.formatText(text, from.Tag == "p", false, inner)
 	}
 
-	// transfer children
-	var err error
-	for _, child := range from.ChildElements() {
-		if proc, ok := supportedTransfers[child.Tag]; ok {
-			err = proc(p, child, inner)
-			if err == nil && from.Tag == "section" {
-				// NOTE: during inner section transfer we may open new xhtml file starting new chapter, so we want to sync up current node...
-				if body := p.ctx().out.FindElement("./html/body"); body != nil {
-					to, inner = body, body
+	if processChildren {
+		// transfer children
+		var err error
+		for _, child := range from.ChildElements() {
+			if proc, ok := supportedTransfers[child.Tag]; ok {
+				err = proc(p, child, inner)
+				if err == nil && from.Tag == "section" {
+					// NOTE: during inner section transfer we may open new xhtml file starting new chapter, so we want to sync up current node...
+					if body := p.ctx().out.FindElement("./html/body"); body != nil {
+						to, inner = body, body
+					}
 				}
+			} else {
+				// unexpected tag to transfer
+				if from.Tag == "body" || from.Tag == "section" {
+					p.env.Log.Debug("Unexpected tag, ignoring completely", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child)))
+					continue
+				}
+				p.env.Log.Debug("Unexpected tag, transferring", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child)))
+				// NOTE: all "unknown" attributes will be lost during this transfer
+				err = p.transfer(child, inner, child.Tag)
 			}
-		} else {
-			// unexpected tag to transfer
-			if from.Tag == "body" || from.Tag == "section" {
-				p.env.Log.Debug("Unexpected tag, ignoring completely", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child)))
-				continue
+			if err != nil {
+				return err
 			}
-			p.env.Log.Debug("Unexpected tag, transferring", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child)))
-			// NOTE: all "unknown" attributes will be lost during this transfer
-			err = p.transfer(child, inner, child.Tag)
-		}
-		if err != nil {
-			return err
 		}
 	}
 

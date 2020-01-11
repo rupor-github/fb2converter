@@ -26,9 +26,12 @@ type tocEntry struct {
 
 // Notes collected during parsing.
 type note struct {
-	title  string
-	body   string
-	parsed *etree.Element
+	title      string
+	number     int
+	bodyName   string
+	bodyNumber int
+	body       string
+	parsed     *etree.Element
 }
 
 // Links to notes collected.
@@ -61,6 +64,7 @@ type Book struct {
 	NoteBodyTitles map[string]*note  // body name -> (note title, parsed title body)
 	Notes          map[string]*note  // note ID -> (title, body)
 	NotesOrder     []notelink        // notes in order of discovery
+	NotesBodies    int               // number of processed notes bodies
 	Data           []*dataFile       // various files: stylesheet, fonts...
 	Meta           []*dataFile       // container meta-info
 	// parsing context

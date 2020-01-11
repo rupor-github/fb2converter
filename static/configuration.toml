@@ -155,6 +155,17 @@
 		mode = "default"
 		#---- Names of the <body> tags in fb2 document to consider for notes processing
 		body_names = [ "notes", "comments" ]
+		#---- Make sure that links in the content are named and numbered consistently
+		#---- NOTE: only works for pop up notes formatting (float, float-old, float-new)
+		renumber = false
+		#---- Pattern to format notes links when renumbering them
+		#---- "#body_number"  - number of the body where note is located. If there is only one body with notes it will be empty
+		#---- "#number"       - number of note in the body
+		#---- "#body_name"    - either title of the body where note is located or body's name if there is no title
+		#---- "#body_name_Fl" - first letter of the #body_name exactly as it was encountered
+		#---- "#body_name_fl" - first letter of the #body_name lowercased
+		#---- "#body_name_FL" - first letter of the #body_name uppercased
+		link_format = "[{#body_number.}#number]"
 
 	[document.toc]
 		#---- Type of ncx TOC generated, depends on device support

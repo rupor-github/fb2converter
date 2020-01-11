@@ -22,6 +22,7 @@ linters:
     - gochecknoinits
     - whitespace
     - wsl
+    - gomnd
   fast: false
 
 linters-settings:
@@ -34,7 +35,7 @@ linters-settings:
   gofmt:
     simplify: true
   funlen:
-    lines: 200
+    lines: 250
     statements: 120
 
 issues:

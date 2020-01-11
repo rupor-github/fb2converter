@@ -38,6 +38,7 @@ type Splitter struct {
 }
 
 // NewSplitter returns pointer to Slitter with parsed mobi file.
+//nolint:interfacer
 func NewSplitter(fname string, u uuid.UUID, asin string, combo, nonPersonal, forceASIN bool, log *zap.Logger) (*Splitter, error) {
 
 	data, err := ioutil.ReadFile(fname)

@@ -7,6 +7,7 @@ import (
 	"math"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -227,6 +228,24 @@ func CreateFileNameKeywordsMap(b *Book, format string, pos int) map[string]strin
 	rd["#authors"] = b.BookAuthors(format, false)
 	rd["#author"] = b.BookAuthors(format, true)
 	rd["#bookid"] = b.ID.String()
+	return rd
+}
+
+// CreateAnchorLinkKeywordsMap prepares keywords map for replacement.
+func CreateAnchorLinkKeywordsMap(name string, bodyNumber, noteNumber int) map[string]string {
+	rd := make(map[string]string)
+	rd["#number"] = strconv.Itoa(noteNumber)
+	if bodyNumber > 0 {
+		rd["#body_number"] = strconv.Itoa(bodyNumber)
+	}
+	rd["#body_name"] = name
+
+	fl := GetFirstRuneString(name)
+
+	rd["#body_name_Fl"] = fl
+	rd["#body_name_fl"] = strings.ToLower(fl)
+	rd["#body_name_FL"] = strings.ToUpper(fl)
+
 	return rd
 }
 
