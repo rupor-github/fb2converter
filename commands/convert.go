@@ -127,17 +127,17 @@ func processArchive(path, pathIn, pathOut string, format processor.OutputFmt, no
 					zap.Error(err))
 			} else {
 				defer r.Close()
-				path := filepath.Join(pathOut, f.FileHeader.Name)
+				apath := f.FileHeader.Name
 				if cpage != nil && f.FileHeader.NonUTF8 {
 					// forcing zip file name encoding
-					if n, err := cpage.NewDecoder().String(path); err == nil {
-						path = n
+					if n, err := cpage.NewDecoder().String(apath); err == nil {
+						apath = n
 					} else {
 						n, _ = ianaindex.IANA.Name(cpage)
-						env.Log.Warn("Unable to convert archive name from specified encoding", zap.String("charset", n), zap.String("path", path), zap.Error(err))
+						env.Log.Warn("Unable to convert archive name from specified encoding", zap.String("charset", n), zap.String("path", apath), zap.Error(err))
 					}
 				}
-				if err := processBook(r, enc, path, dst, nodirs, stk, overwrite, format, env); err != nil {
+				if err := processBook(r, enc, filepath.Join(pathOut, apath), dst, nodirs, stk, overwrite, format, env); err != nil {
 					env.Log.Error("Unable to process file in archive",
 						zap.String("archive", archive),
 						zap.String("file", f.FileHeader.Name),
