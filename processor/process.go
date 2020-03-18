@@ -1055,7 +1055,7 @@ func (p *Processor) processImages() error {
 					if p.metaOverwrite != nil && len(p.metaOverwrite.CoverImage) > 0 {
 						var (
 							err error
-							b   = &binImage{log: p.env.Log, relpath: filepath.Join(DirContent, DirImages)}
+							b   = &binImage{id: b.id, log: p.env.Log, relpath: filepath.Join(DirContent, DirImages)}
 						)
 						fname := p.metaOverwrite.CoverImage
 						if !filepath.IsAbs(fname) {
