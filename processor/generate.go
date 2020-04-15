@@ -135,12 +135,18 @@ func (p *Processor) generateCover() error {
 	case CoverKeepAR:
 		if img := imaging.Resize(cover.img, h*cover.img.Bounds().Dx()/cover.img.Bounds().Dy(), h, imaging.Lanczos); img != nil {
 			cover.img = img
+			if kindle {
+				cover.flags |= imageKindle
+			}
 		} else {
 			p.env.Log.Warn("Unable to resize cover image, using as is")
 		}
 	case CoverStretch:
 		if img := imaging.Resize(cover.img, w, h, imaging.Lanczos); img != nil {
 			cover.img = img
+			if kindle {
+				cover.flags |= imageKindle
+			}
 		} else {
 			p.env.Log.Warn("Unable to resize cover image, using as is")
 		}
@@ -155,7 +161,9 @@ func (p *Processor) generateCover() error {
 			// nothing to do
 		default:
 			cover.img = img
-			cover.flags |= imageKindle
+			if kindle {
+				cover.flags |= imageKindle
+			}
 		}
 	}
 
