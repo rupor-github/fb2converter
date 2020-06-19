@@ -79,7 +79,7 @@ endif()
 
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 46)
+set(PRJ_VERSION_MINOR 47)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -226,8 +226,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             ${PROJECT_SOURCE_DIR}/processor/enums.go
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on
         ${PROJECT_BINARY_DIR}/stringer -linecomment -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement,CoverProcessing
-                -output ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-                ${PROJECT_SOURCE_DIR}/processor/enums.go
+                -output processor/enums_string.go
+                processor/enums.go
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Generating stringer interfaces")
 
@@ -251,8 +251,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 -ignore static/files.go
                 -ignore static/doc.go
                 -pkg static
-                -o static/files.go
-                ${PROJECT_SOURCE_DIR}/static/...
+                -o ${PROJECT_SOURCE_DIR}/static/files.go
+                static/...
         # cannot do this due to the size COMMAND GOPATH=${GO_PATH} ${GO_EXECUTABLE} fmt static/files.go
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         COMMENT "Generating Go resources for static assets")

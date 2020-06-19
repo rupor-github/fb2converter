@@ -52,13 +52,15 @@
 	# images_scale_factor = 0
 
 	#---- Pattern to format book title
-	#---- "#title"      - book title
-	#---- "#series"     - name of sequence book belongs to
-	#---- "#abbrseries" - abbreviated #series, lower case
-	#---- "#ABBRseries" - abbreviated #series, upper case
-	#---- "#number"     - number in a series
-	#---- "#padnumber"  - number in a series padded with zeros to "series_number_positions"
-	#---- "#date"       - date specified in a book description
+	#---- "#title"         - book title
+	#---- "#file_name"     - name of original FB2 file (no path, no extension)
+	#---- "#file_name_ext" - name of original FB2 file (no path)
+	#---- "#series"        - name of sequence book belongs to
+	#---- "#abbrseries"    - abbreviated #series, lower case
+	#---- "#ABBRseries"    - abbreviated #series, upper case
+	#---- "#number"        - number in a series
+	#---- "#padnumber"     - number in a series padded with zeros to "series_number_positions"
+	#---- "#date"          - date specified in a book description
 	title_format = "{(#ABBRseries{ - #padnumber}) }#title"
 	#---- How many positions padded series number will take
 	series_number_positions = 2

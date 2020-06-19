@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -163,12 +164,13 @@ func CreateAuthorKeywordsMap(an *config.AuthorName) map[string]string {
 }
 
 // CreateTitleKeywordsMap prepares keywords map for replacement.
-func CreateTitleKeywordsMap(b *Book, pos int) map[string]string {
+func CreateTitleKeywordsMap(b *Book, pos int, src string) map[string]string {
 	rd := make(map[string]string)
 	rd["#title"] = ""
 	if len(b.Title) > 0 {
 		rd["#title"] = b.Title
 	}
+	rd["#file_name"], rd["#file_name_ext"] = strings.TrimSuffix(src, filepath.Ext(src)), src
 	rd["#series"], rd["#abbrseries"], rd["#ABBRseries"] = "", "", ""
 	if len(b.SeqName) > 0 {
 		rd["#series"] = b.SeqName
