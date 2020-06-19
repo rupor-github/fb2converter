@@ -247,7 +247,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         # -nocompress
         COMMAND GOPATH=${GO_PATH}
             ${PROJECT_BINARY_DIR}/go-bindata
-                -prefix ${PROJECT_SOURCE_DIR}/static/
+                -prefix static/
                 -ignore static/files.go
                 -ignore static/doc.go
                 -pkg static
