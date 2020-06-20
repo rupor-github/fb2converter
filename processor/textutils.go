@@ -170,7 +170,10 @@ func CreateTitleKeywordsMap(b *Book, pos int, src string) map[string]string {
 	if len(b.Title) > 0 {
 		rd["#title"] = b.Title
 	}
-	rd["#file_name"], rd["#file_name_ext"] = strings.TrimSuffix(src, filepath.Ext(src)), src
+	base := filepath.Base(src)
+	if len(base) > 1 {
+		rd["#file_name"], rd["#file_name_ext"] = strings.TrimSuffix(base, filepath.Ext(base)), base
+	}
 	rd["#series"], rd["#abbrseries"], rd["#ABBRseries"] = "", "", ""
 	if len(b.SeqName) > 0 {
 		rd["#series"] = b.SeqName
