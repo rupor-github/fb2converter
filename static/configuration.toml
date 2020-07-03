@@ -186,7 +186,7 @@
 		# page_maxlevel = 2147483647
 		#---- Include chapter without title to TOC - this prevents empty TOC on "bad" books adding chapters without titles to the TOC
 		include_chapters_without_title = false
-		#---- When creating TOC page take book title and author(s) from meta info annd not from first title of main body
+		#---- When creating TOC page take book title and author(s) from meta info and not from first title of main body
 		# book_title_from_meta = false
 
 	[document.cover]
