@@ -17,7 +17,7 @@ func ExportResources(ctx *cli.Context) error {
 	// var err error
 
 	const (
-		errPrefix = "\n*** ERROR ***\n\nexport: "
+		errPrefix = "export: "
 		errCode   = 1
 	)
 

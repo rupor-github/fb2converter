@@ -48,7 +48,7 @@ func processEpub(r io.Reader, src, dst string, nodirs, stk, overwrite bool, form
 func Transfer(ctx *cli.Context) (err error) {
 
 	const (
-		errPrefix = "\n*** ERROR ***\n\ntransfer: "
+		errPrefix = "transfer: "
 		errCode   = 1
 	)
 

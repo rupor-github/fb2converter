@@ -154,7 +154,7 @@ func processArchive(path, pathIn, pathOut string, format processor.OutputFmt, no
 func Convert(ctx *cli.Context) (err error) {
 
 	const (
-		errPrefix = "\n*** ERROR ***\n\nconvert: "
+		errPrefix = "convert: "
 		errCode   = 1
 	)
 

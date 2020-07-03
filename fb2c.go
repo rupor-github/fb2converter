@@ -20,6 +20,7 @@ type appWrapper struct {
 	log           *zap.Logger
 	stdlogRestore func()
 	prof          interface{ Stop() }
+	inCommand     bool
 }
 
 func (w *appWrapper) beforeAppRun(c *cli.Context) error {
@@ -84,11 +85,45 @@ func (w *appWrapper) beforeCommandRun(c *cli.Context) error {
 	w.log = env.Log
 	w.stdlogRestore = zap.RedirectStdLog(env.Log)
 
+	// Log errors rather then print them
+	w.inCommand = true
+
 	w.log.Debug("Program started", zap.Strings("args", os.Args), zap.String("ver", misc.GetVersion()+" ("+runtime.Version()+") : "+LastGitCommit))
 	if len(c.GlobalString("config")) == 0 {
 		w.log.Info("Using defaults (no configuration file)")
 	}
 
+	return nil
+}
+
+func (w *appWrapper) errorHandler(context *cli.Context, err error) {
+
+	if !w.inCommand {
+		cli.HandleExitCoder(err)
+		return
+	}
+
+	if err == nil {
+		return
+	}
+
+	// we are in command run, log is fully prepared
+	if exitErr, ok := err.(cli.ExitCoder); ok {
+		if err.Error() != "" {
+			var msg string
+			if _, ok := exitErr.(cli.ErrorFormatter); ok {
+				msg = fmt.Sprintf("%+v\n", err)
+			} else {
+				msg = err.Error()
+			}
+			w.log.Error("Command ended with error", zap.Int("code", exitErr.ExitCode()), zap.String("error", msg))
+		}
+		cli.OsExiter(exitErr.ExitCode())
+	}
+}
+
+func (w *appWrapper) afterCommandRun(c *cli.Context) error {
+	w.inCommand = false
 	return nil
 }
 
@@ -124,6 +159,7 @@ func main() {
 	var wrap appWrapper
 	app.Before = wrap.beforeAppRun
 	app.After = wrap.afterAppRun
+	app.ExitErrHandler = wrap.errorHandler
 
 	app.Flags = []cli.Flag{
 		// only one profile could be enables at a time - this is enforced by beforeRun
@@ -146,6 +182,7 @@ func main() {
 			Usage:  "Converts FB2 file(s) to specified format",
 			Action: commands.Convert,
 			Before: wrap.beforeCommandRun,
+			After:  wrap.afterCommandRun,
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "to", Value: "epub", Usage: "conversion output `TYPE` (supported types: epub, kepub, azw3, mobi)"},
 				cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
@@ -173,6 +210,7 @@ DESTINATION:
 			Usage:  "Prepares EPUB file(s) for transfer (Kindle only!)",
 			Action: commands.Transfer,
 			Before: wrap.beforeCommandRun,
+			After:  wrap.afterCommandRun,
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "to", Value: "mobi", Usage: "conversion output `TYPE` (supported types: azw3, mobi)"},
 				cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
@@ -198,6 +236,7 @@ This command is a mere convenience wrapper to simplify transfer of files to Kind
 			Usage:  "Extracts thumbnails from documents (Kindle only!)",
 			Action: commands.SyncCovers,
 			Before: wrap.beforeCommandRun,
+			After:  wrap.afterCommandRun,
 			Flags: []cli.Flag{
 				cli.IntFlag{Name: "width", Value: 330, Usage: "width of the resulting thumbnail (default: 330)"},
 				cli.IntFlag{Name: "height", Value: 470, Usage: "height of the resulting thumbnail (default: 470)"},
@@ -216,6 +255,7 @@ Synchronizes kindle thumbnails with books already in Kindle memory so Kindle hom
 			Usage:     "Dumps active configuration (JSON)",
 			Action:    commands.DumpConfig,
 			Before:    wrap.beforeCommandRun,
+			After:     wrap.afterCommandRun,
 			ArgsUsage: "DESTINATION",
 			CustomHelpTemplate: fmt.Sprintf(`%s
 DESTINATION:
@@ -229,6 +269,7 @@ Produces file with actual configuration values to be used by the program. To see
 			Usage:     "Exports built-in resources for customization",
 			Action:    commands.ExportResources,
 			Before:    wrap.beforeCommandRun,
+			After:     wrap.afterCommandRun,
 			ArgsUsage: "DESTINATION",
 			CustomHelpTemplate: fmt.Sprintf(`%s
 DESTINATION:
