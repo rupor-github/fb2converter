@@ -789,7 +789,18 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 				p.ctx().tocIndex++
 			}
 		}
-		to.AddNext("div", attr("class", "chapter_end"))
+
+		// make sure we have single "div chapter_end" when multiple sections are closing
+		var haveEnd bool
+		children := to.ChildElements()
+		if len(children) > 0 {
+			if children[len(children)-1].Tag == "div" && children[len(children)-1].SelectAttrValue("class", "") == "chapter_end" {
+				haveEnd = true
+			}
+		}
+		if !haveEnd {
+			to.AddNext("div", attr("class", "chapter_end"))
+		}
 	}
 	return nil
 }
