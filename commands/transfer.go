@@ -22,11 +22,10 @@ func processEpub(r io.Reader, src, dst string, nodirs, stk, overwrite bool, form
 
 	var fname string
 
-	start := time.Now()
 	env.Log.Info("Transfer starting", zap.String("from", src))
 	defer func(start time.Time) {
 		env.Log.Info("Transfer completed", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname))
-	}(start)
+	}(time.Now())
 
 	p, err := processor.NewEPUB(r, src, dst, nodirs, stk, overwrite, format, env)
 	if err != nil {
@@ -89,11 +88,10 @@ func Transfer(ctx *cli.Context) (err error) {
 		stk = false
 	}
 
-	start := time.Now()
 	env.Log.Info("Processing starting", zap.String("source", src), zap.String("destination", dst), zap.Stringer("format", format))
 	defer func(start time.Time) {
 		env.Log.Info("Processing completed", zap.Duration("elapsed", time.Since(start)))
-	}(start)
+	}(time.Now())
 
 	fi, err := os.Stat(src)
 	if err != nil {

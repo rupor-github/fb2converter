@@ -32,14 +32,13 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	p.ctx().header = 0
 	p.ctx().firstBodyTitle = true
 
-	start := time.Now()
 	p.env.Log.Debug("Parsing body - start", zap.String("name", p.ctx().bodyName))
 	defer func(start time.Time) {
 		p.env.Log.Debug("Parsing body - done",
 			zap.Duration("elapsed", time.Since(start)),
 			zap.String("name", p.ctx().bodyName),
 		)
-	}(start)
+	}(time.Now())
 
 	if p.notesMode == NDefault || !IsOneOf(p.ctx().bodyName, p.env.Cfg.Doc.Notes.BodyNames) {
 		// initialize first XHTML buffer

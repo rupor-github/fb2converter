@@ -26,13 +26,12 @@ func (p *Processor) generateTOCPage() error {
 		return nil
 	}
 
-	start := time.Now()
 	p.env.Log.Debug("Generating TOC page - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Generating TOC page - done",
 			zap.Duration("elapsed", time.Since(start)),
 		)
-	}(start)
+	}(time.Now())
 
 	to, f := p.ctx().createXHTML("toc")
 	f.id = "toc"
@@ -91,13 +90,10 @@ func (p *Processor) generateCover() error {
 		return nil
 	}
 
-	start := time.Now()
 	p.env.Log.Debug("Generating cover page - start")
 	defer func(start time.Time) {
-		p.env.Log.Debug("Generating cover page - done",
-			zap.Duration("elapsed", time.Since(start)),
-		)
-	}(start)
+		p.env.Log.Debug("Generating cover page - done", zap.Duration("elapsed", time.Since(start)))
+	}(time.Now())
 
 	kindle := p.format == OMobi || p.format == OAzw3
 	w, h := p.env.Cfg.Doc.Cover.Width, p.env.Cfg.Doc.Cover.Height
@@ -127,7 +123,7 @@ func (p *Processor) generateCover() error {
 		if kindle && cover.img.Bounds().Dy() < h {
 			if img := imaging.Resize(cover.img, h*cover.img.Bounds().Dx()/cover.img.Bounds().Dy(), h, imaging.Lanczos); img != nil {
 				cover.img = img
-				cover.flags |= imageKindle
+				cover.flags |= imageChanged | imageKindle
 			} else {
 				p.env.Log.Warn("Unable to resize cover image, using as is")
 			}
@@ -135,6 +131,7 @@ func (p *Processor) generateCover() error {
 	case CoverKeepAR:
 		if img := imaging.Resize(cover.img, h*cover.img.Bounds().Dx()/cover.img.Bounds().Dy(), h, imaging.Lanczos); img != nil {
 			cover.img = img
+			cover.flags |= imageChanged
 			if kindle {
 				cover.flags |= imageKindle
 			}
@@ -144,6 +141,7 @@ func (p *Processor) generateCover() error {
 	case CoverStretch:
 		if img := imaging.Resize(cover.img, w, h, imaging.Lanczos); img != nil {
 			cover.img = img
+			cover.flags |= imageChanged
 			if kindle {
 				cover.flags |= imageKindle
 			}
@@ -161,6 +159,7 @@ func (p *Processor) generateCover() error {
 			// nothing to do
 		default:
 			cover.img = img
+			cover.flags |= imageChanged
 			if kindle {
 				cover.flags |= imageKindle
 			}
@@ -230,13 +229,10 @@ func (ts *stackTOC) peek(value *etree.Element) (int, *etree.Element) {
 // generateNCX creates Navigation Control file for XML applications.
 func (p *Processor) generateNCX() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Generating NCX - start")
 	defer func(start time.Time) {
-		p.env.Log.Debug("Generating NCX - done",
-			zap.Duration("elapsed", time.Since(start)),
-		)
-	}(start)
+		p.env.Log.Debug("Generating NCX - done", zap.Duration("elapsed", time.Since(start)))
+	}(time.Now())
 
 	addNavPoint := func(to *etree.Element, index int, title, link string) *etree.Element {
 		pt := to.AddNext("navPoint",
@@ -315,13 +311,10 @@ func (p *Processor) generateNCX() error {
 // process stylesheet and files it references.
 func (p *Processor) prepareStylesheet() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Processing stylesheet - start")
 	defer func(start time.Time) {
-		p.env.Log.Debug("Processing stylesheet - done",
-			zap.Duration("elapsed", time.Since(start)),
-		)
-	}(start)
+		p.env.Log.Debug("Processing stylesheet - done", zap.Duration("elapsed", time.Since(start)))
+	}(time.Now())
 
 	d, err := p.getStylesheet()
 	if err != nil {
@@ -400,13 +393,10 @@ func (p *Processor) prepareStylesheet() error {
 // generatePagemap creates epub page map.
 func (p *Processor) generatePagemap() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Generating page map - start")
 	defer func(start time.Time) {
-		p.env.Log.Debug("Generating page map - done",
-			zap.Duration("elapsed", time.Since(start)),
-		)
-	}(start)
+		p.env.Log.Debug("Generating page map - done", zap.Duration("elapsed", time.Since(start)))
+	}(time.Now())
 
 	to, f := p.ctx().createPM("page-map")
 	p.Book.Files = append(p.Book.Files, f)
@@ -436,13 +426,10 @@ func (p *Processor) generatePagemap() error {
 // generateOPF creates epub Open Package format file.
 func (p *Processor) generateOPF() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Generating OPF - start")
 	defer func(start time.Time) {
-		p.env.Log.Debug("Generating OPF - done",
-			zap.Duration("elapsed", time.Since(start)),
-		)
-	}(start)
+		p.env.Log.Debug("Generating OPF - done", zap.Duration("elapsed", time.Since(start)))
+	}(time.Now())
 
 	to, f := p.ctx().createOPF("content")
 	p.Book.Files = append(p.Book.Files, f)

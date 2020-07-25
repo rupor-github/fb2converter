@@ -406,14 +406,10 @@ func (p *Processor) Process() error {
 // Save makes the conversion results permanent by storing everything properly and cleaning temporary artifacts.
 func (p *Processor) Save() (string, error) {
 
-	start := time.Now()
-	p.env.Log.Debug("Saving content - starting",
-		zap.String("tmp", p.tmpDir),
-		zap.String("content", DirContent),
-	)
+	p.env.Log.Debug("Saving content - starting", zap.String("tmp", p.tmpDir), zap.String("content", DirContent))
 	defer func(start time.Time) {
 		p.env.Log.Debug("Saving content - done", zap.Duration("elapsed", time.Since(start)))
-	}(start)
+	}(time.Now())
 
 	if p.kind == InFb2 {
 		if err := p.Book.flushData(p.tmpDir); err != nil {
@@ -461,7 +457,6 @@ func (p *Processor) SendToKindle(fname string) error {
 		return nil
 	}
 
-	start := time.Now()
 	p.env.Log.Debug("Sending content to Kindle - starting",
 		zap.String("from", p.env.Cfg.SMTPConfig.From),
 		zap.String("to", p.env.Cfg.SMTPConfig.To),
@@ -469,7 +464,7 @@ func (p *Processor) SendToKindle(fname string) error {
 	)
 	defer func(start time.Time) {
 		p.env.Log.Debug("Sending content to Kindle - done", zap.Duration("elapsed", time.Since(start)))
-	}(start)
+	}(time.Now())
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", p.env.Cfg.SMTPConfig.From)
@@ -572,7 +567,6 @@ func (p *Processor) prepareOutputName() string {
 // processDescription processes book description element.
 func (p *Processor) processDescription() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Parsing description - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Parsing description - done",
@@ -588,7 +582,7 @@ func (p *Processor) processDescription() error {
 			zap.Int("sequence number", p.Book.SeqNum),
 			zap.String("date", p.Book.Date),
 		)
-	}(start)
+	}(time.Now())
 
 	for _, desc := range p.doc.FindElements("./FictionBook/description") {
 
@@ -788,13 +782,10 @@ func (p *Processor) processDescription() error {
 // processBodies processes book bodies, including main one.
 func (p *Processor) processBodies() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Parsing bodies - start")
 	defer func(start time.Time) {
-		p.env.Log.Debug("Parsing bodies - done",
-			zap.Duration("elapsed", time.Since(start)),
-		)
-	}(start)
+		p.env.Log.Debug("Parsing bodies - done", zap.Duration("elapsed", time.Since(start)))
+	}(time.Now())
 
 	for i, body := range p.doc.FindElements("./FictionBook/body") {
 		if err := p.processBody(i, body); err != nil {
@@ -863,7 +854,6 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 // processNotes processes notes bodies. We will need notes when main body is parsed.
 func (p *Processor) processNotes() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Parsing notes - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Parsing notes - done",
@@ -872,7 +862,7 @@ func (p *Processor) processNotes() error {
 			zap.Int("notes bodies", p.Book.NotesBodies),
 			zap.Int("notes", len(p.Book.NotesOrder)),
 		)
-	}(start)
+	}(time.Now())
 
 	notesPerBody := make(map[string]int)
 	for _, el := range p.doc.FindElements("./FictionBook/body[@name]") {
@@ -892,14 +882,13 @@ func (p *Processor) processNotes() error {
 // processBinaries processes book images.
 func (p *Processor) processBinaries() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Parsing images - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Parsing images - done",
 			zap.Duration("elapsed", time.Since(start)),
 			zap.Int("images", len(p.Book.Images)),
 		)
-	}(start)
+	}(time.Now())
 
 	for i, el := range p.doc.FindElements("./FictionBook/binary[@id]") {
 
@@ -996,13 +985,10 @@ func (p *Processor) processBinaries() error {
 // processLinks goes over generated documents and makes sure hanging anchors are properly anchored.
 func (p *Processor) processLinks() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Processing links - start")
 	defer func(start time.Time) {
-		p.env.Log.Debug("Processing links - done",
-			zap.Duration("elapsed", time.Since(start)),
-		)
-	}(start)
+		p.env.Log.Debug("Processing links - done", zap.Duration("elapsed", time.Since(start)))
+	}(time.Now())
 
 	for _, f := range p.Book.Files {
 		if f.doc == nil {
@@ -1024,13 +1010,10 @@ func (p *Processor) processLinks() error {
 // processImages makes sure that images we use have suitable properties.
 func (p *Processor) processImages() error {
 
-	start := time.Now()
 	p.env.Log.Debug("Processing images - start")
 	defer func(start time.Time) {
-		p.env.Log.Debug("Processing images - done",
-			zap.Duration("elapsed", time.Since(start)),
-		)
-	}(start)
+		p.env.Log.Debug("Processing images - done", zap.Duration("elapsed", time.Since(start)))
+	}(time.Now())
 
 	if len(p.Book.Cover) > 0 {
 		// some badly formatted fb2 have several covers (LibRusEq - engineers with two left feet) leave only first one

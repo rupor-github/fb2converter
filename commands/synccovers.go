@@ -76,11 +76,10 @@ func SyncCovers(ctx *cli.Context) error {
 		return nil
 	}
 
-	start := time.Now()
 	env.Log.Info("Thumbnail extraction starting", zap.String("kindle directory", sysdir))
 	defer func(start time.Time) {
 		env.Log.Info("Thumbnail extraction completed", zap.Duration("elapsed", time.Since(start)), zap.Int("files", files), zap.Int("extracted", count))
-	}(start)
+	}(time.Now())
 
 	if len(file) > 0 {
 		// single file

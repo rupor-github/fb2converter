@@ -31,6 +31,7 @@ const (
 	imageKindle binImageProcessingFlags = 1 << iota
 	imageOpaquePNG
 	imageScale
+	imageChanged
 )
 
 type binImage struct {
