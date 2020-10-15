@@ -42,7 +42,11 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 
 	if p.notesMode == NDefault || !IsOneOf(p.ctx().bodyName, p.env.Cfg.Doc.Notes.BodyNames) {
 		// initialize first XHTML buffer
-		to, f := p.ctx().createXHTML("")
+		ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
+		if p.notesMode == NFloatNew {
+			ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
+		}
+		to, f := p.ctx().createXHTML("", ns...)
 		p.Book.Files = append(p.Book.Files, f)
 		p.Book.Pages[f.fname] = 0
 		return p.transfer(from, to)
@@ -54,7 +58,11 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	}
 
 	// initialize XHTML buffer for notes
-	to, f := p.ctx().createXHTML("")
+	ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
+	if p.notesMode == NFloatNew {
+		ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
+	}
+	to, f := p.ctx().createXHTML("", ns...)
 	p.Book.Files = append(p.Book.Files, f)
 	f.nofmt = p.notesMode == NFloatNew // kindle pecularities, requires special tratment
 
@@ -580,10 +588,13 @@ func transferSubtitle(p *Processor, from, to *etree.Element) error {
 		if len(t) != 0 {
 			for _, dv := range p.env.Cfg.Doc.ChapterDividers {
 				if t == dv && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
-
 					// open next XHTML
+					ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
+					if p.notesMode == NFloatNew {
+						ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
+					}
 					var f *dataFile
-					to, f = p.ctx().createXHTML("")
+					to, f = p.ctx().createXHTML("", ns...)
 					// store it for future flushing
 					p.Book.Files = append(p.Book.Files, f)
 					p.Book.Pages[f.fname] = 0
@@ -603,10 +614,13 @@ func transferParagraph(p *Processor, from, to *etree.Element) error {
 		// Split content if requested
 		if pages, ok := p.Book.Pages[p.ctx().fname]; ok && pages >= p.env.Cfg.Doc.PagesPerFile &&
 			!p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
-
 			// open next XHTML
+			ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
+			if p.notesMode == NFloatNew {
+				ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
+			}
 			var f *dataFile
-			to, f = p.ctx().createXHTML("")
+			to, f = p.ctx().createXHTML("", ns...)
 			// store it for future flushing
 			p.Book.Files = append(p.Book.Files, f)
 			p.Book.Pages[f.fname] = 0
@@ -751,8 +765,12 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 	if p.env.Cfg.Doc.ChapterPerFile {
 		if len(p.ctx().bodyName) == 0 && p.ctx().header.Int() < p.env.Cfg.Doc.ChapterLevel {
 			// open next XHTML
+			ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
+			if p.notesMode == NFloatNew {
+				ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
+			}
 			var f *dataFile
-			to, f = p.ctx().createXHTML("")
+			to, f = p.ctx().createXHTML("", ns...)
 			// store it for future flushing
 			p.Book.Files = append(p.Book.Files, f)
 			p.Book.Pages[f.fname] = 0

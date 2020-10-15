@@ -690,7 +690,7 @@ func (p *Processor) processDescription() error {
 			if e := info.SelectElement("annotation"); e != nil {
 				p.Book.Annotation = getTextFragment(e)
 				if p.env.Cfg.Doc.Annotation.Create {
-					to, f := p.ctx().createXHTML("annotation")
+					to, f := p.ctx().createXHTML("annotation", attr("xmlns", `http://www.w3.org/1999/xhtml`))
 					inner := to.AddNext("div", attr("class", "annotation"))
 					inner.AddNext("div", attr("class", "h1")).SetText(p.env.Cfg.Doc.Annotation.Title)
 					if err := p.transfer(e, inner, "div"); err != nil {

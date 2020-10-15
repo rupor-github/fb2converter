@@ -33,7 +33,7 @@ func (p *Processor) generateTOCPage() error {
 		)
 	}(time.Now())
 
-	to, f := p.ctx().createXHTML("toc")
+	to, f := p.ctx().createXHTML("toc", attr("xmlns", `http://www.w3.org/1999/xhtml`))
 	f.id = "toc"
 
 	if p.tocPlacement == TOCBefore {
@@ -168,7 +168,7 @@ func (p *Processor) generateCover() error {
 
 	if !kindle {
 		// resizing will be done on device
-		to, f := p.ctx().createXHTML("cover")
+		to, f := p.ctx().createXHTML("cover", attr("xmlns", `http://www.w3.org/1999/xhtml`))
 		f.id = "cover-page"
 		// Cover page goes first
 		p.Book.Files = append(p.Book.Files, nil)

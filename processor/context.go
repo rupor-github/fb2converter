@@ -41,7 +41,7 @@ func newContext() *context {
 	return c
 }
 
-func (ctx *context) createXHTML(name string) (*etree.Element, *dataFile) {
+func (ctx *context) createXHTML(name string, attrs ...*etree.Attr) (*etree.Element, *dataFile) {
 
 	var fname string
 	if len(name) == 0 {
@@ -72,7 +72,7 @@ func (ctx *context) createXHTML(name string) (*etree.Element, *dataFile) {
 		doc:     ctx.out,
 	}
 
-	html := ctx.out.Element.AddNext("html", attr("xmlns", `http://www.w3.org/1999/xhtml`))
+	html := ctx.out.Element.AddNext("html", attrs...)
 
 	html.AddNext("head").
 		AddSame("meta", attr("http-equiv", "Content-Type"), attr("content", `text/html; charset=utf-8`)).
