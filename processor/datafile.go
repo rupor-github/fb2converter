@@ -21,6 +21,7 @@ const (
 type dataFile struct {
 	id        string
 	fname     string
+	nofmt     bool
 	relpath   string             // always relative to "root" directory - usually temporary working directory
 	transient dataTransientFlags // Additional information about file placements
 	ct        string
@@ -40,9 +41,13 @@ func (f *dataFile) flush(path string) error {
 	}
 
 	if f.doc != nil {
-
-		// this is XML - ignore data
-		f.doc.IndentTabs()
+		if f.nofmt {
+			// on present day kindles when using mobi/azw3 formats and float-new notes mode chardata records interfere with notes formating on device
+			f.doc.Indent(etree.NoIndent)
+		} else {
+			// this is XML - ignore char data
+			f.doc.IndentTabs()
+		}
 		if err := f.doc.WriteToFile(filepath.Join(newdir, f.fname)); err != nil {
 			return errors.Wrapf(err, "unable to flush XML content to %s", filepath.Join(newdir, f.fname))
 		}

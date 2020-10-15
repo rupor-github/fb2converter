@@ -40,6 +40,10 @@ func getTextFragment(e *etree.Element) string {
 	return extractText(e, true, true)
 }
 
+func getFullTextFragment(e *etree.Element) string {
+	return extractText(e, true, false)
+}
+
 //nolint:deadcode,unused
 func getXMLFragment(d *etree.Document) string {
 	d.IndentTabs()

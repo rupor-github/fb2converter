@@ -56,6 +56,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	// initialize XHTML buffer for notes
 	to, f := p.ctx().createXHTML("")
 	p.Book.Files = append(p.Book.Files, f)
+	f.nofmt = p.notesMode == NFloatNew // kindle pecularities, requires special tratment
 
 	// To satisfy Amazon's requirements for floating notes we have to create notes body on the fly here, removing most if not
 	// all of existing formatting. At this point we already scanned available notes in ProcessNotes()...

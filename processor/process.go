@@ -834,11 +834,10 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 			bodyNumber: len(notesPerBody),
 		}
 		for _, c := range el.ChildElements() {
-			t := getTextFragment(c)
 			if c.Tag == "title" {
-				note.title = SanitizeTitle(t)
+				note.title = SanitizeTitle(getTextFragment(c))
 			} else {
-				note.body += t
+				note.body += getFullTextFragment(c)
 			}
 		}
 		p.Book.NotesOrder = append(p.Book.NotesOrder, notelink{id: id, bodyName: name})
