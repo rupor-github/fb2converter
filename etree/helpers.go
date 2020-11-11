@@ -129,6 +129,16 @@ func isWhitespace(s string) bool {
 	return true
 }
 
+// isNL returns true if the byte slice contains only newline characters.
+func isNL(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if c := s[i]; c != '\n' && c != '\r' {
+			return false
+		}
+	}
+	return true
+}
+
 // spaceMatch returns true if namespace a is the empty string
 // or if namespace a equals namespace b.
 func spaceMatch(a, b string) bool {
