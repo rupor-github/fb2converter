@@ -118,8 +118,7 @@ func (cw *countWriter) Write(p []byte) (n int, err error) {
 	return b, err
 }
 
-// isWhitespace returns true if the byte slice contains only
-// whitespace characters.
+// isWhitespace returns true if the byte slice contains only whitespace characters.
 func isWhitespace(s string) bool {
 	for i := 0; i < len(s); i++ {
 		if c := s[i]; c != ' ' && c != '\t' && c != '\n' && c != '\r' {
@@ -129,18 +128,21 @@ func isWhitespace(s string) bool {
 	return true
 }
 
-// isNL returns true if the byte slice contains only newline characters.
-func isNL(s string) bool {
+// trimIndent strips whitespaces after first newline.
+func trimIndent(s string) string {
+	if !isWhitespace(s) {
+		return s
+	}
 	for i := 0; i < len(s); i++ {
-		if c := s[i]; c != '\n' && c != '\r' {
-			return false
+		if c := s[i]; c == '\n' || c == '\r' {
+			// lose indenting
+			return s[:i]
 		}
 	}
-	return true
+	return s
 }
 
-// spaceMatch returns true if namespace a is the empty string
-// or if namespace a equals namespace b.
+// spaceMatch returns true if namespace a is the empty string or if namespace a equals namespace b.
 func spaceMatch(a, b string) bool {
 	switch {
 	case a == "":

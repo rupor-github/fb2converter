@@ -694,8 +694,8 @@ func (e *Element) removeBlanks() {
 	// cut indenting tails if possible and do recursion on what's left
 	for i := 0; i < len(e.Child); i++ {
 		t := e.Child[i].tail()
-		if len(t) > 0 && isNL(t) {
-			e.Child[i].setTail("")
+		if len(t) > 0 {
+			e.Child[i].setTail(trimIndent(t))
 		}
 		if ce, ok := e.Child[i].(*Element); ok {
 			ce.removeBlanks()
