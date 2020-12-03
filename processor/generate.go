@@ -323,6 +323,10 @@ func (p *Processor) prepareStylesheet() error {
 
 	processURL := func(index int, name string) string {
 
+		if strings.Index(name, "\\") != -1 {
+			p.env.Log.Warn("Stylesheet has bad url with backslashes in the path. Trying to correct...", zap.String("url", name))
+		}
+
 		fname := name
 		if !filepath.IsAbs(fname) {
 			fname = filepath.Join(p.env.Cfg.Path, fname)
@@ -356,6 +360,7 @@ func (p *Processor) prepareStylesheet() error {
 			d.relpath = filepath.Join(DirContent, DirImages)
 			d.ct = mime.TypeByExtension(filepath.Ext(fname))
 		}
+
 		p.Book.Data = append(p.Book.Data, d)
 		return path.Join(DirFonts, d.fname)
 	}
@@ -364,7 +369,7 @@ func (p *Processor) prepareStylesheet() error {
 	var (
 		result    string
 		lastIndex = 0
-		pattern   = regexp.MustCompile(`url\(\s*"([^\s\(\)\\[:cntrl:]]+)"|'([^\s\(\)\\[:cntrl:]]+)'\s*\)`)
+		pattern   = regexp.MustCompile(`url\(\s*"([^\s\(\)[:cntrl:]]+)"|'([^\s\(\)[:cntrl:]]+)'\s*\)`)
 	)
 	allIndexes := pattern.FindAllSubmatchIndex(d.data, -1)
 	for i, loc := range allIndexes {

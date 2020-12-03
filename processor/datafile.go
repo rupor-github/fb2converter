@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -27,6 +28,15 @@ type dataFile struct {
 	ct        string
 	data      []byte
 	doc       *etree.Document
+}
+
+func (f *dataFile) String() string {
+	if f == nil {
+		return "<<empty>>"
+	}
+	return fmt.Sprintf("<<id: %s, fname: %s, relpath: %s, ct: %s>>",
+		f.id, f.fname, f.relpath, f.ct,
+	)
 }
 
 func (f *dataFile) flush(path string) error {
