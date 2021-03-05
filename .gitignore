@@ -1,7 +1,5 @@
-*.o
-*.a
 *.exe
-!kindlegen/windows/kindlegen.exe
+*.exe~
 *.dll
 *.so
 *.dylib
@@ -10,22 +8,19 @@
 *.prof
 *.mprof
 *.log
-*.svg
 *.7z
+*.zip
+*.syso
+*.minisig
 
 build/
 build_*/
 bin/
 bin_*/
-_obj/
-_test/
 testdata/
-static/dictionaries/*.txt
-static/sentences/*.json
 
 # build specific
 misc/version.go
-
-# errors & profiles - github/pkg
-pkg/
-!vendor/**/pkg/
+static/dictionaries/*.txt
+static/sentences/*.json
+!kindlegen/windows/kindlegen.exe

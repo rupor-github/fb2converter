@@ -78,9 +78,13 @@ for _arch in ${ARCH_INSTALLS}; do
         fi
     )
     (
-        [ -f fb2c-${_arch}.7z ] && rm fb2c-${_arch}.7z
+        [ -f fb2c-${_arch}.zip ] && rm fb2c-${_arch}.zip
+        [ -f fb2c-${_arch}.zip.minisig ] && rm fb2c-${_arch}.zip.minisig
         cd ${_dist}
-        7z a -r ../fb2c-${_arch}
+        zip -r -9 ../fb2c-${_arch}.zip *
+        cd ..
+        echo ${BUILD_PSWD} | minisign -S -s ~/.minisign/build.key -c "fb2converter for ${_arch} release signature" -m fb2c-${_arch}.zip
+
     )
 done
 
