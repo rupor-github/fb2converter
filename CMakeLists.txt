@@ -79,7 +79,7 @@ endif()
 
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 57)
+set(PRJ_VERSION_MINOR 58)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -128,7 +128,6 @@ endif()
 
 add_custom_target(bin_fb2c ALL
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-        ${PROJECT_SOURCE_DIR}/static/files.go
     COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
         ${GO_EXECUTABLE} build -trimpath -o ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}
         -ldflags='-X main.LastGitCommit=${GIT_HASH}'
@@ -173,7 +172,6 @@ add_custom_target(test_all
 
 add_custom_target(test_processor
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-        ${PROJECT_SOURCE_DIR}/static/files.go
     COMMAND GOPATH=${GO_PATH} GO111MODULE=on # GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_processor.out
@@ -183,7 +181,6 @@ add_custom_target(test_processor
 
 add_custom_target(test_hyphenator
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-        ${PROJECT_SOURCE_DIR}/static/files.go
     COMMAND GOPATH=${GO_PATH} GO111MODULE=on # GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
         ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_hyphenator.out
@@ -200,7 +197,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # main target with race detector
     add_custom_target(bin_fb2c_race
         DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-            ${PROJECT_SOURCE_DIR}/static/files.go
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
             ${GO_EXECUTABLE} build -race -o ${PROJECT_BINARY_DIR}/fb2c_race${CMAKE_EXECUTABLE_SUFFIX}
             -ldflags='-X main.LastGitCommit=${GIT_HASH}'
@@ -231,32 +227,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Generating stringer interfaces")
 
-    add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/go-bindata
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on
-            ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/go-bindata
-            github.com/shuLhan/go-bindata/cmd/go-bindata
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        COMMENT "Building go-bindata executable...")
-    add_custom_target(bin_go-bindata
-        DEPENDS ${PROJECT_BINARY_DIR}/go-bindata)
-
-    file(GLOB_RECURSE SRCS_STATIC LIST_DIRECTORIES false ${PROJECT_SOURCE_DIR}/static/*)
-    list(REMOVE_ITEM SRCS_STATIC ${PROJECT_SOURCE_DIR}/static/files.go ${PROJECT_SOURCE_DIR}/static/doc.go)
-    add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/static/files.go
-        DEPENDS ${PROJECT_BINARY_DIR}/go-bindata ${SRCS_STATIC}
-        # -nocompress
-        COMMAND GOPATH=${GO_PATH}
-            ${PROJECT_BINARY_DIR}/go-bindata
-                -prefix static/
-                -ignore static/files.go
-                -ignore static/doc.go
-                -pkg static
-                -o ${PROJECT_SOURCE_DIR}/static/files.go
-                static/...
-        # cannot do this due to the size COMMAND GOPATH=${GO_PATH} ${GO_EXECUTABLE} fmt static/files.go
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-        COMMENT "Generating Go resources for static assets")
-
     ########################################################################################################
     # Go linter
     ########################################################################################################
@@ -285,7 +255,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
     add_custom_target(lint
         DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-            ${PROJECT_SOURCE_DIR}/static/files.go
         COMMAND GOPATH=${GO_PATH} GO111MODULE=on ${GO_LINTER} run
         COMMENT "Mega-linting project with ${GO_LINTER}..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")

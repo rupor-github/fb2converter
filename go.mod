@@ -1,6 +1,6 @@
 module github.com/rupor-github/fb2converter
 
-go 1.13
+go 1.16
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
@@ -19,7 +19,6 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/pkg/profile v1.3.0
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
-	github.com/shuLhan/go-bindata v3.4.0+incompatible
 	github.com/urfave/cli v1.22.4
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
