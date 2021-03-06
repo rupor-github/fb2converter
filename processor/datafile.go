@@ -2,7 +2,6 @@ package processor
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -64,7 +63,7 @@ func (f *dataFile) flush(path string) error {
 		return nil
 	}
 
-	if err := ioutil.WriteFile(filepath.Join(newdir, f.fname), f.data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(newdir, f.fname), f.data, 0644); err != nil {
 		return errors.Wrapf(err, "unable to save data to (%s)", filepath.Join(newdir, f.fname))
 	}
 	return nil

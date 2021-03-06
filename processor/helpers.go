@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image"
 	"io"
-	"io/ioutil"
 	"mime"
 	"os"
 	"path"
@@ -35,7 +34,7 @@ func (p *Processor) getStylesheet() (*dataFile, error) {
 		if !filepath.IsAbs(fname) {
 			fname = filepath.Join(p.env.Cfg.Path, fname)
 		}
-		if d.data, err = ioutil.ReadFile(fname); err != nil {
+		if d.data, err = os.ReadFile(fname); err != nil {
 			return nil, errors.Wrap(err, "unable to read stylesheet")
 		}
 	} else {
@@ -78,7 +77,7 @@ func (p *Processor) getDefaultCover(i int) (*binImage, error) {
 			fname = filepath.Join(p.env.Cfg.Path, fname)
 		}
 		// NOTE: I do not want to make sure that supplied default cover has right properties, will just use it as is
-		if b.data, err = ioutil.ReadFile(fname); err != nil {
+		if b.data, err = os.ReadFile(fname); err != nil {
 			return nil, errors.Wrap(err, "unable to read cover image")
 		}
 		ext := filepath.Ext(fname)
@@ -181,7 +180,7 @@ func (p *Processor) getVignetteFile(level, vignette string) string {
 		if !filepath.IsAbs(absname) {
 			absname = filepath.Join(p.env.Cfg.Path, absname)
 		}
-		if b.data, err = ioutil.ReadFile(absname); err != nil {
+		if b.data, err = os.ReadFile(absname); err != nil {
 			b.data = nil
 		}
 	}

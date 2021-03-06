@@ -52,13 +52,15 @@ else()
     else()
         # host platform is always linux amd64
         set(KINDLEGEN "kindlegen/linux/kindlegen")
+        # set(CROSS_GOOS linux)
+        # set(CROSS_GOARCH amd64)
         message(STATUS "Targeting 64 bits Linux executable")
     endif()
 endif()
 set(DEST_DIR "${PROJECT_SOURCE_DIR}/bin_${MSYSTEM_NAME}")
 message(STATUS "Installation directory: ${DEST_DIR}")
 
-find_package(Go 1.13 REQUIRED)
+find_package(Go 1.16 REQUIRED)
 find_package(Git REQUIRED)
 
 # Make sure we setup go properly
@@ -80,6 +82,7 @@ endif()
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
 set(PRJ_VERSION_MINOR 58)
+set(PRJ_VERSION_PATCH 0)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -100,7 +103,7 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/version.go.in" "${PROJECT_SOURCE_DIR
 execute_process(COMMAND ${CMAKE_COMMAND} -E env ${GIT_EXECUTABLE} changelog --all --tag "${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR}" --stdout OUTPUT_FILE ${PROJECT_BINARY_DIR}/changelog.txt ERROR_QUIET)
 install(FILES ${PROJECT_BINARY_DIR}/changelog.txt DESTINATION ${DEST_DIR} CONFIGURATIONS Release)
 
-message(STATUS "Building version \"${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR}\" git \"${GIT_HASH}\"")
+message(STATUS "Building version \"${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR}.${PRJ_VERSION_PATCH}\" git \"${GIT_HASH}\"")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # Create git pre-commit hook to check formatting before commit
@@ -108,6 +111,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
         execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/cmake/pre-commit ${PROJECT_SOURCE_DIR}/.git/hooks/. WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
     endif()
 endif()
+
 if(EXISTS "${PROJECT_SOURCE_DIR}/${KINDLEGEN}")
     execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/${KINDLEGEN} ${PROJECT_BINARY_DIR}/.)
 endif()
@@ -116,8 +120,15 @@ endif()
 # Some contexts dependent settings
 ########################################################################################################
 
+list(APPEND GO_ENV
+    GOPATH=${GO_PATH}
+    GOOS=${CROSS_GOOS}
+    GOARCH=${CROSS_GOARCH}
+    )
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(TEST_RUN_ARGS "-v")
+    set(GO_MOD_ARGS "-mod=mod")
 else()
     set(GO_MOD_ARGS "-mod=vendor")
 endif()
@@ -128,10 +139,7 @@ endif()
 
 add_custom_target(bin_fb2c ALL
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-    COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
-        ${GO_EXECUTABLE} build -trimpath -o ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}
-        -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-        ${GO_MOD_ARGS}
+    COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}
     COMMENT "Building fb2c..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}${INSTALL_SUBDIR} CONFIGURATIONS Release)
@@ -140,19 +148,15 @@ add_custom_target(bin_fb2c ALL
 if(CROSS_GOOS STREQUAL "windows")
     # myhomelib suppport - Windows only
     add_custom_target(bin_fb2mobi
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
-            ${GO_EXECUTABLE} build -trimpath -o ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
-            -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-            ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/cmd/fb2mobi
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
+            github.com/rupor-github/fb2converter/cmd/fb2mobi
         COMMENT "Building fb2mobi..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2mobi CONFIGURATIONS Release)
 
     add_custom_target(bin_fb2epub
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
-            ${GO_EXECUTABLE} build -trimpath -o ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
-            -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-            ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/cmd/fb2epub
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
+             github.com/rupor-github/fb2converter/cmd/fb2epub
         COMMENT "Building fb2epub..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2epub CONFIGURATIONS Release)
@@ -172,17 +176,15 @@ add_custom_target(test_all
 
 add_custom_target(test_processor
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-    COMMAND GOPATH=${GO_PATH} GO111MODULE=on # GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
-        ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
+    COMMAND ${GO_ENV} ${GO_EXECUTABLE} test ${GO_MOD_ARGS} ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_processor.out
-            ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/processor
+            github.com/rupor-github/fb2converter/processor
     COMMENT "processor tests..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(test_hyphenator
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-    COMMAND GOPATH=${GO_PATH} GO111MODULE=on # GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
-        ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
+    COMMAND ${GO_ENV} ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_hyphenator.out
             ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/hyphenator
     COMMENT "hyphenator tests..."
@@ -194,23 +196,12 @@ add_custom_target(test_hyphenator
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
-    # main target with race detector
-    add_custom_target(bin_fb2c_race
-        DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on GOOS=${CROSS_GOOS} GOARCH=${CROSS_GOARCH}
-            ${GO_EXECUTABLE} build -race -o ${PROJECT_BINARY_DIR}/fb2c_race${CMAKE_EXECUTABLE_SUFFIX}
-            -ldflags='-X main.LastGitCommit=${GIT_HASH}'
-            github.com/rupor-github/fb2converter/cmd/fb2c
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        COMMENT "Building fb2c with race detector...")
-
     ########################################################################################################
     # Code generation - on host platform only
     ########################################################################################################
 
     add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/stringer
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on
-            ${GO_EXECUTABLE} build -o ${PROJECT_BINARY_DIR}/stringer
+        COMMAND GOPATH=${GO_PATH} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -o ${PROJECT_BINARY_DIR}/stringer
             golang.org/x/tools/cmd/stringer
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Building stringer executable...")
@@ -220,8 +211,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/processor/enums_string.go
         DEPENDS ${PROJECT_BINARY_DIR}/stringer
             ${PROJECT_SOURCE_DIR}/processor/enums.go
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on
-        ${PROJECT_BINARY_DIR}/stringer -linecomment -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement,CoverProcessing
+        COMMAND GOPATH=${GO_PATH} ${PROJECT_BINARY_DIR}/stringer
+                -linecomment -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement,CoverProcessing
                 -output processor/enums_string.go
                 processor/enums.go
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
@@ -234,13 +225,13 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # Running linters on main target
     find_program(GO_LINTER golangci-lint PATHS ${PROJECT_BINARY_DIR} NO_DEFAULT_PATH)
     if(NOT GO_LINTER)
-        set(golangci-lint-ver "1.22.2")
+        set(golangci-lint-ver "1.33.0")
         message(STATUS "Preparing golangci-lint ${golangci-lint-ver}")
         file(DOWNLOAD "https://github.com/golangci/golangci-lint/releases/download/v${golangci-lint-ver}/golangci-lint-${golangci-lint-ver}-linux-amd64.tar.gz" ${PROJECT_BINARY_DIR}/golangci-lint.tar.gz
             INACTIVITY_TIMEOUT 60
             TIMEOUT 300
             STATUS DOWNLOAD_RES
-            EXPECTED_HASH SHA256=109d38cdc89f271392f5a138d6782657157f9f496fd4801956efa2d0428e0cbe)
+            EXPECTED_HASH SHA256=e2d6082f1df53c5d2c280765000f9e82783ea909ba419c6c4e172936b076031e)
         list(GET DOWNLOAD_RES 0 RES)
         list(GET DOWNLOAD_RES 1 MSG)
         if(RES)
@@ -254,8 +245,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif()
 
     add_custom_target(lint
-        DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on ${GO_LINTER} run
+        COMMAND ${GO_ENV} ${GO_LINTER} run
         COMMENT "Mega-linting project with ${GO_LINTER}..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
@@ -263,30 +253,16 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # Go dependency management
     ########################################################################################################
 
-    add_custom_target(deps_print
-        SOURCES ${PROJECT_SOURCE_DIR}/go.mod
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on ${GO_EXECUTABLE} mod graph
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        COMMENT "Printing dependencies (go mod graph)"
-        VERBATIM)
-
     add_custom_target(deps_tidy
         SOURCES ${PROJECT_SOURCE_DIR}/go.mod
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on ${GO_EXECUTABLE} mod tidy
+        COMMAND GOPATH=${GO_PATH} ${GO_EXECUTABLE} mod tidy
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Cleaning dependencies (go mod tidy)"
         VERBATIM)
 
-    add_custom_target(deps_verify
-        SOURCES ${PROJECT_SOURCE_DIR}/go.mod
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on ${GO_EXECUTABLE} mod verify
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-        COMMENT "Verifying dependencies (go mod verify)"
-        VERBATIM)
-
     add_custom_target(deps_vendor
         SOURCES ${PROJECT_SOURCE_DIR}/go.mod
-        COMMAND GOPATH=${GO_PATH} GO111MODULE=on ${GO_EXECUTABLE} mod vendor
+        COMMAND GOPATH=${GO_PATH} ${GO_EXECUTABLE} mod vendor
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Creating vendor directory (go mod vendor)"
         VERBATIM)

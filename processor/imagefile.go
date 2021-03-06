@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -169,7 +168,7 @@ func (b *binImage) flush(path string) error {
 	}
 
 Storing:
-	if err := ioutil.WriteFile(filepath.Join(newdir, b.fname), b.data, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(newdir, b.fname), b.data, 0644); err != nil {
 		return errors.Wrapf(err, "unable to save image (%s)", filepath.Join(newdir, b.fname))
 	}
 	return nil

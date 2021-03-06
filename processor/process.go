@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"image"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"mime"
 	"net/url"
@@ -215,7 +214,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 			return nil, errors.Wrap(err, "unable to create temporary directory")
 		}
 	} else {
-		p.tmpDir, err = ioutil.TempDir("", "fb2c-")
+		p.tmpDir, err = os.MkdirTemp("", "fb2c-")
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to create temporary directory")
 		}
@@ -305,7 +304,7 @@ func NewEPUB(r io.Reader, src, dst string, nodirs, stk, overwrite bool, format O
 			return nil, errors.Wrap(err, "unable to create temporary directory")
 		}
 	} else {
-		p.tmpDir, err = ioutil.TempDir("", "fb2c-")
+		p.tmpDir, err = os.MkdirTemp("", "fb2c-")
 		if err != nil {
 			return nil, errors.Wrap(err, "unable to create temporary directory")
 		}
@@ -1034,7 +1033,7 @@ func (p *Processor) processImages() error {
 						if !filepath.IsAbs(fname) {
 							fname = filepath.Join(p.env.Cfg.Path, fname)
 						}
-						if b.data, err = ioutil.ReadFile(fname); err == nil {
+						if b.data, err = os.ReadFile(fname); err == nil {
 							if b.img, b.imgType, err = image.Decode(bytes.NewReader(b.data)); err == nil {
 								b.ct = mime.TypeByExtension("." + b.imgType)
 								b.fname = strings.TrimSuffix(p.Book.Images[i].fname, filepath.Ext(p.Book.Images[i].fname)) + "." + b.imgType

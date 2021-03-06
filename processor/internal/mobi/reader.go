@@ -3,7 +3,6 @@ package mobi
 import (
 	"bytes"
 	"image"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,7 +29,7 @@ type Reader struct {
 // NewReader returns pointer to Reader with parsed mobi file.
 func NewReader(fname string, w, h int, stretch bool, log *zap.Logger) (*Reader, error) {
 
-	data, err := ioutil.ReadFile(fname)
+	data, err := os.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +62,7 @@ func (r *Reader) SaveResult(dir string) (bool, error) {
 		r.log.Debug("Overwriting existing thumbnail", zap.String("file", r.fname), zap.String("thumb", fname))
 	}
 
-	if err := ioutil.WriteFile(fname, r.thumbnail, 0644); err != nil {
+	if err := os.WriteFile(fname, r.thumbnail, 0644); err != nil {
 		return false, err
 	}
 

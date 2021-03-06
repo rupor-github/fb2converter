@@ -16,18 +16,13 @@ import (
 // params := Format('"%s" "%s" -nc -cl -us -nt', [InpFile, ChangeFileExt(OutFile, '.mobi')]);
 // Result := ExecAndWait(FAppPath + 'converters\fb2mobi\fb2mobi.exe', params, SW_HIDE);
 
-// LastGitCommit is used during build to inject git sha
-var LastGitCommit string
-
 func main() {
 
 	log.SetPrefix("\n*** ")
 
 	usage := func() {
 		fmt.Fprintf(os.Stderr, "\nMyHomeLib wrapper for fb2 converter\nVersion %s (%s) : %s\n\n",
-			misc.GetVersion(),
-			runtime.Version(),
-			LastGitCommit)
+			misc.GetVersion(), runtime.Version(), misc.GetGitHash())
 		fmt.Fprintf(os.Stderr, "Usage: %s <from fb2> <to mobi>\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "       Supports configuration file \"./fb2mobi.toml\"\n\n")
 	}

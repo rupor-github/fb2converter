@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"image"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -41,7 +40,7 @@ type Splitter struct {
 //nolint:interfacer
 func NewSplitter(fname string, u uuid.UUID, asin string, combo, nonPersonal, forceASIN bool, log *zap.Logger) (*Splitter, error) {
 
-	data, err := ioutil.ReadFile(fname)
+	data, err := os.ReadFile(fname)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +71,7 @@ func (s *Splitter) SaveResult(fname string) error {
 	if len(s.result) == 0 {
 		return errors.New("nothing to save")
 	}
-	return ioutil.WriteFile(fname, s.result, 0644)
+	return os.WriteFile(fname, s.result, 0644)
 }
 
 // SavePageMap saves combo mobi to the requested location.
@@ -93,7 +92,7 @@ func (s *Splitter) SavePageMap(fname string, eink bool) error {
 		}
 	}
 	base += ".apnx"
-	return ioutil.WriteFile(filepath.Join(dir, base), s.pagedata, 0644)
+	return os.WriteFile(filepath.Join(dir, base), s.pagedata, 0644)
 }
 
 func (s *Splitter) produceCombo(data []byte, u []byte, nonPersonal bool) {

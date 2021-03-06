@@ -2,9 +2,9 @@ package processor
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
 	"mime"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -332,7 +332,7 @@ func (p *Processor) prepareStylesheet() error {
 			fname = filepath.Join(p.env.Cfg.Path, fname)
 		}
 
-		data, err := ioutil.ReadFile(fname)
+		data, err := os.ReadFile(fname)
 		if err != nil {
 			p.env.Log.Warn("Stylesheet resource not found. Skipping...", zap.String("url", name))
 			return name

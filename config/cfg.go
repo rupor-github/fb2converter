@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	goerr "errors"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -299,7 +299,7 @@ func BuildConfig(fnames ...string) (*Config, error) {
 			if !wasStdin {
 				wasStdin = true
 				// stdin - json format ONLY
-				s, err := ioutil.ReadAll(os.Stdin)
+				s, err := io.ReadAll(os.Stdin)
 				if err != nil {
 					return nil, errors.Wrap(err, "unable to read configuration from stdin")
 				}

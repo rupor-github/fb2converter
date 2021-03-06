@@ -88,7 +88,7 @@ func (w *appWrapper) beforeCommandRun(c *cli.Context) error {
 	// Log errors rather then print them
 	w.inCommand = true
 
-	w.log.Debug("Program started", zap.Strings("args", os.Args), zap.String("ver", misc.GetVersion()+" ("+runtime.Version()+") : "+LastGitCommit))
+	w.log.Debug("Program started", zap.Strings("args", os.Args), zap.String("ver", misc.GetVersion()+" ("+runtime.Version()+") : "+misc.GetGitHash()))
 	if len(c.GlobalString("config")) == 0 {
 		w.log.Info("Using defaults (no configuration file)")
 	}
@@ -143,9 +143,6 @@ func (w *appWrapper) afterAppRun(c *cli.Context) error {
 	return nil
 }
 
-// LastGitCommit is used during build to inject git sha
-var LastGitCommit string
-
 func main() {
 
 	cli.OsExiter = func(int) { /* do nothing, we want afterRun to execute */ }
@@ -154,7 +151,7 @@ func main() {
 
 	app.Name = "fb2converter"
 	app.Usage = "fb2 conversion engine"
-	app.Version = misc.GetVersion() + " (" + runtime.Version() + ") : " + LastGitCommit
+	app.Version = misc.GetVersion() + " (" + runtime.Version() + ") : " + misc.GetGitHash()
 
 	var wrap appWrapper
 	app.Before = wrap.beforeAppRun
