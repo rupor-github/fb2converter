@@ -3,3 +3,6 @@
 	wget -r -l1 --no-parent -nd -A.pat.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
 	wget -r -l1 --no-parent -nd -A.hyp.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
 
+If you want to reduce resulting program size compress dictionaries
+
+       for a in $(ls *.txt); do gzip $a; done

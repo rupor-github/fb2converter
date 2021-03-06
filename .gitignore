@@ -9,6 +9,7 @@
 *.mprof
 *.log
 *.7z
+*.gz
 *.zip
 *.syso
 *.minisig
@@ -24,3 +25,4 @@ misc/version.go
 static/dictionaries/*.txt
 static/sentences/*.json
 !kindlegen/windows/kindlegen.exe
+!static/resources/LinLibertine_RBah.ttf.gz

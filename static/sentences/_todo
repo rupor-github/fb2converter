@@ -2,6 +2,10 @@
 
 	curl -L https://api.github.com/repos/neurosnap/sentences/tarball | tar xz --wildcards '*/data/*.json' --strip-components=2
 
+If you want to reduce resulting program size compress dictionaries
+
+       for a in $(ls *.json); do gzip $a; done
+
 
 Data for ruusssian pickle could be found here: https://github.com/Mottl/ru_punkt
 
