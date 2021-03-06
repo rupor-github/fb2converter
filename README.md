@@ -41,6 +41,12 @@ better diagnostics and no installation required.
 - fb2c could be build for any platform supported by [go language](https://golang.org/doc/install). If mobi or azw3 are required additional limitations are imposed by [Amazon's kindlegen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
 - fb2c has no dependencies and does not require installation or any kind
 
+### Installation:
+
+Download from the [releases page](https://github.com/rupor-github/fb2converter/releases) and unpack it in a convenient location.
+
+Starting with v1.58.0 releases are packed with zip and signed with [minisign](https://jedisct1.github.io/minisign/). Here is public key for verification: ![key](doc/build_key.png) RWTNh1aN8DrXq26YRmWO3bPBx4m8jBATGXt4Z96DF4OVSzdCBmoAU+Vq
+
 ### Usage:
 
 Configuration is fully documented [here](https://github.com/rupor-github/fb2converter/blob/master/static/configuration.toml).
