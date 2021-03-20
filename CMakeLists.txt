@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
 
 project(fb2converter NONE)
 
@@ -21,19 +21,19 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 # Release installation directory
 if(CMAKE_CROSSCOMPILING)
     if(MSYSTEM_NAME STREQUAL "win32")
-        set(KINDLEGEN "kindlegen/windows/kindlegen.exe")
+        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/windows/kindlegen.exe")
         set(CROSS_GOOS windows)
         set(CROSS_GOARCH 386)
         set(INSTALL_SUBDIR "/fb2converter")
         message(STATUS "Targeting 32 bits Windows executable")
     elseif(MSYSTEM_NAME STREQUAL "win64")
-        set(KINDLEGEN "kindlegen/windows/kindlegen.exe")
+        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/windows/kindlegen.exe")
         set(CROSS_GOOS windows)
         set(CROSS_GOARCH amd64)
         set(INSTALL_SUBDIR "/fb2converter")
         message(STATUS "Targeting 64 bits Windows executable")
     elseif(MSYSTEM_NAME STREQUAL "darwin")
-        set(KINDLEGEN "kindlegen/macos/kindlegen")
+        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/macos/kindlegen")
         set(CROSS_GOOS darwin)
         set(CROSS_GOARCH amd64)
         message(STATUS "Targeting 64 bits Darwin executable")
@@ -43,22 +43,20 @@ if(CMAKE_CROSSCOMPILING)
 else()
     if (NOT "$ENV{MSYSTEM_NAME}" STREQUAL "")
         set(MSYSTEM_NAME "$ENV{MSYSTEM_NAME}" CACHE INTERNAL "Copied from environment")
+    else()
+        set(MSYSTEM_NAME "linux_amd64" CACHE INTERNAL "Host environment")
     endif()
-    if("$ENV{MSYSTEM_NAME}" STREQUAL "linux32")
-        set(KINDLEGEN "kindlegen/linux/kindlegen")
+    if("$ENV{MSYSTEM_NAME}" STREQUAL "linux_i386")
+        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/linux/kindlegen")
         set(CROSS_GOOS linux)
         set(CROSS_GOARCH 386)
         message(STATUS "Targeting 32 bits Linux executable")
     else()
         # host platform is always linux amd64
-        set(KINDLEGEN "kindlegen/linux/kindlegen")
-        # set(CROSS_GOOS linux)
-        # set(CROSS_GOARCH amd64)
+        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/linux/kindlegen")
         message(STATUS "Targeting 64 bits Linux executable")
     endif()
 endif()
-set(DEST_DIR "${PROJECT_SOURCE_DIR}/bin_${MSYSTEM_NAME}")
-message(STATUS "Installation directory: ${DEST_DIR}")
 
 find_package(Go 1.16 REQUIRED)
 find_package(Git REQUIRED)
@@ -82,7 +80,7 @@ endif()
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
 set(PRJ_VERSION_MINOR 58)
-set(PRJ_VERSION_PATCH 0)
+set(PRJ_VERSION_PATCH 1)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -91,7 +89,6 @@ if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/
         OUTPUT_VARIABLE GIT_HASH
         ERROR_QUIET
         OUTPUT_STRIP_TRAILING_WHITESPACE)
-
     # This will cause reconfiguration on every commit
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/.git/index")
 else()
@@ -101,7 +98,6 @@ configure_file("${PROJECT_SOURCE_DIR}/cmake/version.go.in" "${PROJECT_SOURCE_DIR
 
 # distribute history
 execute_process(COMMAND ${CMAKE_COMMAND} -E env ${GIT_EXECUTABLE} changelog --all --tag "${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR}.${PRJ_VERSION_PATCH}" --stdout OUTPUT_FILE ${PROJECT_BINARY_DIR}/changelog.txt ERROR_QUIET)
-install(FILES ${PROJECT_BINARY_DIR}/changelog.txt DESTINATION ${DEST_DIR} CONFIGURATIONS Release)
 
 message(STATUS "Building version \"${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR}.${PRJ_VERSION_PATCH}\" git \"${GIT_HASH}\"")
 
@@ -110,10 +106,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
         execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/cmake/pre-commit ${PROJECT_SOURCE_DIR}/.git/hooks/. WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
     endif()
-endif()
-
-if(EXISTS "${PROJECT_SOURCE_DIR}/${KINDLEGEN}")
-    execute_process(COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/${KINDLEGEN} ${PROJECT_BINARY_DIR}/.)
 endif()
 
 ########################################################################################################
@@ -137,30 +129,58 @@ endif()
 # main target - always out of date, "go build" will figure it out
 ########################################################################################################
 
-add_custom_target(bin_fb2c ALL
+add_custom_target(release
+    DEPENDS ${PROJECT_SOURCE_DIR}/fb2c_${MSYSTEM_NAME}.zip
+    COMMAND ${CMAKE_SOURCE_DIR}/cmake/sign.sh ${MSYSTEM_NAME}
+    COMMENT "Building release..."
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+
+set(FB2C_TARGET "${PROJECT_BINARY_DIR}${INSTALL_SUBDIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}")
+set(KINDLEGEN_TARGET "${PROJECT_BINARY_DIR}${INSTALL_SUBDIR}/kindlegen${CMAKE_EXECUTABLE_SUFFIX}")
+list(APPEND ZIP_DEPS ${PROJECT_BINARY_DIR}/changelog.txt ${FB2C_TARGET} ${KINDLEGEN_TARGET})
+if(CROSS_GOOS STREQUAL "windows")
+    # myhomelib suppport
+    list(APPEND ZIP_DEPS ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CMAKE_EXECUTABLE_SUFFIX} ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CMAKE_EXECUTABLE_SUFFIX})
+endif()
+# strip path for archive content
+foreach(fname ${ZIP_DEPS})
+    file(RELATIVE_PATH path ${PROJECT_BINARY_DIR} ${fname})
+    list(APPEND ZIP_CNTS ${path})
+endforeach()
+
+add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/fb2c_${MSYSTEM_NAME}.zip
+    DEPENDS ${ZIP_DEPS}
+    COMMAND ${CMAKE_COMMAND} -E tar "cfv" ${PROJECT_SOURCE_DIR}/fb2c_${MSYSTEM_NAME}.zip --format=zip ${ZIP_CNTS}
+    COMMENT "Archiving release..."
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}")
+
+# shortcut
+add_custom_target(bin_fb2c ALL DEPENDS ${FB2C_TARGET} ${KINDLEGEN_TARGET} WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+add_custom_command(OUTPUT ${FB2C_TARGET}
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
-    COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}
+    COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${FB2C_TARGET}
     COMMENT "Building fb2c..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}${INSTALL_SUBDIR} CONFIGURATIONS Release)
-    install(PROGRAMS ${PROJECT_SOURCE_DIR}/${KINDLEGEN} DESTINATION ${DEST_DIR}${INSTALL_SUBDIR} CONFIGURATIONS Release)
 
 if(CROSS_GOOS STREQUAL "windows")
-    # myhomelib suppport - Windows only
-    add_custom_target(bin_fb2mobi
-        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
+    # myhomelib suppport
+    add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
             github.com/rupor-github/fb2converter/cmd/fb2mobi
         COMMENT "Building fb2mobi..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2mobi${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2mobi CONFIGURATIONS Release)
-
-    add_custom_target(bin_fb2epub
-        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
+    add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
              github.com/rupor-github/fb2converter/cmd/fb2epub
         COMMENT "Building fb2epub..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/fb2epub${CMAKE_EXECUTABLE_SUFFIX} DESTINATION ${DEST_DIR}/fb2epub CONFIGURATIONS Release)
 endif()
+
+add_custom_command(OUTPUT ${KINDLEGEN_TARGET}
+    DEPENDS ${KINDLEGEN}
+    COMMAND ${CMAKE_COMMAND} -E copy ${KINDLEGEN} ${KINDLEGEN_TARGET}
+    COMMENT "Copying kindlegen..."
+    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}")
 
 ########################################################################################################
 # Test targets: to test various parts of the system specify multiple test targets
@@ -205,8 +225,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             golang.org/x/tools/cmd/stringer
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Building stringer executable...")
-    add_custom_target(bin_stringer
-        DEPENDS ${PROJECT_BINARY_DIR}/stringer)
+    add_custom_target(bin_stringer DEPENDS ${PROJECT_BINARY_DIR}/stringer)
 
     add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/processor/enums_string.go
         DEPENDS ${PROJECT_BINARY_DIR}/stringer

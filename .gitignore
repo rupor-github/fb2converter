@@ -8,21 +8,17 @@
 *.prof
 *.mprof
 *.log
-*.7z
-*.gz
-*.zip
 *.syso
-*.minisig
-
-build/
-build_*/
-bin/
-bin_*/
-testdata/
 
 # build specific
+build/
+build_*/
 misc/version.go
 static/dictionaries/*.txt
+static/dictionaries/*.txt.gz
 static/sentences/*.json
+static/sentences/*.json.gz
 !kindlegen/windows/kindlegen.exe
 !static/resources/LinLibertine_RBah.ttf.gz
+fb2c_*.zip
+fb2c_*.minisig

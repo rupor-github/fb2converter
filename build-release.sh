@@ -33,7 +33,7 @@ RED='[38;5;01m'
 YELLOW='[38;5;03m'
 
 readonly ALL_OFF BOLD BLUE GREEN RED YELLOW
-ARCH_INSTALLS="${ARCH_INSTALLS:-win32 win64 darwin linux32 linux}"
+ARCH_INSTALLS="${ARCH_INSTALLS:-win32 win64 darwin linux_i386 linux_amd64}"
 
 if not command -v cmake >/dev/null 2>&1; then
     print_error "No cmake found - please, install"
@@ -58,34 +58,25 @@ for _arch in ${ARCH_INSTALLS}; do
     echo
     print_msg1 "Building ${_arch} release"
 
-    [ -d ${_dist} ] && rm -rf ${_dist}
-
     [ -d build_${_arch} ] && rm -rf build_${_arch}
     mkdir -p build_${_arch}
+
+    [ -f fb2c_${_arch}.zip ] && rm fb2c_${_arch}.zip
+    [ -f fb2c_${_arch}.zip.minisig ] && rm fb2c_${_arch}.zip.minisig
 
     (
         cd  build_${_arch}
 
         if [[ ${_arch} == linux* ]]; then
             MSYSTEM_NAME=${_arch} cmake -DCMAKE_BUILD_TYPE=Release ..
-            ${mk} install
-        elif [[ ${_arch} == win* ]]; then
-            cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=cmake/${_arch}.toolchain ..
-            ${mk} bin_fb2epub bin_fb2mobi bin_fb2c install
         else
             cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=cmake/${_arch}.toolchain ..
-            ${mk} install
         fi
+       ${mk} release
     )
-    (
-        [ -f fb2c-${_arch}.zip ] && rm fb2c-${_arch}.zip
-        [ -f fb2c-${_arch}.zip.minisig ] && rm fb2c-${_arch}.zip.minisig
-        cd ${_dist}
-        zip -r -9 ../fb2c-${_arch}.zip *
-        cd ..
-        echo ${BUILD_PSWD} | minisign -S -s ~/.minisign/build.key -c "fb2converter for ${_arch} release signature" -m fb2c-${_arch}.zip
 
-    )
+    rm -rf build_${_arch}
+
 done
 
 exit 0
