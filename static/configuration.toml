@@ -150,7 +150,7 @@
 		#---- How to render notes in the book
 		#---- "default"   - notes are links
 		#---- "inline"    - note is shown "in-place" and could be styled via css
-		#---- "block"     - motes are shown "in-place" at the paragraph end and could be styled via css
+		#---- "block"     - notes are shown "in-place" at the paragraph end and could be styled via css
 		#---- "float"     - pop up notes using "bi-directional links" method
 		#---- "float-old" - same as "float", pop up notes using "bi-directional links" method
 		#---- "float-new" - pop up notes using "preferred" method - HTML5 with <aside> recommended by Amazon publishing guidelines
