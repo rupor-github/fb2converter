@@ -58,7 +58,7 @@ else()
     endif()
 endif()
 
-find_package(Go 1.16 REQUIRED)
+find_package(Go 1.17 REQUIRED)
 find_package(Git REQUIRED)
 
 # Make sure we setup go properly
@@ -79,8 +79,8 @@ endif()
 
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 58)
-set(PRJ_VERSION_PATCH 1)
+set(PRJ_VERSION_MINOR 59)
+set(PRJ_VERSION_PATCH 0)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -154,10 +154,10 @@ add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/fb2c_${MSYSTEM_NAME}.zip
     COMMENT "Archiving release..."
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}")
 
-# shortcut
-add_custom_target(bin_fb2c ALL DEPENDS ${FB2C_TARGET} ${KINDLEGEN_TARGET} WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
-add_custom_command(OUTPUT ${FB2C_TARGET}
-    DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
+# make sure go always runs here - it will figure out the rest
+add_custom_target(bin_fb2c ALL
+    DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go ${KINDLEGEN_TARGET}
+    BYPRODUCTS ${FB2C_TARGET}
     COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${FB2C_TARGET}
     COMMENT "Building fb2c..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")

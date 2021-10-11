@@ -21,7 +21,7 @@ func extractText(e *etree.Element, head, skipLinks bool) string {
 	res := e.Text()
 	for _, c := range e.ChildElements() {
 		switch {
-		case IsOneOf(c.Tag, []string{"p", "div"}):
+		case IsOneOf(c.Tag, []string{"p", "div", "v", "stanza"}):
 			res += "\n" + extractText(c, false, skipLinks)
 		case c.Tag != "a" || !skipLinks:
 			res += extractText(c, false, skipLinks)
@@ -41,7 +41,7 @@ func getTextFragment(e *etree.Element) string {
 }
 
 func getFullTextFragment(e *etree.Element) string {
-	return extractText(e, true, false)
+	return extractText(e, false, false)
 }
 
 //nolint:deadcode,unused
