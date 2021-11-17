@@ -100,5 +100,4 @@ Windows builds come with full [MyHomeLib](https://github.com/OleksiyPenkov/myhom
 
 #### NOTE:
 * `fb2mobi.exe` looks for `fb2mobi.toml` in its directory (similarly `fb2epub.exe` looks for `fb2epub.toml`), so any additional customization is easy.
-* You may decide to install MyHomeLib in either `%ProgramFiles%` or `%ProgramFiles(x86)%` directory (bad idea). For regular user accounts In Windows those places are write-protected and converters will fail to create `conversion.log` which is enabled by default. In such cases you'd have to create aforementioned configuration files and overwrite at least `logger.file.level` setting it to "none" or pointing to some not protected place for converter to work.
-* Starting with version 1.60.0 is cases like that log file (if file logging was requested but file cannot be created) will be automatically moved to temporary directory.
+* __Do not install__ MyHomeLib in either `%ProgramFiles%` or `%ProgramFiles(x86)%` directory - it is bad idea. Since for regular user accounts In Windows those places are __write-protected__ you will have difficulties copying converters there and converters will have problems creating conversion logs which are enabled by default.
