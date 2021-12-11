@@ -33,7 +33,7 @@ RED='[38;5;01m'
 YELLOW='[38;5;03m'
 
 readonly ALL_OFF BOLD BLUE GREEN RED YELLOW
-ARCH_INSTALLS="${ARCH_INSTALLS:-win32 win64 darwin linux_i386 linux_amd64}"
+ARCH_INSTALLS="${ARCH_INSTALLS:-win32 win64 darwin_amd64 darwin_arm64 linux_i386 linux_amd64}"
 
 if not command -v cmake >/dev/null 2>&1; then
     print_error "No cmake found - please, install"

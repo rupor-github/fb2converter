@@ -46,6 +46,7 @@ better diagnostics and no installation required.
 Download from the [releases page](https://github.com/rupor-github/fb2converter/releases) and unpack it in a convenient location.
 
 Starting with v1.58.0 releases are packed with zip and signed with [minisign](https://jedisct1.github.io/minisign/). Here is public key for verification: ![key](doc/build_key.png) RWTNh1aN8DrXq26YRmWO3bPBx4m8jBATGXt4Z96DF4OVSzdCBmoAU+Vq
+Starting with v1.60.1 macOS releases for Intel and Apple silicon are build separately. I do not have `kindlegen` for Apple Silicon - not sure if one even exists, so manage your expectations.
 
 ### Usage:
 
