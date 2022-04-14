@@ -1,5 +1,8 @@
-name: Build&release
-on: push
+name: Build & release
+on:
+  create:
+    tags:
+      - v*
 jobs:
   build:
     runs-on: ${{ matrix.dist }}
