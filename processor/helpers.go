@@ -1,4 +1,3 @@
-//nolint:goconst
 package processor
 
 import (
@@ -13,10 +12,9 @@ import (
 	"strings"
 
 	"github.com/h2non/filetype"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/static"
+	"fb2converter/static"
 )
 
 func (p *Processor) getStylesheet() (*dataFile, error) {
@@ -35,7 +33,7 @@ func (p *Processor) getStylesheet() (*dataFile, error) {
 			fname = filepath.Join(p.env.Cfg.Path, fname)
 		}
 		if d.data, err = os.ReadFile(fname); err != nil {
-			return nil, errors.Wrap(err, "unable to read stylesheet")
+			return nil, fmt.Errorf("unable to read stylesheet: %w", err)
 		}
 	} else {
 		if dir, err := static.AssetDir(DirProfile); err == nil {
@@ -51,7 +49,7 @@ func (p *Processor) getStylesheet() (*dataFile, error) {
 			fname = "default.css"
 		}
 		if d.data, err = static.Asset(path.Join(DirProfile, fname)); err != nil {
-			return nil, errors.Wrap(err, "unable to get default stylesheet")
+			return nil, fmt.Errorf("unable to get default stylesheet: %w", err)
 		}
 	}
 	d.fname = "stylesheet.css"
@@ -78,7 +76,7 @@ func (p *Processor) getDefaultCover(i int) (*binImage, error) {
 		}
 		// NOTE: I do not want to make sure that supplied default cover has right properties, will just use it as is
 		if b.data, err = os.ReadFile(fname); err != nil {
-			return nil, errors.Wrap(err, "unable to read cover image")
+			return nil, fmt.Errorf("unable to read cover image: %w", err)
 		}
 		ext := filepath.Ext(fname)
 		b.fname = fmt.Sprintf("bin%08d%s", i, ext)
@@ -87,7 +85,7 @@ func (p *Processor) getDefaultCover(i int) (*binImage, error) {
 	} else {
 		fname := "default_cover.jpeg"
 		if b.data, err = static.Asset(fname); err != nil {
-			return nil, errors.Wrap(err, "unable to get default cover image")
+			return nil, fmt.Errorf("unable to get default cover image: %w", err)
 		}
 		b.fname = fmt.Sprintf("bin%08d.jpeg", i)
 		b.ct = mime.TypeByExtension(".jpeg")
@@ -96,7 +94,7 @@ func (p *Processor) getDefaultCover(i int) (*binImage, error) {
 
 	b.img, b.imgType, err = image.Decode(bytes.NewReader(b.data))
 	if err != nil {
-		return nil, errors.Wrapf(err, "bad default cover image %s", fname)
+		return nil, fmt.Errorf("bad default cover image %s: %w", fname, err)
 	}
 	b.id = "dummycover"
 	return b, nil
@@ -114,14 +112,14 @@ func (p *Processor) getNotFoundImage(i int) (*binImage, error) {
 	)
 
 	if b.data, err = static.Asset(path.Join(DirResources, "not_found.png")); err != nil {
-		return nil, errors.Wrap(err, "unable to get image not_found.png")
+		return nil, fmt.Errorf("unable to get image not_found.png: %w", err)
 	}
 	b.fname = fmt.Sprintf("bin%08d.png", i)
 	b.ct = mime.TypeByExtension(".png")
 
 	b.img, b.imgType, err = image.Decode(bytes.NewReader(b.data))
 	if err != nil {
-		return nil, errors.Wrap(err, "bad image not_found.png")
+		return nil, fmt.Errorf("bad image not_found.png: %w", err)
 	}
 	b.id = "notfound"
 	return b, nil

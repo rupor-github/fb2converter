@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"errors"
 	"fmt"
 	"html"
 	"net/url"
@@ -13,11 +14,10 @@ import (
 	"unicode/utf8"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/config"
-	"github.com/rupor-github/fb2converter/etree"
+	"fb2converter/config"
+	"fb2converter/etree"
 )
 
 // processBody parses fb2 document body and produces formatted output.
@@ -553,7 +553,7 @@ func init() {
 		"cite": func(p *Processor, from, to *etree.Element) error {
 			return p.transfer(from, to, "div", "cite")
 		},
-		"empty-line": func(_ *Processor, _, to *etree.Element) error { //nolint:unparam
+		"empty-line": func(_ *Processor, _, to *etree.Element) error {
 			to.AddNext("div", attr("class", "emptyline"))
 			return nil
 		},
@@ -857,7 +857,7 @@ func transferImage(p *Processor, from, to *etree.Element) error {
 		if p.notFound == nil {
 			p.notFound, err = p.getNotFoundImage(len(p.Book.Images))
 			if err != nil {
-				return errors.Wrap(err, "unable to load not-found image")
+				return fmt.Errorf("unable to load not-found image: %w", err)
 			}
 			p.Book.Images = append(p.Book.Images, p.notFound)
 		}

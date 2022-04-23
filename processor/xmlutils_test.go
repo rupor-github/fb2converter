@@ -3,7 +3,7 @@ package processor
 import (
 	"testing"
 
-	"github.com/rupor-github/fb2converter/etree"
+	"fb2converter/etree"
 )
 
 var casesTxtFragment = []testCase{

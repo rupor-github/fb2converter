@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/rupor-github/fb2converter/config"
-	"github.com/rupor-github/fb2converter/misc"
+	"fb2converter/config"
+	"fb2converter/misc"
 )
 
 // params := Format('"%s" "%s" -nc -cl -us -nt', [InpFile, ChangeFileExt(OutFile, '.mobi')]);

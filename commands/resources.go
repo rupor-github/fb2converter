@@ -1,14 +1,14 @@
 package commands
 
 import (
+	"errors"
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 
-	"github.com/rupor-github/fb2converter/processor"
-	"github.com/rupor-github/fb2converter/state"
-	"github.com/rupor-github/fb2converter/static"
+	"fb2converter/processor"
+	"fb2converter/state"
+	"fb2converter/static"
 )
 
 // ExportResources is "export" command body.
@@ -27,7 +27,6 @@ func ExportResources(ctx *cli.Context) error {
 	if len(fname) == 0 {
 		return cli.NewExitError(errors.New(errPrefix+"destination directory has not been specified"), errCode)
 	}
-	//nolint:gocritic
 	if info, err := os.Stat(fname); err != nil && !os.IsNotExist(err) {
 		return cli.NewExitError(errors.New(errPrefix+"unable to access destination directory"), errCode)
 	} else if err != nil {

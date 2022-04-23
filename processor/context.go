@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/rupor-github/fb2converter/etree"
+	"fb2converter/etree"
 )
 
 // context used during fb2 transformation.
@@ -205,7 +205,7 @@ type stackedBool struct {
 	ptr *bool
 }
 
-//nolint:unused
+//lint:ignore U1000 keep val()
 func (pb *stackedBool) val() bool {
 	return *pb.ptr
 }
@@ -233,12 +233,12 @@ type stackedInt struct {
 	ptr *int
 }
 
-//nolint:unused
+//lint:ignore U1000 keep val()
 func (pi *stackedInt) val() int {
 	return *pi.ptr
 }
 
-//nolint:unused
+//lint:ignore U1000 keep val()
 func (pi *stackedInt) set(val int) {
 	*pi.ptr = val
 }

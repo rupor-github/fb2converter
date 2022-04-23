@@ -13,7 +13,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/rupor-github/fb2converter/config"
+	"fb2converter/config"
 )
 
 const (

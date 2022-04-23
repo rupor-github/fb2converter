@@ -1,13 +1,14 @@
 package commands
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/state"
+	"fb2converter/state"
 )
 
 // DumpConfig is "dumpconfig" command body.
@@ -42,12 +43,12 @@ func DumpConfig(ctx *cli.Context) error {
 		data, err = env.Cfg.GetActualBytes()
 	}
 	if err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%sunable to get configuration", errPrefix), errCode)
+		return cli.NewExitError(fmt.Errorf("%sunable to get configuration: %w", errPrefix, err), errCode)
 	}
 
 	_, err = out.Write(data)
 	if err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%sunable to write configuration", errPrefix), errCode)
+		return cli.NewExitError(fmt.Errorf("%sunable to write configuration: %w", errPrefix, err), errCode)
 	}
 	return nil
 }

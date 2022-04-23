@@ -3,7 +3,7 @@ package processor
 import (
 	"strings"
 
-	"github.com/rupor-github/fb2converter/etree"
+	"fb2converter/etree"
 )
 
 var attr = etree.NewAttr
@@ -44,7 +44,7 @@ func getFullTextFragment(e *etree.Element) string {
 	return extractText(e, false, false)
 }
 
-//nolint:deadcode,unused
+//lint:ignore U1000 keep getXMLFragment()
 func getXMLFragment(d *etree.Document) string {
 	d.IndentTabs()
 	s, err := d.WriteToString()

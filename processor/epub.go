@@ -2,13 +2,13 @@ package processor
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
 
 	fixzip "github.com/hidez8891/zip"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -16,12 +16,12 @@ func zipRemoveDataDescriptors(from, to string) error {
 
 	out, err := os.Create(to)
 	if err != nil {
-		return errors.Wrapf(err, "unable to create EPUB: %s", to)
+		return fmt.Errorf("unable to create EPUB (%s): %w", to, err)
 	}
 
 	r, err := fixzip.OpenReader(from)
 	if err != nil {
-		return errors.Wrapf(err, "unable to read EPUB: %s", from)
+		return fmt.Errorf("unable to read EPUB (%s): %w", from, err)
 	}
 	defer r.Close()
 
@@ -34,7 +34,7 @@ func zipRemoveDataDescriptors(from, to string) error {
 
 		// copy zip entry
 		if err := w.CopyFile(file); err != nil {
-			return errors.Wrapf(err, "unable to write EPUB: %s", to)
+			return fmt.Errorf("unable to write EPUB (%s): %w", to, err)
 		}
 	}
 	return nil
@@ -44,7 +44,7 @@ func (p *Processor) writeEPUB(fname string) error {
 
 	f, err := os.Create(fname)
 	if err != nil {
-		return errors.Wrapf(err, "unable to create EPUB: %s", fname)
+		return fmt.Errorf("unable to create EPUB (%s): %w", fname, err)
 	}
 	defer f.Close()
 
@@ -112,16 +112,16 @@ func (p *Processor) writeEPUB(fname string) error {
 	mt := filepath.Join(p.tmpDir, "mimetype")
 	info, err := os.Stat(mt)
 	if err != nil {
-		return errors.Wrap(err, "unable to find mimetype file")
+		return fmt.Errorf("unable to find mimetype file: %w", err)
 	}
 	if err = saveFile(mt, info, nil); err != nil {
-		return errors.Wrap(err, "unable to add mimetype to EPUB")
+		return fmt.Errorf("unable to add mimetype to EPUB: %w", err)
 	}
 
 	content = true
 
 	if err = filepath.Walk(p.tmpDir, saveFile); err != nil {
-		return errors.Wrap(err, "unable to add file to EPUB")
+		return fmt.Errorf("unable to add file to EPUB: %w", err)
 	}
 	return nil
 }
@@ -131,7 +131,7 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 
 	if _, err := os.Stat(fname); err == nil {
 		if !p.env.Debug && !p.overwrite {
-			return errors.Errorf("output file already exists: %s", fname)
+			return fmt.Errorf("output file already exists: %s", fname)
 		}
 		p.env.Log.Warn("Overwriting existing file", zap.String("file", fname))
 		if err = os.Remove(fname); err != nil {
@@ -140,7 +140,7 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 	} else if !os.IsNotExist(err) {
 		return err
 	} else if err := os.MkdirAll(filepath.Dir(fname), 0700); err != nil {
-		return errors.Wrap(err, "unable to create output directory")
+		return fmt.Errorf("unable to create output directory: %w", err)
 	}
 
 	if p.env.Cfg.Doc.FixZip {

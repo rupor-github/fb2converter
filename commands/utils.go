@@ -2,13 +2,13 @@ package commands
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/h2non/filetype"
-	"github.com/pkg/errors"
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/encoding/unicode/utf32"
 	"golang.org/x/text/transform"
@@ -151,7 +151,7 @@ func isBookFile(fname string) (bool, srcEncoding, error) {
 	if ref, err := file.Seek(0, 0); err != nil {
 		return false, encUnknown, err
 	} else if ref != 0 {
-		return false, encUnknown, errors.Errorf("unable reset file: %s", fname)
+		return false, encUnknown, fmt.Errorf("unable reset file: %s", fname)
 	}
 
 	header := make([]byte, 512)

@@ -1,10 +1,8 @@
 // Package processor does actual work.
-//nolint:goconst
 package processor
 
 import (
 	"bytes"
-	"compress/gzip"
 	"encoding/base64"
 	"fmt"
 	"image"
@@ -23,16 +21,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
 	"github.com/oklog/ulid"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
 	"gopkg.in/gomail.v2"
 
-	"github.com/rupor-github/fb2converter/config"
-	"github.com/rupor-github/fb2converter/etree"
-	"github.com/rupor-github/fb2converter/state"
+	"fb2converter/config"
+	"fb2converter/etree"
+	"fb2converter/state"
 )
 
 // InputFmt defines type of input we are processing.
@@ -100,7 +97,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 
 	u, err := uuid.NewRandom()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to generate UUID")
+		return nil, fmt.Errorf("unable to generate UUID: %w", err)
 	}
 
 	notes := ParseNotesString(env.Cfg.Doc.Notes.Mode)
@@ -198,25 +195,25 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 	if env.Debug {
 		wd, err := os.Getwd()
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to get working directory")
+			return nil, fmt.Errorf("unable to get working directory: %w", err)
 		}
 		tmpd := filepath.Join(wd, "fb2c_deb")
 		if err = os.MkdirAll(tmpd, 0700); err != nil {
-			return nil, errors.Wrap(err, "unable to create debug directory")
+			return nil, fmt.Errorf("unable to create debug directory: %w", err)
 		}
 		t := time.Now()
 		ulid, err := ulid.New(ulid.Timestamp(t), ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0))
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to allocate ULID")
+			return nil, fmt.Errorf("unable to allocate ULID: %w", err)
 		}
 		p.tmpDir = filepath.Join(tmpd, ulid.String()+"_"+filepath.Base(src))
 		if err = os.MkdirAll(p.tmpDir, 0700); err != nil {
-			return nil, errors.Wrap(err, "unable to create temporary directory")
+			return nil, fmt.Errorf("unable to create temporary directory: %w", err)
 		}
 	} else {
 		p.tmpDir, err = os.MkdirTemp("", "fb2c-")
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to create temporary directory")
+			return nil, fmt.Errorf("unable to create temporary directory: %w", err)
 		}
 	}
 
@@ -229,7 +226,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 
 	// Read and parse fb2
 	if _, err := p.doc.ReadFrom(r); err != nil {
-		return nil, errors.Wrap(err, "unable to parse FB2")
+		return nil, fmt.Errorf("unable to parse FB2: %w", err)
 	}
 
 	// Clean document
@@ -240,7 +237,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		doc := p.doc.Copy()
 		doc.IndentTabs()
 		if err := doc.WriteToFile(filepath.Join(p.tmpDir, filepath.Base(src))); err != nil {
-			return nil, errors.Wrap(err, "unable to write XML")
+			return nil, fmt.Errorf("unable to write XML: %w", err)
 		}
 	}
 
@@ -288,25 +285,25 @@ func NewEPUB(r io.Reader, src, dst string, nodirs, stk, overwrite bool, format O
 	if env.Debug {
 		wd, err := os.Getwd()
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to get working directory")
+			return nil, fmt.Errorf("unable to get working directory: %w", err)
 		}
 		tmpd := filepath.Join(wd, "fb2c_deb")
 		if err = os.MkdirAll(tmpd, 0700); err != nil {
-			return nil, errors.Wrap(err, "unable to create debug directory")
+			return nil, fmt.Errorf("unable to create debug directory: %w", err)
 		}
 		t := time.Now()
 		ulid, err := ulid.New(ulid.Timestamp(t), ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0))
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to allocate ULID")
+			return nil, fmt.Errorf("unable to allocate ULID: %w", err)
 		}
 		p.tmpDir = filepath.Join(tmpd, ulid.String()+"_"+filepath.Base(src))
 		if err = os.MkdirAll(p.tmpDir, 0700); err != nil {
-			return nil, errors.Wrap(err, "unable to create temporary directory")
+			return nil, fmt.Errorf("unable to create temporary directory: w", err)
 		}
 	} else {
 		p.tmpDir, err = os.MkdirTemp("", "fb2c-")
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to create temporary directory")
+			return nil, fmt.Errorf("unable to create temporary directory: %w", err)
 		}
 	}
 
@@ -315,10 +312,10 @@ func NewEPUB(r io.Reader, src, dst string, nodirs, stk, overwrite bool, format O
 	if destination, err := os.Create(filepath.Join(p.tmpDir, filepath.Base(src))); err == nil {
 		defer destination.Close()
 		if _, err := io.Copy(destination, r); err != nil {
-			return nil, errors.Wrap(err, "unable to copy source")
+			return nil, fmt.Errorf("unable to copy source: %w", err)
 		}
 	} else {
-		return nil, errors.Wrap(err, "unable to copy source")
+		return nil, fmt.Errorf("unable to copy source: %w", err)
 	}
 
 	// we are ready to convert document
@@ -332,30 +329,6 @@ func (p *Processor) Process() error {
 		// later we may decide to clean epub, massage its stylesheet, etc.
 		return nil
 	}
-
-	// Debugging
-	defer func() {
-		if p.env.Debug && p.kind == InFb2 {
-			// Dump processed book for debugging
-			bname := filepath.Base(p.src)
-			dump, err := os.Create(filepath.Join(p.tmpDir, strings.TrimSuffix(bname, filepath.Ext(p.src))+"-dump.gz"))
-			if err != nil {
-				p.env.Log.Debug("Unable to create file to dump internal state to", zap.Error(err))
-				return
-			}
-			defer dump.Close()
-
-			zdump, err := gzip.NewWriterLevel(dump, gzip.BestSpeed)
-			if err != nil {
-				p.env.Log.Debug("Unable to compress internal state dump", zap.Error(err))
-			}
-			defer zdump.Close()
-
-			zdump.Name = bname
-			zdump.Comment = "fb2c debug dump"
-			p.Book.Dump(zdump)
-		}
-	}()
 
 	// Processing - order of steps and their presence are important as information and context
 	// being built and accumulated...
@@ -475,7 +448,7 @@ func (p *Processor) SendToKindle(fname string) error {
 	d := gomail.NewDialer(p.env.Cfg.SMTPConfig.Server, p.env.Cfg.SMTPConfig.Port, p.env.Cfg.SMTPConfig.User, p.env.Cfg.SMTPConfig.Password)
 
 	if err := d.DialAndSend(m); err != nil {
-		return errors.Wrap(err, "SentToKindle failed")
+		return fmt.Errorf("SentToKindle failed: %w", err)
 	}
 
 	if p.env.Cfg.SMTPConfig.DeleteOnSuccess {

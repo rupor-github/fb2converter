@@ -6,9 +6,27 @@
 package slug
 
 func init() {
-	// Merge language subs with the default one
+	// Merge language subs with the default one.
+	// TODO: Find better way so all langs are merged automatically and better
+	// tested.
 	for _, sub := range []*map[rune]string{
-		&deSub, &enSub, &esSub, &fiSub, &grSub, &nlSub, &plSub,
+		&csSub,
+		&deSub,
+		&enSub,
+		&esSub,
+		&fiSub,
+		&frSub,
+		&grSub,
+		&huSub,
+		&idSub,
+		&kkSub,
+		&nbSub,
+		&nlSub,
+		&nnSub,
+		&plSub,
+		&slSub,
+		&svSub,
+		&trSub,
 	} {
 		for key, value := range defaultSub {
 			(*sub)[key] = value
@@ -24,6 +42,11 @@ var defaultSub = map[rune]string{
 	'–':  "-", // en dash
 	'—':  "-", // em dash
 	'―':  "-", // horizontal bar
+}
+
+var csSub = map[rune]string{
+	'&': "a",
+	'@': "zavinac",
 }
 
 var deSub = map[rune]string{
@@ -52,6 +75,11 @@ var fiSub = map[rune]string{
 	'@': "at",
 }
 
+var frSub = map[rune]string{
+	'&': "et",
+	'@': "arobase",
+}
+
 var grSub = map[rune]string{
 	'&': "kai",
 	'η': "i",
@@ -69,6 +97,61 @@ var grSub = map[rune]string{
 	'ϋ': "u",
 }
 
+var huSub = map[rune]string{
+	'á': "a",
+	'Á': "A",
+	'é': "e",
+	'É': "E",
+	'í': "i",
+	'Í': "I",
+	'ó': "o",
+	'Ó': "O",
+	'ö': "o",
+	'Ö': "O",
+	'ő': "o",
+	'Ő': "O",
+	'ú': "u",
+	'Ú': "U",
+	'ü': "u",
+	'Ü': "U",
+	'ű': "u",
+	'Ű': "U",
+}
+
+var idSub = map[rune]string{
+	'&': "dan",
+}
+
+var kkSub = map[rune]string{
+	'&': "jane",
+	'ә': "a",
+	'ғ': "g",
+	'қ': "q",
+	'ң': "n",
+	'ө': "o",
+	'ұ': "u",
+	'Ә': "A",
+	'Ғ': "G",
+	'Қ': "Q",
+	'Ң': "N",
+	'Ө': "O",
+	'Ұ': "U",
+}
+
+var nbSub = map[rune]string{
+	'&': "og",
+	'@': "at",
+	'æ': "ae",
+	'ø': "oe",
+	'å': "aa",
+	'Æ': "Ae",
+	'Ø': "Oe",
+	'Å': "Aa",
+}
+
+// Norwegian Nynorsk has the same rules
+var nnSub = nbSub
+
 var nlSub = map[rune]string{
 	'&': "en",
 	'@': "at",
@@ -77,6 +160,17 @@ var nlSub = map[rune]string{
 var plSub = map[rune]string{
 	'&': "i",
 	'@': "na",
+}
+
+var slSub = map[rune]string{
+	'&': "in",
+	'Đ': "DZ",
+	'đ': "dz",
+}
+
+var svSub = map[rune]string{
+	'&': "och",
+	'@': "snabel a",
 }
 
 var trSub = map[rune]string{

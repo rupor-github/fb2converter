@@ -4,7 +4,6 @@
 
 // Package etree provides XML services through an Element Tree
 // abstraction (forked from https://github.com/beevik/etree and modified).
-//nolint:errcheck
 package etree
 
 import (

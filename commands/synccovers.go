@@ -1,17 +1,18 @@
 package commands
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/processor"
-	"github.com/rupor-github/fb2converter/state"
+	"fb2converter/processor"
+	"fb2converter/state"
 )
 
 // SyncCovers reads books in Kindle formats and produces thumbnails for them. Very Kindle specific.
@@ -32,12 +33,12 @@ func SyncCovers(ctx *cli.Context) error {
 
 	in, err := filepath.Abs(ctx.Args().Get(0))
 	if err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%swrong book source has been specified", errPrefix), errCode)
+		return cli.NewExitError(fmt.Errorf("%swrong book source has been specified: %w", errPrefix, err), errCode)
 	}
 
 	dir, file := in, ""
 	if info, err := os.Stat(in); err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%swrong book source has been specified", errPrefix), errCode)
+		return cli.NewExitError(fmt.Errorf("%swrong book source has been specified: %w", errPrefix, err), errCode)
 	} else if info.Mode().IsRegular() {
 		dir, file = filepath.Split(in)
 	}

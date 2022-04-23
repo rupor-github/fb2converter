@@ -1,18 +1,19 @@
 package commands
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/urfave/cli"
 	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/processor"
-	"github.com/rupor-github/fb2converter/state"
+	"fb2converter/processor"
+	"fb2converter/state"
 )
 
 // processEpub processes single EPUB file. "src" is part of the source path (always including file name) relative to the original
@@ -59,17 +60,17 @@ func Transfer(ctx *cli.Context) (err error) {
 	}
 	src, err = filepath.Abs(src)
 	if err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%scleaning source path failed", errPrefix), errCode)
+		return cli.NewExitError(fmt.Errorf("%scleaning source path failed: %w", errPrefix, err), errCode)
 	}
 
 	dst := ctx.Args().Get(1)
 	if len(dst) == 0 {
 		if dst, err = os.Getwd(); err != nil {
-			return cli.NewExitError(errors.Wrapf(err, "%sunable to get working directory", errPrefix), errCode)
+			return cli.NewExitError(fmt.Errorf("%sunable to get working directory", errPrefix, err), errCode)
 		}
 	} else {
 		if dst, err = filepath.Abs(dst); err != nil {
-			return cli.NewExitError(errors.Wrapf(err, "%scleaning destination path failed", errPrefix), errCode)
+			return cli.NewExitError(fmt.Errorf("%scleaning destination path failed", errPrefix, err), errCode)
 		}
 	}
 
@@ -95,7 +96,7 @@ func Transfer(ctx *cli.Context) (err error) {
 
 	fi, err := os.Stat(src)
 	if err != nil {
-		return cli.NewExitError(errors.Errorf("%sinput source was not found (%s)", errPrefix, src), errCode)
+		return cli.NewExitError(fmt.Errorf("%sinput source was not found (%s)", errPrefix, src), errCode)
 	}
 
 	switch mode := fi.Mode(); {
@@ -125,7 +126,7 @@ func Transfer(ctx *cli.Context) (err error) {
 			}
 			return nil
 		}); err != nil {
-			return cli.NewExitError(errors.Wrapf(err, "%sunable to process directory", errPrefix), errCode)
+			return cli.NewExitError(fmt.Errorf("%sunable to process directory: %w", errPrefix, err), errCode)
 		}
 		if count == 0 {
 			env.Log.Debug("Nothing to process", zap.String("dir", src))
@@ -133,10 +134,10 @@ func Transfer(ctx *cli.Context) (err error) {
 	case mode.IsRegular():
 		if ok, err := isEpubFile(src); err != nil {
 			// checking format - but cannot open target file
-			return cli.NewExitError(errors.Wrapf(err, "%sunable to check file type", errPrefix), errCode)
+			return cli.NewExitError(fmt.Errorf("%sunable to check file type: %w", errPrefix, err), errCode)
 		} else if !ok {
 			// wrong file type
-			return cli.NewExitError(errors.Errorf("%sinput was not recognized as epub book (%s)", errPrefix, src), errCode)
+			return cli.NewExitError(fmt.Errorf("%sinput was not recognized as epub book (%s)", errPrefix, src), errCode)
 		}
 		if file, err := os.Open(src); err != nil {
 			env.Log.Error("Unable to process file", zap.String("file", src), zap.Error(err))
@@ -147,7 +148,7 @@ func Transfer(ctx *cli.Context) (err error) {
 			}
 		}
 	default:
-		return cli.NewExitError(errors.Errorf("%sunsupported type of input source (%s)", errPrefix, src), errCode)
+		return cli.NewExitError(fmt.Errorf("%sunsupported type of input source (%s)", errPrefix, src), errCode)
 	}
 	return nil
 }

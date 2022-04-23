@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package config
@@ -5,10 +6,10 @@ package config
 import (
 	"os"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 // EnableColorOutput checks if colorized output is possible.
 func EnableColorOutput(stream *os.File) bool {
-	return terminal.IsTerminal(int(stream.Fd()))
+	return term.IsTerminal(int(stream.Fd()))
 }

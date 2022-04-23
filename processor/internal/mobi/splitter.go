@@ -1,4 +1,3 @@
-//nolint:errcheck
 package mobi
 
 // Despite obvious ineffectiveness I decided to repeat python code "ad verbum" for now, it is very time
@@ -10,6 +9,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	"os"
@@ -18,7 +18,6 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -37,7 +36,6 @@ type Splitter struct {
 }
 
 // NewSplitter returns pointer to Slitter with parsed mobi file.
-//nolint:interfacer
 func NewSplitter(fname string, u uuid.UUID, asin string, combo, nonPersonal, forceASIN bool, log *zap.Logger) (*Splitter, error) {
 
 	data, err := os.ReadFile(fname)
@@ -88,7 +86,7 @@ func (s *Splitter) SavePageMap(fname string, eink bool) error {
 	if eink {
 		dir = filepath.Join(dir, base+".sdr")
 		if err := os.MkdirAll(dir, 0700); err != nil {
-			return errors.Wrap(err, "unable to create pagemap directory")
+			return fmt.Errorf("unable to create pagemap directory: %w", err)
 		}
 	}
 	base += ".apnx"
