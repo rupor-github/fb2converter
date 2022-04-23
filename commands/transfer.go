@@ -66,11 +66,11 @@ func Transfer(ctx *cli.Context) (err error) {
 	dst := ctx.Args().Get(1)
 	if len(dst) == 0 {
 		if dst, err = os.Getwd(); err != nil {
-			return cli.NewExitError(fmt.Errorf("%sunable to get working directory", errPrefix, err), errCode)
+			return cli.NewExitError(fmt.Errorf("%sunable to get working directory: %w", errPrefix, err), errCode)
 		}
 	} else {
 		if dst, err = filepath.Abs(dst); err != nil {
-			return cli.NewExitError(fmt.Errorf("%scleaning destination path failed", errPrefix, err), errCode)
+			return cli.NewExitError(fmt.Errorf("%scleaning destination path failed: %w", errPrefix, err), errCode)
 		}
 	}
 

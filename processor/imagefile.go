@@ -163,7 +163,7 @@ func (b *binImage) flush(path string) error {
 
 	// Sanity - should never happen
 	if len(b.data) == 0 {
-		return fmt.Errorf("No image to save %s (%s)", b.id, filepath.Join(newdir, b.fname))
+		return fmt.Errorf("no image to save %s (%s)", b.id, filepath.Join(newdir, b.fname))
 	}
 
 Storing:

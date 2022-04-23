@@ -298,7 +298,7 @@ func NewEPUB(r io.Reader, src, dst string, nodirs, stk, overwrite bool, format O
 		}
 		p.tmpDir = filepath.Join(tmpd, ulid.String()+"_"+filepath.Base(src))
 		if err = os.MkdirAll(p.tmpDir, 0700); err != nil {
-			return nil, fmt.Errorf("unable to create temporary directory: w", err)
+			return nil, fmt.Errorf("unable to create temporary directory: %w", err)
 		}
 	} else {
 		p.tmpDir, err = os.MkdirTemp("", "fb2c-")
