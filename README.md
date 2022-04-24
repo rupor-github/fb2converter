@@ -1,17 +1,13 @@
-﻿<p align="center">
-    <h1 align="center">fb2converter</h1>
-    <p align="center">
-        converts fb2 files to epub, kepub, mobi, azw3
-    </p>
-    <p align="center">
-        <a href="https://pkg.go.dev/mod/github.com/rupor-github/fb2converter/?tab=packages"><img alt="GoDoc" src="https://img.shields.io/badge/godoc-reference-blue.svg" /></a>
-        <a href="https://goreportcard.com/report/github.com/rupor-github/fb2converter"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/rupor-github/fb2converter" /></a>
-    </p>
-    <hr>
-</p>
+﻿<h1>   
+    <img src="docs/transform.svg" style="vertical-align:middle; width:8%" align="absmiddle"/>
+    <span style="vertical-align:middle;">&nbsp;&nbsp;fb2converter</span>
+</h1>
 
-### A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi).
- 
+### Converts fb2 files to epub, kepub, mobi, azw3.
+[![GitHub Release](https://img.shields.io/github/release/rupor-github/fb2conveter.svg)](https://github.com/rupor-github/fb2coverter/releases)
+
+### A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi)
+
   Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter)
   
   Russian [forum](https://4pda.ru/forum/index.php?showtopic=942250).
