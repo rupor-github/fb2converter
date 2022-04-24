@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 
 	"fb2converter/state"
@@ -21,7 +21,7 @@ func DumpConfig(ctx *cli.Context) error {
 		errCode   = 1
 	)
 
-	env := ctx.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
 
 	fname := ctx.Args().Get(0)
 
@@ -29,7 +29,7 @@ func DumpConfig(ctx *cli.Context) error {
 	if len(fname) > 0 {
 		out, err = os.Create(fname)
 		if err != nil {
-			return cli.NewExitError(errors.New(errPrefix+"unable to use destination file"), errCode)
+			return cli.Exit(errors.New(errPrefix+"unable to use destination file"), errCode)
 		}
 		defer out.Close()
 
@@ -43,12 +43,12 @@ func DumpConfig(ctx *cli.Context) error {
 		data, err = env.Cfg.GetActualBytes()
 	}
 	if err != nil {
-		return cli.NewExitError(fmt.Errorf("%sunable to get configuration: %w", errPrefix, err), errCode)
+		return cli.Exit(fmt.Errorf("%sunable to get configuration: %w", errPrefix, err), errCode)
 	}
 
 	_, err = out.Write(data)
 	if err != nil {
-		return cli.NewExitError(fmt.Errorf("%sunable to write configuration: %w", errPrefix, err), errCode)
+		return cli.Exit(fmt.Errorf("%sunable to write configuration: %w", errPrefix, err), errCode)
 	}
 	return nil
 }

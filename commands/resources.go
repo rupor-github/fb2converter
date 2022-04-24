@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	"fb2converter/processor"
 	"fb2converter/state"
@@ -21,18 +21,18 @@ func ExportResources(ctx *cli.Context) error {
 		errCode   = 1
 	)
 
-	env := ctx.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
 
 	fname := ctx.Args().Get(0)
 	if len(fname) == 0 {
-		return cli.NewExitError(errors.New(errPrefix+"destination directory has not been specified"), errCode)
+		return cli.Exit(errors.New(errPrefix+"destination directory has not been specified"), errCode)
 	}
 	if info, err := os.Stat(fname); err != nil && !os.IsNotExist(err) {
-		return cli.NewExitError(errors.New(errPrefix+"unable to access destination directory"), errCode)
+		return cli.Exit(errors.New(errPrefix+"unable to access destination directory"), errCode)
 	} else if err != nil {
-		return cli.NewExitError(errors.New(errPrefix+"destination directory does not exits"), errCode)
+		return cli.Exit(errors.New(errPrefix+"destination directory does not exits"), errCode)
 	} else if !info.IsDir() {
-		return cli.NewExitError(errors.New(errPrefix+"destination is not a directory"), errCode)
+		return cli.Exit(errors.New(errPrefix+"destination is not a directory"), errCode)
 	}
 
 	ignoreNames := map[string]bool{
@@ -46,7 +46,7 @@ func ExportResources(ctx *cli.Context) error {
 			if _, ignore := ignoreNames[a]; env.Debug || !ignore {
 				err = static.RestoreAssets(fname, a)
 				if err != nil {
-					return cli.NewExitError(errors.New(errPrefix+"unable to store resources"), errCode)
+					return cli.Exit(errors.New(errPrefix+"unable to store resources"), errCode)
 				}
 			}
 		}

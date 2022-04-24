@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/ianaindex"
@@ -162,25 +162,25 @@ func Convert(ctx *cli.Context) (err error) {
 		errCode   = 1
 	)
 
-	env := ctx.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
 
 	src := ctx.Args().Get(0)
 	if len(src) == 0 {
-		return cli.NewExitError(errors.New(errPrefix+"no input source has been specified"), errCode)
+		return cli.Exit(errors.New(errPrefix+"no input source has been specified"), errCode)
 	}
 	src, err = filepath.Abs(src)
 	if err != nil {
-		return cli.NewExitError(fmt.Errorf("%scleaning source path failed", errPrefix), errCode)
+		return cli.Exit(fmt.Errorf("%scleaning source path failed", errPrefix), errCode)
 	}
 
 	dst := ctx.Args().Get(1)
 	if len(dst) == 0 {
 		if dst, err = os.Getwd(); err != nil {
-			return cli.NewExitError(fmt.Errorf("%sunable to get working directory", errPrefix), errCode)
+			return cli.Exit(fmt.Errorf("%sunable to get working directory", errPrefix), errCode)
 		}
 	} else {
 		if dst, err = filepath.Abs(dst); err != nil {
-			return cli.NewExitError(fmt.Errorf("%scleaning destination path failed", errPrefix), errCode)
+			return cli.Exit(fmt.Errorf("%scleaning destination path failed", errPrefix), errCode)
 		}
 	}
 
@@ -254,10 +254,10 @@ func Convert(ctx *cli.Context) (err error) {
 		if fi.Mode().IsDir() {
 			if len(tail) != 0 {
 				// directory cannot have tail - it would be simple file
-				return cli.NewExitError(fmt.Errorf("%sinput source was not found (%s) => (%s)", errPrefix, head, strings.TrimPrefix(src, head)), errCode)
+				return cli.Exit(fmt.Errorf("%sinput source was not found (%s) => (%s)", errPrefix, head, strings.TrimPrefix(src, head)), errCode)
 			}
 			if err := processDir(head, format, nodirs, stk, overwrite, cpage, dst, env); err != nil {
-				return cli.NewExitError(fmt.Errorf("%sunable to process directory", errPrefix), errCode)
+				return cli.Exit(fmt.Errorf("%sunable to process directory", errPrefix), errCode)
 			}
 			break
 		}
@@ -267,14 +267,14 @@ func Convert(ctx *cli.Context) (err error) {
 			ok, err := isArchiveFile(head)
 			if err != nil {
 				// checking format - but cannot open target file
-				return cli.NewExitError(fmt.Errorf("%sunable to check archive type: %w", errPrefix, err), errCode)
+				return cli.Exit(fmt.Errorf("%sunable to check archive type: %w", errPrefix, err), errCode)
 			}
 
 			if ok {
 				// we need to look inside to see if path makes sense
 				tail = strings.TrimPrefix(strings.TrimPrefix(src, head), string(filepath.Separator))
 				if err := processArchive(head, tail, "", format, nodirs, stk, overwrite, cpage, dst, env); err != nil {
-					return cli.NewExitError(fmt.Errorf("%sunable to process archive: %w", errPrefix, err), errCode)
+					return cli.Exit(fmt.Errorf("%sunable to process archive: %w", errPrefix, err), errCode)
 				}
 				break
 			}
@@ -283,7 +283,7 @@ func Convert(ctx *cli.Context) (err error) {
 			ok, enc, err = isBookFile(head)
 			if err != nil {
 				// checking format - but cannot open target file
-				return cli.NewExitError(fmt.Errorf("%sunable to check file type: %w", errPrefix, err), errCode)
+				return cli.Exit(fmt.Errorf("%sunable to check file type: %w", errPrefix, err), errCode)
 
 			}
 
@@ -301,13 +301,13 @@ func Convert(ctx *cli.Context) (err error) {
 				break
 			}
 
-			return cli.NewExitError(fmt.Errorf("%sinput was not recognized as FB2 book (%s)", errPrefix, head), errCode)
+			return cli.Exit(fmt.Errorf("%sinput was not recognized as FB2 book (%s)", errPrefix, head), errCode)
 		}
 
-		return cli.NewExitError(fmt.Errorf("%sunexpected path mode for (%s) => (%s)", errPrefix, head, strings.TrimPrefix(src, head)), errCode)
+		return cli.Exit(fmt.Errorf("%sunexpected path mode for (%s) => (%s)", errPrefix, head, strings.TrimPrefix(src, head)), errCode)
 	}
 	if len(head) == 0 {
-		return cli.NewExitError(fmt.Errorf("%sinput source was not found (%s)", errPrefix, src), errCode)
+		return cli.Exit(fmt.Errorf("%sinput source was not found (%s)", errPrefix, src), errCode)
 	}
 
 	return nil

@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	"github.com/pkg/profile"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 
 	"fb2converter/commands"
@@ -36,17 +36,17 @@ func (w *appWrapper) beforeAppRun(c *cli.Context) error {
 
 	// Process global options
 
-	env := c.GlobalGeneric(state.FlagName).(*state.LocalEnv)
-	env.Debug = c.GlobalBool("debug")
-	mhl := c.GlobalInt("mhl")
+	env := c.Generic(state.FlagName).(*state.LocalEnv)
+	env.Debug = c.Bool("debug")
+	mhl := c.Int("mhl")
 	if mhl >= config.MhlNone && mhl < config.MhlUnknown {
 		env.Mhl = mhl
 	}
 
 	// Prepare configuration
-	fconfig := c.GlobalStringSlice("config")
+	fconfig := c.StringSlice("config")
 	if env.Cfg, err = config.BuildConfig(fconfig...); err != nil {
-		return cli.NewExitError(fmt.Errorf("%sunable to build configuration: %w", errPrefix, err), errCode)
+		return cli.Exit(fmt.Errorf("%sunable to build configuration: %w", errPrefix, err), errCode)
 	}
 
 	// We may want to do some profiling
@@ -73,12 +73,12 @@ func (w *appWrapper) beforeCommandRun(c *cli.Context) error {
 	)
 	var err error
 
-	env := c.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+	env := c.Generic(state.FlagName).(*state.LocalEnv)
 
 	// Prepare logs
 	env.Log, err = env.Cfg.PrepareLog()
 	if err != nil {
-		return cli.NewExitError(fmt.Errorf("%sunable to create logs: %w", errPrefix, err), errCode)
+		return cli.Exit(fmt.Errorf("%sunable to create logs: %w", errPrefix, err), errCode)
 	}
 
 	w.log = env.Log
@@ -88,7 +88,7 @@ func (w *appWrapper) beforeCommandRun(c *cli.Context) error {
 	w.inCommand = true
 
 	w.log.Debug("Program started", zap.Strings("args", os.Args), zap.String("ver", misc.GetVersion()+" ("+runtime.Version()+") : "+misc.GetGitHash()))
-	if len(c.GlobalString("config")) == 0 {
+	if len(c.String("config")) == 0 {
 		w.log.Info("Using defaults (no configuration file)")
 	}
 
@@ -134,7 +134,7 @@ func (w *appWrapper) afterAppRun(c *cli.Context) error {
 
 	if w.log != nil {
 
-		w.log.Debug("Program ended", zap.Strings("parsed args", c.Args()))
+		w.log.Debug("Program ended", zap.Strings("parsed args", c.Args().Slice()))
 
 		w.stdlogRestore()
 		_ = w.log.Sync()
@@ -159,20 +159,20 @@ func main() {
 
 	app.Flags = []cli.Flag{
 		// only one profile could be enables at a time - this is enforced by beforeRun
-		cli.StringFlag{Name: "cpuprofile", Hidden: true, Usage: "write cpu profile to `PATH`"},
-		cli.StringFlag{Name: "memprofile", Hidden: true, Usage: "write memory profile to `PATH`"},
-		cli.StringFlag{Name: "blkprofile", Hidden: true, Usage: "write block profile to `PATH`"},
-		cli.StringFlag{Name: "traceprofile", Hidden: true, Usage: "write trace profile to `PATH`"},
-		cli.StringFlag{Name: "mutexprofile", Hidden: true, Usage: "write mutex profile to `PATH`"},
+		&cli.StringFlag{Name: "cpuprofile", Hidden: true, Usage: "write cpu profile to `PATH`"},
+		&cli.StringFlag{Name: "memprofile", Hidden: true, Usage: "write memory profile to `PATH`"},
+		&cli.StringFlag{Name: "blkprofile", Hidden: true, Usage: "write block profile to `PATH`"},
+		&cli.StringFlag{Name: "traceprofile", Hidden: true, Usage: "write trace profile to `PATH`"},
+		&cli.StringFlag{Name: "mutexprofile", Hidden: true, Usage: "write mutex profile to `PATH`"},
 
-		cli.GenericFlag{Name: state.FlagName, Hidden: true, Usage: "--internal--", Value: state.NewLocalEnv()},
-		cli.IntFlag{Name: "mhl", Value: config.MhlNone, Hidden: true, Usage: "--internal--"},
+		&cli.GenericFlag{Name: state.FlagName, Hidden: true, Usage: "--internal--", Value: state.NewLocalEnv()},
+		&cli.IntFlag{Name: "mhl", Value: config.MhlNone, Hidden: true, Usage: "--internal--"},
 
-		cli.StringSliceFlag{Name: "config, c", Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
-		cli.BoolFlag{Name: "debug, d", Usage: "leave behind various artifacts for debugging (do not delete intermediate results)"},
+		&cli.StringSliceFlag{Name: "config, c", Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
+		&cli.BoolFlag{Name: "debug, d", Usage: "leave behind various artifacts for debugging (do not delete intermediate results)"},
 	}
 
-	app.Commands = []cli.Command{
+	app.Commands = []*cli.Command{
 		{
 			Name:   "convert",
 			Usage:  "Converts FB2 file(s) to specified format",
@@ -180,11 +180,11 @@ func main() {
 			Before: wrap.beforeCommandRun,
 			After:  wrap.afterCommandRun,
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "to", Value: "epub", Usage: "conversion output `TYPE` (supported types: epub, kepub, azw3, mobi)"},
-				cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
-				cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (mobi only)"},
-				cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},
-				cli.StringFlag{Name: "force-zip-cp", Usage: "Force `ENCODING` for ALL file names in archives (see IANA.org for character set names)"},
+				&cli.StringFlag{Name: "to", Value: "epub", Usage: "conversion output `TYPE` (supported types: epub, kepub, azw3, mobi)"},
+				&cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
+				&cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (mobi only)"},
+				&cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},
+				&cli.StringFlag{Name: "force-zip-cp", Usage: "Force `ENCODING` for ALL file names in archives (see IANA.org for character set names)"},
 			},
 			ArgsUsage: "SOURCE [DESTINATION]",
 			CustomHelpTemplate: fmt.Sprintf(`%sSOURCE:
@@ -208,10 +208,10 @@ DESTINATION:
 			Before: wrap.beforeCommandRun,
 			After:  wrap.afterCommandRun,
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "to", Value: "mobi", Usage: "conversion output `TYPE` (supported types: azw3, mobi)"},
-				cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
-				cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (mobi only)"},
-				cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},
+				&cli.StringFlag{Name: "to", Value: "mobi", Usage: "conversion output `TYPE` (supported types: azw3, mobi)"},
+				&cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
+				&cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (mobi only)"},
+				&cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},
 			},
 			ArgsUsage: "SOURCE [DESTINATION]",
 			CustomHelpTemplate: fmt.Sprintf(`%sSOURCE:
@@ -234,9 +234,9 @@ This command is a mere convenience wrapper to simplify transfer of files to Kind
 			Before: wrap.beforeCommandRun,
 			After:  wrap.afterCommandRun,
 			Flags: []cli.Flag{
-				cli.IntFlag{Name: "width", Value: 330, Usage: "width of the resulting thumbnail (default: 330)"},
-				cli.IntFlag{Name: "height", Value: 470, Usage: "height of the resulting thumbnail (default: 470)"},
-				cli.BoolFlag{Name: "stretch", Usage: "do not preserve thumbnail aspect ratio when resizing"},
+				&cli.IntFlag{Name: "width", Value: 330, Usage: "width of the resulting thumbnail (default: 330)"},
+				&cli.IntFlag{Name: "height", Value: 470, Usage: "height of the resulting thumbnail (default: 470)"},
+				&cli.BoolFlag{Name: "stretch", Usage: "do not preserve thumbnail aspect ratio when resizing"},
 			},
 			ArgsUsage: "SOURCE",
 			CustomHelpTemplate: fmt.Sprintf(`%s
