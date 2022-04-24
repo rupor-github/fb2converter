@@ -1,6 +1,6 @@
 ﻿<h1>   
     <img src="docs/books.svg" style="vertical-align:middle; width:8%" align="absmiddle"/>
-    <span style="vertical-align:middle;">&nbsp;&nbsp;fb2converter - convert fb2 files to epub, kepub, mobi, azw3</span>
+    <span style="vertical-align:middle;">&nbsp;&nbsp;FB2 converter to EPUB2, KEPUB, MOBI 7/8, AZW3</span>
 </h1>
 
 [![GitHub Release](https://img.shields.io/github/release/rupor-github/fb2converter.svg)](https://github.com/rupor-github/fb2converter/releases)
