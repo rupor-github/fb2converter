@@ -1,5 +1,5 @@
 ﻿<h1>   
-    <img src="docs/transform.svg" style="vertical-align:middle; width:8%" align="absmiddle"/>
+    <img src="docs/books.svg" style="vertical-align:middle; width:8%" align="absmiddle"/>
     <span style="vertical-align:middle;">&nbsp;&nbsp;fb2converter</span>
 </h1>
 
