@@ -1,19 +1,14 @@
 ﻿<h1>   
     <img src="docs/books.svg" style="vertical-align:middle; width:8%" align="absmiddle"/>
-    <span style="vertical-align:middle;">&nbsp;&nbsp;fb2converter</span>
+    <span style="vertical-align:middle;">&nbsp;&nbsp;fb2converter - convert fb2 files to epub, kepub, mobi, azw3</span>
 </h1>
 
-### Converts fb2 files to epub, kepub, mobi, azw3.
 [![GitHub Release](https://img.shields.io/github/release/rupor-github/fb2converter.svg)](https://github.com/rupor-github/fb2converter/releases)
 
 ### A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi)
+Aims to be faster than python implementation and much easier to maintain. Simpler configuration, zero dependencies, better diagnostics and no installation required.
 
-  Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter)
-  
-  Russian [forum](https://4pda.ru/forum/index.php?showtopic=942250).
-
-Aims to be faster than python implementation and much easier to maintain. Simpler configuration, zero dependencies,
-better diagnostics and no installation required.
+Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter) and [forum](https://4pda.ru/forum/index.php?showtopic=942250).
 
 ### Essential differences:
 
