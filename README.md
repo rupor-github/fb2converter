@@ -4,7 +4,7 @@
 </h1>
 
 ### Converts fb2 files to epub, kepub, mobi, azw3.
-[![GitHub Release](https://img.shields.io/github/release/rupor-github/fb2conveter.svg)](https://github.com/rupor-github/fb2coverter/releases)
+[![GitHub Release](https://img.shields.io/github/release/rupor-github/fb2converter.svg)](https://github.com/rupor-github/fb2converter/releases)
 
 ### A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi)
 
