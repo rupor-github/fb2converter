@@ -168,8 +168,8 @@ func main() {
 		&cli.GenericFlag{Name: state.FlagName, Hidden: true, Usage: "--internal--", Value: state.NewLocalEnv()},
 		&cli.IntFlag{Name: "mhl", Value: config.MhlNone, Hidden: true, Usage: "--internal--"},
 
-		&cli.StringSliceFlag{Name: "config, c", Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
-		&cli.BoolFlag{Name: "debug, d", Usage: "leave behind various artifacts for debugging (do not delete intermediate results)"},
+		&cli.StringSliceFlag{Name: "config", Aliases: []string{"c"}, Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
+		&cli.BoolFlag{Name: "debug", Aliases: []string{"d"}, Usage: "leave behind various artifacts for debugging (do not delete intermediate results)"},
 	}
 
 	app.Commands = []*cli.Command{
