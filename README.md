@@ -19,7 +19,6 @@ Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter) a
 - no overwriting of configuration parameters from command line, options either specified in configuration file or on command line
 - slightly different hyphenation algorithm (no hyphensReplaceNBSP)
 - fixes and echancements in toc.ncx generation
-- epub processing was separated into its own command "transfer" and any attempts to process epub content were dropped
 - go differs in how it processes images, it is less forgiving than Python's PILLOW and do not have lazy decoding (see use_broken_images configuration option)
 - small changes in result formatting, for example:
   - chapter-end vignette would not be added if chapter does not have text paragraphs
