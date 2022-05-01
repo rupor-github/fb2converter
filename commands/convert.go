@@ -227,11 +227,11 @@ func Convert(ctx *cli.Context) (err error) {
 	}
 
 	stk := ctx.Bool("stk")
-	if env.Mhl == config.MhlMobi {
-		stk = env.Cfg.Fb2Mobi.SendToKindle
+	if env.Mhl == config.MhlEpub {
+		stk = env.Cfg.Fb2Epub.SendToKindle
 	}
-	if stk && format != processor.OMobi {
-		env.Log.Warn("Send to Kindle could only be used with mobi output format, turning off", zap.Stringer("format", format))
+	if stk && format != processor.OEpub {
+		env.Log.Warn("Send to Kindle could only be used with epub output format, turning off", zap.Stringer("format", format))
 		stk = false
 	}
 

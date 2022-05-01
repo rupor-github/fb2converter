@@ -44,12 +44,12 @@ type Logger struct {
 // Fb2Mobi provides special support for MyHomeLib.
 type Fb2Mobi struct {
 	OutputFormat string `json:"output_format"`
-	SendToKindle bool   `json:"send_to_kindle"`
 }
 
 // Fb2Epub provides special support for MyHomeLib.
 type Fb2Epub struct {
 	OutputFormat string `json:"output_format"`
+	SendToKindle bool   `json:"send_to_kindle"`
 }
 
 // SMTPConfig keeps STK configuration.

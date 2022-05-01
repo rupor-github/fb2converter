@@ -120,15 +120,10 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 	}
 	var apnx APNXGeneration
 	if kindle {
-		if stk && format == OMobi && env.Cfg.SMTPConfig.IsValid() && env.Cfg.SMTPConfig.DeleteOnSuccess {
-			// Do not create pagemap - we do not need it
+		apnx = ParseAPNXGenerationSring(env.Cfg.Doc.Kindlegen.PageMap)
+		if apnx == UnsupportedAPNXGeneration {
+			env.Log.Warn("Unknown APNX generation option requested, turning off", zap.String("apnx", env.Cfg.Doc.Kindlegen.PageMap))
 			apnx = APNXNone
-		} else {
-			apnx = ParseAPNXGenerationSring(env.Cfg.Doc.Kindlegen.PageMap)
-			if apnx == UnsupportedAPNXGeneration {
-				env.Log.Warn("Unknown APNX generation option requested, turning off", zap.String("apnx", env.Cfg.Doc.Kindlegen.PageMap))
-				apnx = APNXNone
-			}
 		}
 	}
 	var stamp StampPlacement
@@ -245,83 +240,6 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 	return p, nil
 }
 
-// NewEPUB creates EPUB book processor and prepares necessary temporary directories.
-func NewEPUB(r io.Reader, src, dst string, nodirs, stk, overwrite bool, format OutputFmt, env *state.LocalEnv) (*Processor, error) {
-
-	var err error
-
-	var apnx APNXGeneration
-	if format == OAzw3 || format == OMobi {
-		if stk && format == OMobi && env.Cfg.SMTPConfig.IsValid() && env.Cfg.SMTPConfig.DeleteOnSuccess {
-			// Do not create pagemap - we do not need it
-			apnx = APNXNone
-		} else {
-			apnx = ParseAPNXGenerationSring(env.Cfg.Doc.Kindlegen.PageMap)
-			if apnx == UnsupportedAPNXGeneration {
-				env.Log.Warn("Unknown APNX generation option requested, turning off", zap.String("apnx", env.Cfg.Doc.Kindlegen.PageMap))
-				apnx = APNXNone
-			}
-		}
-	}
-
-	p := &Processor{
-		kind:          InEpub,
-		src:           src,
-		dst:           dst,
-		nodirs:        nodirs,
-		stk:           stk,
-		kindlePageMap: apnx,
-		overwrite:     overwrite,
-		format:        format,
-		env:           env,
-	}
-
-	// Fail early
-	if p.kindlegenPath, err = env.Cfg.GetKindlegenPath(); err != nil {
-		return nil, err
-	}
-
-	// re-route temporary directory for debugging
-	if env.Debug {
-		wd, err := os.Getwd()
-		if err != nil {
-			return nil, fmt.Errorf("unable to get working directory: %w", err)
-		}
-		tmpd := filepath.Join(wd, "fb2c_deb")
-		if err = os.MkdirAll(tmpd, 0700); err != nil {
-			return nil, fmt.Errorf("unable to create debug directory: %w", err)
-		}
-		t := time.Now()
-		ulid, err := ulid.New(ulid.Timestamp(t), ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0))
-		if err != nil {
-			return nil, fmt.Errorf("unable to allocate ULID: %w", err)
-		}
-		p.tmpDir = filepath.Join(tmpd, ulid.String()+"_"+filepath.Base(src))
-		if err = os.MkdirAll(p.tmpDir, 0700); err != nil {
-			return nil, fmt.Errorf("unable to create temporary directory: %w", err)
-		}
-	} else {
-		p.tmpDir, err = os.MkdirTemp("", "fb2c-")
-		if err != nil {
-			return nil, fmt.Errorf("unable to create temporary directory: %w", err)
-		}
-	}
-
-	// copy source file to temporary directory - when we decide what else to do with EPUBs this will be very handy
-
-	if destination, err := os.Create(filepath.Join(p.tmpDir, filepath.Base(src))); err == nil {
-		defer destination.Close()
-		if _, err := io.Copy(destination, r); err != nil {
-			return nil, fmt.Errorf("unable to copy source: %w", err)
-		}
-	} else {
-		return nil, fmt.Errorf("unable to copy source: %w", err)
-	}
-
-	// we are ready to convert document
-	return p, nil
-}
-
 // Process does all the work.
 func (p *Processor) Process() error {
 
@@ -420,7 +338,7 @@ func (p *Processor) Save() (string, error) {
 // SendToKindle will mail converted file to specified address and remove file if requested.
 func (p *Processor) SendToKindle(fname string) error {
 
-	if !p.stk || p.format != OMobi || len(fname) == 0 {
+	if !p.stk || p.format != OEpub || len(fname) == 0 {
 		return nil
 	}
 

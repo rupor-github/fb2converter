@@ -182,7 +182,7 @@ func main() {
 			Flags: []cli.Flag{
 				&cli.StringFlag{Name: "to", Value: "epub", Usage: "conversion output `TYPE` (supported types: epub, kepub, azw3, mobi)"},
 				&cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
-				&cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (mobi only)"},
+				&cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (epub only)"},
 				&cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},
 				&cli.StringFlag{Name: "force-zip-cp", Usage: "Force `ENCODING` for ALL file names in archives (see IANA.org for character set names)"},
 			},
@@ -199,32 +199,6 @@ func main() {
 DESTINATION:
     always a path, output file name(s) and extension will be derived from other parameters
     if absent - current working directory
-`, cli.CommandHelpTemplate),
-		},
-		{
-			Name:   "transfer",
-			Usage:  "Prepares EPUB file(s) for transfer (Kindle only!)",
-			Action: commands.Transfer,
-			Before: wrap.beforeCommandRun,
-			After:  wrap.afterCommandRun,
-			Flags: []cli.Flag{
-				&cli.StringFlag{Name: "to", Value: "mobi", Usage: "conversion output `TYPE` (supported types: azw3, mobi)"},
-				&cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
-				&cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (mobi only)"},
-				&cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},
-			},
-			ArgsUsage: "SOURCE [DESTINATION]",
-			CustomHelpTemplate: fmt.Sprintf(`%sSOURCE:
-    path to epub file(s) to process, following formats are supported:
-        path to a file: [path]file.epub
-        path to a directory: [path]directory - recursively process all files under directory (symbolic links are not followed)
-
-DESTINATION:
-    always a path, output file name(s) and extension will be derived from other parameters
-    if absent - current working directory
-
-Presently no processing of input files is performed - not even unpacking, so most of program functionality is disabled.
-This command is a mere convenience wrapper to simplify transfer of files to Kindle over USB or mail.
 `, cli.CommandHelpTemplate),
 		},
 		{
