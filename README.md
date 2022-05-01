@@ -64,7 +64,6 @@ VERSION:
 
 COMMANDS:
      convert     Converts FB2 file(s) to specified format
-     transfer    Prepares EPUB file(s) for transfer (Kindle only!)
      synccovers  Extracts thumbnails from documents (Kindle only!)
      dumpconfig  Dumps active configuration (JSON)
      export      Exports built-in resources for customization
@@ -82,9 +81,9 @@ Additional help for any command could be obtained by running `./fb2c help COMMAN
 ### Examples:
 
 In order to convert all fb2 files in `c:\books\to-read` directory and get results in `d:\out` directory without keeping original subdirectory structure
-sending mobi files to Kindle via e-mail in process execute
+sending files to Kindle via e-mail in process execute
 
-   `fb2c.exe convert --nodirs --stk --to mobi c:\books\to-read d:\out`
+   `fb2c.exe convert --nodirs --stk --to epub c:\books\to-read d:\out`
 
 If you want resulting mobi files to be located alongside with original files, do something like
 
@@ -98,3 +97,9 @@ Windows builds come with full [MyHomeLib](https://github.com/OleksiyPenkov/myhom
 #### NOTE:
 * `fb2mobi.exe` looks for `fb2mobi.toml` in its directory (similarly `fb2epub.exe` looks for `fb2epub.toml`), so any additional customization is easy.
 * __Do not install__ MyHomeLib in either `%ProgramFiles%` or `%ProgramFiles(x86)%` directory - it is bad idea. Since for regular user accounts In Windows those places are __write-protected__ you will have difficulties copying converters there and converters will have problems creating conversion logs which are enabled by default.
+
+### BREAKING CHANGES:
+
+Starting with version 1.62.0 "Send to Kindle" functionality supported for EPUB files only. This reflects current Amazon intention to completely drop MOBI support on backend. As the result converter drops "transfer" subcommand, disables sending of MOBI files via e-mail and moves support for this from `fb2mobi` to `fb2epub`.
+
+
