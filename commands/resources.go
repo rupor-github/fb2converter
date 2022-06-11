@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 
 	"fb2converter/processor"
 	"fb2converter/state"
@@ -14,14 +15,15 @@ import (
 // ExportResources is "export" command body.
 func ExportResources(ctx *cli.Context) error {
 
-	// var err error
-
 	const (
 		errPrefix = "export: "
 		errCode   = 1
 	)
 
 	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
+	if ctx.Args().Len() > 1 {
+		env.Log.Warn("Mailformed command line, too many destinations", zap.Strings("ignoring", ctx.Args().Slice()[1:]))
+	}
 
 	fname := ctx.Args().Get(0)
 	if len(fname) == 0 {

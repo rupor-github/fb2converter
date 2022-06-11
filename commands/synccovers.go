@@ -35,6 +35,9 @@ func SyncCovers(ctx *cli.Context) error {
 	if err != nil {
 		return cli.Exit(fmt.Errorf("%swrong book source has been specified: %w", errPrefix, err), errCode)
 	}
+	if ctx.Args().Len() > 1 {
+		env.Log.Warn("Mailformed command line, too many sources", zap.Strings("ignoring", ctx.Args().Slice()[1:]))
+	}
 
 	dir, file := in, ""
 	if info, err := os.Stat(in); err != nil {

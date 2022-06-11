@@ -170,7 +170,7 @@ func Convert(ctx *cli.Context) (err error) {
 	}
 	src, err = filepath.Abs(src)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("%scleaning source path failed", errPrefix), errCode)
+		return cli.Exit(fmt.Errorf("%snormalizing source path failed", errPrefix), errCode)
 	}
 
 	dst := ctx.Args().Get(1)
@@ -180,7 +180,10 @@ func Convert(ctx *cli.Context) (err error) {
 		}
 	} else {
 		if dst, err = filepath.Abs(dst); err != nil {
-			return cli.Exit(fmt.Errorf("%scleaning destination path failed", errPrefix), errCode)
+			return cli.Exit(fmt.Errorf("%snormalizing destination path failed", errPrefix), errCode)
+		}
+		if ctx.Args().Len() > 2 {
+			env.Log.Warn("Mailformed command line, too many destinations", zap.Strings("ignoring", ctx.Args().Slice()[2:]))
 		}
 	}
 

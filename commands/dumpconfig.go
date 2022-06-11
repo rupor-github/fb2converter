@@ -22,6 +22,9 @@ func DumpConfig(ctx *cli.Context) error {
 	)
 
 	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
+	if ctx.Args().Len() > 1 {
+		env.Log.Warn("Mailformed command line, too many destinations", zap.Strings("ignoring", ctx.Args().Slice()[1:]))
+	}
 
 	fname := ctx.Args().Get(0)
 

@@ -10,12 +10,6 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Generator: ${CMAKE_GENERATOR}")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "********************************************************************************")
-    message(STATUS "*** Do not forget to do \"make deps_vendor\" before switching to Release mode! ***")
-    message(STATUS "********************************************************************************")
-endif()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 # Release installation directory
@@ -63,7 +57,7 @@ else()
     endif()
 endif()
 
-set(GO_MIN_REQURED_VERSION 1.17)
+set(GO_MIN_REQURED_VERSION 1.18)
 find_package(Go ${GO_MIN_REQURED_VERSION} REQUIRED)
 find_package(Git REQUIRED)
 
@@ -85,7 +79,7 @@ endif()
 
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 62)
+set(PRJ_VERSION_MINOR 63)
 set(PRJ_VERSION_PATCH 0)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
@@ -195,7 +189,7 @@ add_custom_command(OUTPUT ${KINDLEGEN_TARGET}
 ########################################################################################################
 
 # Temporary directory for test results
-execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory tests_results)
+# execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory tests_results)
 
 add_custom_target(test_all
     DEPENDS test_processor test_hyphenator
