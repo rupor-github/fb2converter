@@ -15,6 +15,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	"go.uber.org/zap"
+	"golang.org/x/text/cases"
 
 	"fb2converter/config"
 	"fb2converter/etree"
@@ -86,7 +87,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 				tocTitle = t.title
 				inner.AddChild(t.parsed.Copy())
 			} else {
-				tocTitle = strings.Title(p.ctx().bodyName)
+				tocTitle = cases.Title(p.Book.Lang).String(p.ctx().bodyName)
 				inner.AddNext("div", attr("class", "h0")).AddNext("p", attr("class", "title")).SetText(tocTitle)
 			}
 
@@ -378,7 +379,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 						if t, ok := p.Book.NoteBodyTitles[note.bodyName]; ok {
 							name = t.title
 						} else {
-							name = strings.Title(note.bodyName)
+							name = cases.Title(p.Book.Lang).String(note.bodyName)
 						}
 						var bodyNumber int
 						if p.Book.NotesBodies > 1 {
