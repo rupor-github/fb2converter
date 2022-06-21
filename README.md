@@ -52,27 +52,28 @@ Program has detailed logging configured by default (by default conversion.log in
 
 ```
 >>> ./fb2c
+
 NAME:
    fb2converter - fb2 conversion engine
 
 USAGE:
-   fb2c.exe [global options] command [command options] [arguments...]
+   fb2c [global options] command [command options] [arguments...]
 
 VERSION:
    "program version" ("go runtime version") : "git sha string"
 
 COMMANDS:
-     convert     Converts FB2 file(s) to specified format
-     synccovers  Extracts thumbnails from documents (Kindle only!)
-     dumpconfig  Dumps active configuration (JSON)
-     export      Exports built-in resources for customization
-     help, h     Shows a list of commands or help for one command
+   convert     Converts FB2 file(s) to specified format
+   synccovers  Extracts thumbnails from documents (Kindle only!)
+   dumpconfig  Dumps active configuration (JSON)
+   export      Exports built-in resources for customization
+   help, h     Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --config FILE, -c FILE  load configuration from FILE (YAML, TOML or JSON). if FILE is "-" JSON will be expected from STDIN
-   --debug, -d             leave behind various artifacts for debugging (do not delete intermediate results)
-   --help, -h              show help
-   --version, -v           print the version
+   --config FILE, -c FILE  load configuration from FILE (YAML, TOML or JSON). if FILE is "-" JSON will be expected from STDIN  (accepts multiple inputs)
+   --debug, -d             prepare archive with details of a current run (may overwrite some log settings) (default: false)
+   --help, -h              show help (default: false)
+   --version, -v           print the version (default: false)
 ```
 
 Additional help for any command could be obtained by running `./fb2c help COMMAND-NAME`.
@@ -100,5 +101,6 @@ Windows builds come with full [MyHomeLib](https://github.com/OleksiyPenkov/myhom
 ### BREAKING CHANGES:
 
 Starting with version 1.62.0 "Send to Kindle" functionality supported for EPUB files only. This reflects current Amazon intention to completely drop MOBI support on backend. As the result converter drops "transfer" subcommand, disables sending of MOBI files via e-mail and moves support for this from `fb2mobi` to `fb2epub`.
+Starting with version 1.64.0 `--debug` flag produces zip archive with artifacts for debugging either in directory of the converter or if it is inaccessible in temporary directory. Environment variable FB2C_DEBUG set to "Yes" could be used with `fb2epub.exe` and `fb2mobi.exe` for similar effect. Resulting archive could be shared to facilitate troubleshooting.
 
 
