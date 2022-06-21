@@ -24,6 +24,7 @@ import (
 	"fb2converter/go-micro/config/source"
 	"fb2converter/go-micro/config/source/file"
 	"fb2converter/go-micro/config/source/memory"
+	"fb2converter/reporter"
 )
 
 //  Internal constants defining if program was invoked via MyHomeLib wrappers.
@@ -520,7 +521,7 @@ func (conf *Config) GetActualBytes() ([]byte, error) {
 }
 
 // PrepareLog returns our standard logger. It prepares zap logger for use by the program.
-func (conf *Config) PrepareLog() (*zap.Logger, error) {
+func (conf *Config) PrepareLog(rpt *reporter.Report) (*zap.Logger, error) {
 
 	// Console - split stdout and stderr, handle colors and redirection
 
@@ -581,12 +582,21 @@ func (conf *Config) PrepareLog() (*zap.Logger, error) {
 	}
 
 	var (
-		fileEncoder  zapcore.Encoder
-		fileCore     zapcore.Core
-		logLevel     zap.AtomicLevel
-		logRequested bool
+		fileEncoder    zapcore.Encoder
+		fileCore       zapcore.Core
+		logLevel       zap.AtomicLevel
+		logRequested   bool
+		levelRequested = conf.FileLogger.Level
+		modeRequested  = conf.FileLogger.Mode
 	)
-	switch conf.FileLogger.Level {
+
+	if rpt != nil {
+		// if report is requested always set maximum available logging level for file logger
+		levelRequested = "debug"
+		modeRequested = "overwrite"
+	}
+
+	switch levelRequested {
 	case "debug":
 		fileEncoder = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 		logLevel = zap.NewAtomicLevelAt(zap.DebugLevel)
@@ -599,11 +609,13 @@ func (conf *Config) PrepareLog() (*zap.Logger, error) {
 
 	var newName string
 	if logRequested {
-		if f, err := opener(conf.FileLogger.Destination, conf.FileLogger.Mode); err == nil {
+		if f, err := opener(conf.FileLogger.Destination, modeRequested); err == nil {
 			fileCore = zapcore.NewCore(fileEncoder, zapcore.Lock(f), logLevel)
+			rpt.Store("file.log", f.Name())
 		} else if f, err = os.CreateTemp("", "conversion.*.log"); err == nil {
 			newName = f.Name()
 			fileCore = zapcore.NewCore(fileEncoder, zapcore.Lock(f), logLevel)
+			rpt.Store("file.log", newName)
 		} else {
 			return nil, fmt.Errorf("unable to access file log destination (%s): %w", conf.FileLogger.Destination, err)
 		}
@@ -617,7 +629,6 @@ func (conf *Config) PrepareLog() (*zap.Logger, error) {
 		core.Warn("Log file was redirected to new location", zap.String("location", newName))
 	}
 	return core, nil
-
 }
 
 // When logging error to console - do not output verbose message.

@@ -78,6 +78,7 @@ func (p *Processor) getDefaultCover(i int) (*binImage, error) {
 		if b.data, err = os.ReadFile(fname); err != nil {
 			return nil, fmt.Errorf("unable to read cover image: %w", err)
 		}
+
 		ext := filepath.Ext(fname)
 		b.fname = fmt.Sprintf("bin%08d%s", i, ext)
 		b.ct = mime.TypeByExtension(ext)

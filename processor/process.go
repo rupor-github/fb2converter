@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"image"
 	"io"
-	"math/rand"
 	"mime"
 	"net/url"
 	"os"
@@ -20,7 +19,6 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
-	"github.com/oklog/ulid"
 	"go.uber.org/zap"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/language"
@@ -186,31 +184,11 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		p.dashTransform.To = string(sym)
 	}
 
-	// re-route temporary directory for debugging
-	if env.Debug {
-		wd, err := os.Getwd()
-		if err != nil {
-			return nil, fmt.Errorf("unable to get working directory: %w", err)
-		}
-		tmpd := filepath.Join(wd, "fb2c_deb")
-		if err = os.MkdirAll(tmpd, 0700); err != nil {
-			return nil, fmt.Errorf("unable to create debug directory: %w", err)
-		}
-		t := time.Now()
-		ulid, err := ulid.New(ulid.Timestamp(t), ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0))
-		if err != nil {
-			return nil, fmt.Errorf("unable to allocate ULID: %w", err)
-		}
-		p.tmpDir = filepath.Join(tmpd, ulid.String()+"_"+filepath.Base(src))
-		if err = os.MkdirAll(p.tmpDir, 0700); err != nil {
-			return nil, fmt.Errorf("unable to create temporary directory: %w", err)
-		}
-	} else {
-		p.tmpDir, err = os.MkdirTemp("", "fb2c-")
-		if err != nil {
-			return nil, fmt.Errorf("unable to create temporary directory: %w", err)
-		}
+	p.tmpDir, err = os.MkdirTemp("", "fb2c-")
+	if err != nil {
+		return nil, fmt.Errorf("unable to create temporary directory: %w", err)
 	}
+	env.Rpt.Store(fmt.Sprintf("fb2c-%s", u.String()), p.tmpDir)
 
 	if unknownEncoding {
 		// input file had no BOM mark - most likely was not Unicode
@@ -228,7 +206,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 	p.doc.Indent(etree.NoIndent)
 
 	// Save parsed document back to file (pretty-printed) for debugging
-	if p.env.Debug {
+	if p.env.Rpt != nil {
 		doc := p.doc.Copy()
 		doc.IndentTabs()
 		if err := doc.WriteToFile(filepath.Join(p.tmpDir, filepath.Base(src))); err != nil {
@@ -388,7 +366,7 @@ func (p *Processor) SendToKindle(fname string) error {
 
 // Clean removes temporary files left after processing.
 func (p *Processor) Clean() error {
-	if p.env.Debug {
+	if p.env.Rpt != nil {
 		// Leave temporary files intact
 		return nil
 	}

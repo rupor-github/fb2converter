@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/pkg/profile"
@@ -12,6 +13,7 @@ import (
 	"fb2converter/commands"
 	"fb2converter/config"
 	"fb2converter/misc"
+	"fb2converter/reporter"
 	"fb2converter/state"
 )
 
@@ -19,7 +21,11 @@ type appWrapper struct {
 	log           *zap.Logger
 	stdlogRestore func()
 	prof          interface{ Stop() }
-	inCommand     bool
+	report        interface {
+		Close() error
+		Name() string
+	}
+	inCommand bool
 }
 
 func (w *appWrapper) beforeAppRun(c *cli.Context) error {
@@ -37,14 +43,27 @@ func (w *appWrapper) beforeAppRun(c *cli.Context) error {
 	// Process global options
 
 	env := c.Generic(state.FlagName).(*state.LocalEnv)
-	env.Debug = c.Bool("debug")
 	mhl := c.Int("mhl")
 	if mhl >= config.MhlNone && mhl < config.MhlUnknown {
 		env.Mhl = mhl
 	}
 
-	// Prepare configuration
 	fconfig := c.StringSlice("config")
+
+	if c.Bool("debug") {
+		env.Rpt, err = reporter.NewReporter()
+		if err != nil {
+			return cli.Exit(fmt.Errorf("%sunable to report: %w", errPrefix, err), errCode)
+		}
+		w.report = env.Rpt
+
+		// save all external configuration files
+		for i, c := range fconfig {
+			env.Rpt.Store(fmt.Sprintf("config/%d%s", i, filepath.Ext(c)), c)
+		}
+	}
+
+	// Prepare configuration
 	if env.Cfg, err = config.BuildConfig(fconfig...); err != nil {
 		return cli.Exit(fmt.Errorf("%sunable to build configuration: %w", errPrefix, err), errCode)
 	}
@@ -76,7 +95,7 @@ func (w *appWrapper) beforeCommandRun(c *cli.Context) error {
 	env := c.Generic(state.FlagName).(*state.LocalEnv)
 
 	// Prepare logs
-	env.Log, err = env.Cfg.PrepareLog()
+	env.Log, err = env.Cfg.PrepareLog(env.Rpt)
 	if err != nil {
 		return cli.Exit(fmt.Errorf("%sunable to create logs: %w", errPrefix, err), errCode)
 	}
@@ -131,13 +150,21 @@ func (w *appWrapper) afterAppRun(c *cli.Context) error {
 	if w.prof != nil {
 		w.prof.Stop()
 	}
-
 	if w.log != nil {
 
 		w.log.Debug("Program ended", zap.Strings("parsed args", c.Args().Slice()))
 
 		w.stdlogRestore()
 		_ = w.log.Sync()
+
+		if w.report != nil {
+			w.log.Info("Creating report", zap.String("location", w.report.Name()))
+		}
+	}
+	if w.report != nil {
+		if err := w.report.Close(); err != nil {
+			w.log.Error("Reporting problem", zap.Error(err))
+		}
 	}
 	return nil
 }
@@ -169,7 +196,7 @@ func main() {
 		&cli.IntFlag{Name: "mhl", Value: config.MhlNone, Hidden: true, Usage: "--internal--"},
 
 		&cli.StringSliceFlag{Name: "config", Aliases: []string{"c"}, Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
-		&cli.BoolFlag{Name: "debug", Aliases: []string{"d"}, Usage: "leave behind various artifacts for debugging (do not delete intermediate results)"},
+		&cli.BoolFlag{Name: "debug", Aliases: []string{"d"}, Usage: "prepare archive with details of a current run (may overwrite some log settings)"},
 	}
 
 	app.Commands = []*cli.Command{

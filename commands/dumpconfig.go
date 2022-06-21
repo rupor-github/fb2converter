@@ -36,15 +36,13 @@ func DumpConfig(ctx *cli.Context) error {
 		}
 		defer out.Close()
 
+		env.Rpt.Store("dump.json", fname)
+
 		env.Log.Info("Dumping configuration", zap.String("file", fname))
 	}
 
 	var data []byte
-	if env.Debug {
-		data, err = env.Cfg.GetBytes()
-	} else {
-		data, err = env.Cfg.GetActualBytes()
-	}
+	data, err = env.Cfg.GetActualBytes()
 	if err != nil {
 		return cli.Exit(fmt.Errorf("%sunable to get configuration: %w", errPrefix, err), errCode)
 	}

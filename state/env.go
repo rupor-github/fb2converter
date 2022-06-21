@@ -5,15 +5,16 @@ import (
 	"go.uber.org/zap"
 
 	"fb2converter/config"
+	"fb2converter/reporter"
 )
 
 // LocalEnv keeps everything program needs in a single place.
 type LocalEnv struct {
-	Debug bool
-	Mhl   int
+	Mhl int
 
 	Cfg *config.Config
 	Log *zap.Logger
+	Rpt *reporter.Report
 }
 
 // NewLocalEnv creates LocalEnv and initializes it.

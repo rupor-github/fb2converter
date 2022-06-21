@@ -29,14 +29,14 @@ import (
 // it will be relative path inside archive or directory (including base file name).
 func processBook(r io.Reader, enc srcEncoding, src, dst string, nodirs, stk, overwrite bool, format processor.OutputFmt, env *state.LocalEnv) error {
 
-	var fname string
+	var fname, id string
 
 	env.Log.Info("Conversion starting", zap.String("from", src))
 	defer func(start time.Time) {
 		if r := recover(); r != nil {
-			env.Log.Error("Conversion ended with panic", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.ByteString("stack", debug.Stack()))
+			env.Log.Error("Conversion ended with panic", zap.Any("panic", r), zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.ByteString("stack", debug.Stack()))
 		} else {
-			env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname))
+			env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.String("red_id", id))
 		}
 	}(time.Now())
 
@@ -44,6 +44,8 @@ func processBook(r io.Reader, enc srcEncoding, src, dst string, nodirs, stk, ove
 	if err != nil {
 		return err
 	}
+	id = p.Book.ID.String() // store for reference in the log
+
 	if err = p.Process(); err != nil {
 		return err
 	}
