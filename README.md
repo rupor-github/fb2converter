@@ -100,7 +100,7 @@ Windows builds come with full [MyHomeLib](https://github.com/OleksiyPenkov/myhom
 
 ### BREAKING CHANGES:
 
-Starting with version 1.62.0 "Send to Kindle" functionality supported for EPUB files only. This reflects current Amazon intention to completely drop MOBI support on backend. As the result converter drops "transfer" subcommand, disables sending of MOBI files via e-mail and moves support for this from `fb2mobi` to `fb2epub`.
-Starting with version 1.64.0 `--debug` flag produces zip archive with artifacts for debugging either in directory of the converter or if it is inaccessible in temporary directory. Environment variable FB2C_DEBUG set to "Yes" could be used with `fb2epub.exe` and `fb2mobi.exe` for similar effect. Resulting archive could be shared to facilitate troubleshooting.
+* Starting with version 1.62.0 "Send to Kindle" functionality supported for EPUB files only. This reflects current Amazon intention to completely drop MOBI support on backend. As the result converter drops "transfer" subcommand, disables sending of MOBI files via e-mail and moves support for this from `fb2mobi` to `fb2epub`.
+* Starting with version 1.64.0 `--debug` flag produces zip archive with artifacts for debugging either in directory of the converter or if it is inaccessible in temporary directory. Environment variable FB2C_DEBUG set to "Yes" could be used with `fb2epub.exe` and `fb2mobi.exe` for similar effect. Resulting archive could be shared to facilitate troubleshooting.
 
 
