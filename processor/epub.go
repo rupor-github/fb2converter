@@ -150,9 +150,10 @@ func (p *Processor) FinalizeEPUB(fname string) error {
 		if err := p.writeEPUB(tmp); err != nil {
 			return err
 		}
-		if p.env.Cfg.Doc.FixZip {
-			return zipRemoveDataDescriptors(tmp, fname)
+		if err := zipRemoveDataDescriptors(tmp, fname); err != nil {
+			return err
 		}
+		return os.Remove(tmp)
 	} else if err := p.writeEPUB(fname); err != nil {
 		return err
 	}

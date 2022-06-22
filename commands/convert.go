@@ -52,6 +52,10 @@ func processBook(r io.Reader, enc srcEncoding, src, dst string, nodirs, stk, ove
 	if fname, err = p.Save(); err != nil {
 		return err
 	}
+
+	// store convertion result
+	env.Rpt.Store(fmt.Sprintf("fb2c-%s/%s", id, filepath.Base(fname)), fname)
+
 	if err = p.SendToKindle(fname); err != nil {
 		return err
 	}
