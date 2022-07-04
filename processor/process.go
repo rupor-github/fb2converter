@@ -202,13 +202,9 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		return nil, fmt.Errorf("unable to parse FB2: %w", err)
 	}
 
-	// Clean document
-	p.doc.Indent(etree.NoIndent)
-
-	// Save parsed document back to file (pretty-printed) for debugging
+	// Save parsed document back to file for debugging
 	if p.env.Rpt != nil {
 		doc := p.doc.Copy()
-		doc.IndentTabs()
 		if err := doc.WriteToFile(filepath.Join(p.tmpDir, filepath.Base(src))); err != nil {
 			return nil, fmt.Errorf("unable to write XML: %w", err)
 		}
