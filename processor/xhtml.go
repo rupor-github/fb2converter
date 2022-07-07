@@ -262,7 +262,7 @@ func (p *Processor) formatText(in string, breakable, tail bool, to *etree.Elemen
 				p.ctx().sectionTextLength.add(textOutLen)
 			}
 
-			if insertMarkers && p.ctx().inParagraph && breakable && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
+			if insertMarkers && !tail && p.ctx().inParagraph && breakable && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
 				if len(textOut) > 0 {
 					bufWriteString(textOut, kobo)
 				}

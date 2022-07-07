@@ -36,7 +36,7 @@ func processBook(r io.Reader, enc srcEncoding, src, dst string, nodirs, stk, ove
 		if r := recover(); r != nil {
 			env.Log.Error("Conversion ended with panic", zap.Any("panic", r), zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.ByteString("stack", debug.Stack()))
 		} else {
-			env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.String("red_id", id))
+			env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.String("ref_id", id))
 		}
 	}(time.Now())
 

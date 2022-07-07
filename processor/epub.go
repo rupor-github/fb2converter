@@ -18,6 +18,7 @@ func zipRemoveDataDescriptors(from, to string) error {
 	if err != nil {
 		return fmt.Errorf("unable to create EPUB (%s): %w", to, err)
 	}
+	defer out.Close()
 
 	r, err := fixzip.OpenReader(from)
 	if err != nil {
