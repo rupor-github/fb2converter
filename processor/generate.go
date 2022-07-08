@@ -559,7 +559,7 @@ func (p *Processor) generateOPF() error {
 	guide := to.AddNext("guide")
 
 	if len(p.Book.Cover) > 0 && !kindle {
-		guide.AddSame("reference", attr("type", "cover-page"), attr("href", "cover.xhtml"))
+		guide.AddSame("reference", attr("type", "cover-page"), attr("title", "Starts here"), attr("href", "cover.xhtml"))
 	}
 
 	started := false
