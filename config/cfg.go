@@ -145,6 +145,7 @@ type Doc struct {
 	Notes struct {
 		BodyNames []string `json:"body_names"`
 		Mode      string   `json:"mode"`
+		KeepNL    bool     `json:"keep_new_lines"`
 		Renumber  bool     `json:"renumber"`
 		Format    string   `json:"link_format"`
 	} `json:"notes"`
@@ -251,6 +252,7 @@ var defaultConfig = []byte(`{
     "notes": {
       "body_names": [ "notes", "comments" ],
       "mode": "default",
+	  "keep_new_lines": true,
       "link_format": "[{#body_number.}#number]"
     },
     "annotation": {

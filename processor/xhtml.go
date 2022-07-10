@@ -65,7 +65,6 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	}
 	to, f := p.ctx().createXHTML("", ns...)
 	p.Book.Files = append(p.Book.Files, f)
-	f.nofmt = p.notesMode == NFloatNew // kindle pecularities, requires special tratment
 
 	// To satisfy Amazon's requirements for floating notes we have to create notes body on the fly here, removing most if not
 	// all of existing formatting. At this point we already scanned available notes in ProcessNotes()...
@@ -128,15 +127,20 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 					}
 				}
 			}
+			txt := note.body
+			if !p.env.Cfg.Doc.Notes.KeepNL {
+				txt = strings.TrimSuffix(strings.ReplaceAll(txt, "\n", " "), " ")
+			}
+			// NOTE: we are adding .SetTail("\n") to make result readable when debugging, it does not have any other use
 			if p.notesMode == NFloatNew {
 				// new "preffered" HTML5 method with "aside"
-				to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).
+				to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n").
 					AddNext("p", attr("class", "floatnote")).
-					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + txt)
 			} else {
 				// old bi-directional mode
-				to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).
-					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+				to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").
+					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + txt)
 			}
 		}
 	}
