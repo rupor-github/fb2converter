@@ -697,11 +697,18 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 			bodyName:   name,
 			bodyNumber: len(notesPerBody),
 		}
+		sep := "\n"
+		if !p.env.Cfg.Doc.Notes.KeepNL {
+			sep = " "
+		}
 		for _, c := range el.ChildElements() {
 			if c.Tag == "title" {
 				note.title = SanitizeTitle(getTextFragment(c))
 			} else {
-				note.body += getFullTextFragment(c)
+				if len(note.body) > 0 {
+					note.body += sep
+				}
+				note.body += strings.ReplaceAll(getFullTextFragment(c), "\n", sep)
 			}
 		}
 		p.Book.NotesOrder = append(p.Book.NotesOrder, notelink{id: id, bodyName: name})

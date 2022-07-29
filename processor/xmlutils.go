@@ -41,7 +41,7 @@ func getTextFragment(e *etree.Element) string {
 }
 
 func getFullTextFragment(e *etree.Element) string {
-	return extractText(e, false, false)
+	return extractText(e, true, false)
 }
 
 //lint:ignore U1000 keep getXMLFragment()
