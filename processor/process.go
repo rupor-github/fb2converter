@@ -330,13 +330,47 @@ func (p *Processor) SendToKindle(fname string) error {
 		p.env.Log.Debug("Sending content to Kindle - done", zap.Duration("elapsed", time.Since(start)))
 	}(time.Now())
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", p.env.Cfg.SMTPConfig.From)
-	m.SetAddressHeader("To", p.env.Cfg.SMTPConfig.To, "kindle")
-	m.SetHeader("Subject", "Sent to Kindle")
-	m.SetBody("text/plain", "This email has been automatically sent by fb2converter tool")
-	m.Attach(fname)
+	// NOTE: Content-Type and Content-Disposition headers require special encoding (rfc2231/rfc5987/rfc8187)
 
+	ext := filepath.Ext(fname)
+	fullname := strings.TrimSuffix(filepath.Base(fname), ext)
+	safename := slug.Make(fullname)
+
+	m := gomail.NewMessage(gomail.SetCharset("UTF-8"), gomail.SetEncoding(gomail.Base64))
+	m.SetAddressHeader("From", p.env.Cfg.SMTPConfig.From, "fb2converter ")
+	m.SetAddressHeader("To", p.env.Cfg.SMTPConfig.To, "kindle device")
+	m.SetHeader("Subject", "Sent to Kindle: "+fullname+ext)
+	m.SetBody("text/plain", "This email has been sent by fb2converter")
+	m.Attach(fname,
+		gomail.Rename(safename+ext),
+		gomail.SetHeader(
+			map[string][]string{
+				"Content-Type":        {`application/epub+zip; name="` + mime.BEncoding.Encode("UTF-8", fullname+ext) + `"`},
+				"Content-Disposition": {`attachment; ` + EncodeContentDispFilename(safename+ext, fullname+ext)},
+			},
+		),
+	)
+
+	// debugging
+	if p.env.Rpt != nil {
+		var sf gomail.SendFunc = func(from string, to []string, m io.WriterTo) error {
+			buf, err := os.Create(filepath.Join(p.tmpDir, safename+".mail"))
+			if err != nil {
+				return err
+			}
+			defer buf.Close()
+			_, err = m.WriteTo(buf)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		if err := gomail.Send(sf, m); err != nil {
+			return err
+		}
+	}
+
+	// real send
 	d := gomail.NewDialer(p.env.Cfg.SMTPConfig.Server, p.env.Cfg.SMTPConfig.Port, p.env.Cfg.SMTPConfig.User, p.env.Cfg.SMTPConfig.Password)
 
 	if err := d.DialAndSend(m); err != nil {

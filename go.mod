@@ -1,6 +1,6 @@
 module fb2converter
 
-go 1.18
+go 1.19
 
 require (
 	github.com/BurntSushi/toml v1.1.0
@@ -29,7 +29,7 @@ require (
 	golang.org/x/tools v0.1.11
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/neurosnap/sentences.v1 v1.0.7
-	honnef.co/go/tools v0.3.2
+	honnef.co/go/tools v0.3.3
 )
 
 require (

@@ -57,7 +57,7 @@ else()
     endif()
 endif()
 
-set(GO_MIN_REQURED_VERSION 1.18)
+set(GO_MIN_REQURED_VERSION 1.19)
 find_package(Go ${GO_MIN_REQURED_VERSION} REQUIRED)
 find_package(Git REQUIRED)
 
@@ -79,8 +79,8 @@ endif()
 
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 64)
-set(PRJ_VERSION_PATCH 5)
+set(PRJ_VERSION_MINOR 65)
+set(PRJ_VERSION_PATCH 0)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -261,7 +261,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
     add_custom_target(deps_tidy
         SOURCES ${PROJECT_SOURCE_DIR}/go.mod
-        COMMAND ${GO_ENV} ${GO_EXECUTABLE} mod tidy -compat=${GO_MIN_REQURED_VERSION}
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} mod tidy -go=${GO_MIN_REQURED_VERSION}
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Cleaning dependencies (go mod tidy)"
         VERBATIM)
