@@ -962,6 +962,16 @@ func (p *Processor) processImages() error {
 				}
 			}
 		}
+		if p.metaOverwrite != nil && p.metaOverwrite.CoverImage == "remove cover" {
+			p.env.Log.Warn("Removing cover image due to meta overwrite")
+			for i := len(p.Book.Images) - 1; i >= 0; i-- {
+				if p.Book.Images[i].id == p.Book.Cover {
+					p.Book.Images = append(p.Book.Images[:i], p.Book.Images[i+1:]...)
+					p.Book.Cover = ""
+					break
+				}
+			}
+		}
 	} else if p.env.Cfg.Doc.Cover.Default || p.format == OMobi || p.format == OAzw3 {
 		// For Kindle we always supply cover image if none is present, for others - only if asked to
 		b, err := p.getDefaultCover(len(p.Book.Images))
