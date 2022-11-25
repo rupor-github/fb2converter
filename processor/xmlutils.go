@@ -18,7 +18,7 @@ func getAttrValue(e *etree.Element, key string) string {
 }
 
 func extractText(e *etree.Element, head, skipLinks bool) string {
-	res := strings.Trim(e.Text(), "\n\r ")
+	res := e.Text()
 	for _, c := range e.ChildElements() {
 		switch {
 		case IsOneOf(c.Tag, []string{"p", "div", "v", "stanza"}):
@@ -26,10 +26,10 @@ func extractText(e *etree.Element, head, skipLinks bool) string {
 		case c.Tag != "a" || !skipLinks:
 			res += extractText(c, false, skipLinks)
 		default:
-			res += strings.Trim(c.Tail(), "\n\r ")
+			res += c.Tail()
 		}
 	}
-	res += strings.Trim(e.Tail(), "\n\r ")
+	res += e.Tail()
 	if !head {
 		return res
 	}
