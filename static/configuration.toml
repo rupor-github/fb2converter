@@ -317,7 +317,7 @@
 #		sequence = "Super Series"
 #		sequence_number = 666
 #		date = "1984"
-#		cover_image = "file_name"
+#		cover_image = "full_file_name" or "remove cover" if you want to completly remove cover image
 
 #-----------------------------------------------------------------------------------------------------------------------------
 #---- Windows only, support for MyHomeLib
