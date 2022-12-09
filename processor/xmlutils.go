@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"regexp"
 	"strings"
 
 	"fb2converter/etree"
@@ -17,14 +18,14 @@ func getAttrValue(e *etree.Element, key string) string {
 	return a.Value
 }
 
-func extractText(e *etree.Element, head, skipLinks bool) string {
+func extractText(e *etree.Element, head bool) string {
 	res := e.Text()
 	for _, c := range e.ChildElements() {
 		switch {
-		case IsOneOf(c.Tag, []string{"p", "div", "v", "stanza"}):
-			res += "\n" + extractText(c, false, skipLinks)
-		case c.Tag != "a" || !skipLinks:
-			res += extractText(c, false, skipLinks)
+		case IsOneOf(c.Tag, []string{"p", "div"}):
+			res += "\n" + extractText(c, false)
+		case c.Tag != "a":
+			res += extractText(c, false)
 		default:
 			res += c.Tail()
 		}
@@ -37,16 +38,31 @@ func extractText(e *etree.Element, head, skipLinks bool) string {
 }
 
 func getTextFragment(e *etree.Element) string {
-	return extractText(e, true, true)
+	return extractText(e, true)
 }
 
 func getFullTextFragment(e *etree.Element) string {
-	return extractText(e, true, false)
+	// replace paragraph with new line
+	res := strings.NewReplacer("\r", "", "<p>", "\n", "</p>", "").Replace(getXMLFragmentFromElement(e, false))
+	// remove ALL xml tags
+	res = regexp.MustCompile(`<[^(><)]+>`).ReplaceAllLiteralString(res, "")
+	// remove empty lines
+	lines := make([]string, 0, 16)
+	for _, ss := range strings.Split(res, "\n") {
+		if len(strings.TrimSpace(ss)) > 0 {
+			lines = append(lines, ss)
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
-//lint:ignore U1000 keep getXMLFragment()
-func getXMLFragment(d *etree.Document) string {
-	d.IndentTabs()
+func getXMLFragmentFromElement(e *etree.Element, format bool) string {
+	d := etree.NewDocument()
+	d.WriteSettings = etree.WriteSettings{CanonicalText: true, CanonicalAttrVal: true}
+	d.SetRoot(e.Copy())
+	if format {
+		d.IndentTabs()
+	}
 	s, err := d.WriteToString()
 	if err != nil {
 		return err.Error()
@@ -54,10 +70,8 @@ func getXMLFragment(d *etree.Document) string {
 	return s
 }
 
-func getXMLFragmentFromElement(e *etree.Element) string {
-	d := etree.NewDocument()
-	d.WriteSettings = etree.WriteSettings{CanonicalText: true, CanonicalAttrVal: true}
-	d.SetRoot(e.Copy())
+//lint:ignore U1000 keep getXMLFragment()
+func getXMLFragment(d *etree.Document) string {
 	d.IndentTabs()
 	s, err := d.WriteToString()
 	if err != nil {

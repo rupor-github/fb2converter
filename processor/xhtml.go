@@ -457,10 +457,10 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			} else {
 				// unexpected tag to transfer
 				if from.Tag == "body" || from.Tag == "section" {
-					p.env.Log.Debug("Unexpected tag, ignoring completely", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child)))
+					p.env.Log.Debug("Unexpected tag, ignoring completely", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child, true)))
 					continue
 				}
-				p.env.Log.Debug("Unexpected tag, transferring", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child)))
+				p.env.Log.Debug("Unexpected tag, transferring", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child, true)))
 				// NOTE: all "unknown" attributes will be lost during this transfer
 				err = p.transfer(child, inner, child.Tag)
 			}
@@ -647,10 +647,10 @@ func transferAnchor(p *Processor, from, to *etree.Element) error {
 			}
 		}
 		if len(txt) > 0 || len(from.ChildElements()) > 0 {
-			p.env.Log.Warn("Unable to find href attribute in anchor", zap.String("xml", getXMLFragmentFromElement(from)))
+			p.env.Log.Warn("Unable to find href attribute in anchor", zap.String("xml", getXMLFragmentFromElement(from, true)))
 			return p.transfer(from, to, "a", "empty-href")
 		}
-		p.env.Log.Warn("Unable to find href attribute in anchor, ignoring", zap.String("xml", getXMLFragmentFromElement(from)))
+		p.env.Log.Warn("Unable to find href attribute in anchor, ignoring", zap.String("xml", getXMLFragmentFromElement(from, true)))
 		return nil
 	}
 	// sometimes people are doing strange things with URLs
@@ -838,7 +838,7 @@ func transferImage(p *Processor, from, to *etree.Element) error {
 		}
 	}
 	if len(href) == 0 {
-		p.env.Log.Warn("Encountered image tag without href, skipping", zap.String("path", from.GetPath()), zap.String("xml", getXMLFragmentFromElement(from)))
+		p.env.Log.Warn("Encountered image tag without href, skipping", zap.String("path", from.GetPath()), zap.String("xml", getXMLFragmentFromElement(from, true)))
 		return nil
 	}
 
@@ -853,7 +853,7 @@ func transferImage(p *Processor, from, to *etree.Element) error {
 
 	// oups
 	if len(fname) == 0 {
-		p.env.Log.Warn("Unable to find image for ref-id", zap.String("ref-id", href), zap.String("xml", getXMLFragmentFromElement(from)))
+		p.env.Log.Warn("Unable to find image for ref-id", zap.String("ref-id", href), zap.String("xml", getXMLFragmentFromElement(from, true)))
 		var err error
 		if p.notFound == nil {
 			p.notFound, err = p.getNotFoundImage(len(p.Book.Images))

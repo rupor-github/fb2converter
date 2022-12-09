@@ -155,9 +155,6 @@
 		#---- "float-old" - same as "float", pop up notes using "bi-directional links" method
 		#---- "float-new" - pop up notes using "preferred" method - HTML5 with <aside> recommended by Amazon publishing guidelines
 		mode = "default"
-		#---- By default in all notes modes but "default" new line replaces most fb2 formatting tags.
-		#---- If "keep_new_line" is set to false in such notes bodies all new lines will be replaced with spaces.
-		# keep_new_lines = true
 		#---- Names of the <body> tags in fb2 document to consider for notes processing
 		body_names = [ "notes", "comments" ]
 		#---- Make sure that links in the content are named and numbered consistently

@@ -576,7 +576,7 @@ func (p *Processor) processDescription() error {
 				num := getAttrValue(e, "number")
 				if len(num) > 0 {
 					if !govalidator.IsNumeric(num) {
-						p.env.Log.Warn("Sequence number is not an integer, ignoring", zap.String("xml", getXMLFragmentFromElement(e)))
+						p.env.Log.Warn("Sequence number is not an integer, ignoring", zap.String("xml", getXMLFragmentFromElement(e, true)))
 					} else {
 						p.Book.SeqNum, err = strconv.Atoi(num)
 						if err != nil {
@@ -731,18 +731,14 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 			bodyName:   name,
 			bodyNumber: len(notesPerBody),
 		}
-		sep := "\n"
-		if !p.env.Cfg.Doc.Notes.KeepNL {
-			sep = " "
-		}
 		for _, c := range el.ChildElements() {
 			if c.Tag == "title" {
 				note.title = SanitizeTitle(getTextFragment(c))
 			} else {
 				if len(note.body) > 0 {
-					note.body += sep
+					note.body += "\n"
 				}
-				note.body += strings.ReplaceAll(getFullTextFragment(c), "\n", sep)
+				note.body += getFullTextFragment(c)
 			}
 		}
 		p.Book.NotesOrder = append(p.Book.NotesOrder, notelink{id: id, bodyName: name})
