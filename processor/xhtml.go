@@ -129,10 +129,14 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 			}
 			// NOTE: we are adding .SetTail("\n") to make result readable when debugging, it does not have any other use
 			if p.notesMode == NFloatNew {
-				// new "preffered" HTML5 method with "aside"
-				to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n").
-					AddNext("p", attr("class", "floatnote")).
-					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+				// new bidirectional mode
+				body := to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n").
+					AddNext("div", attr("class", "floatnote"))
+				body.AddNext("a", attr("epub:type", "noteref"), attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP)
+				for _, c := range note.parsed.ChildElements() {
+					body.AddChild(c.Copy())
+				}
+				body.AddNext("div", attr("class", "emptyline"))
 			} else {
 				// old bi-directional mode
 				to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").

@@ -731,6 +731,7 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 			bodyName:   name,
 			bodyNumber: len(notesPerBody),
 		}
+		body := etree.NewDocument().CreateElement("note")
 		for _, c := range el.ChildElements() {
 			if c.Tag == "title" {
 				note.title = SanitizeTitle(getTextFragment(c))
@@ -739,8 +740,14 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 					note.body += "\n"
 				}
 				note.body += getFullTextFragment(c)
+				p.ctxPush()
+				if err := p.transfer(c, body); err != nil {
+					p.env.Log.Warn("Unable to parse notes body ", zap.String("path", c.GetPath()), zap.Error(err))
+				}
+				p.ctxPop()
 			}
 		}
+		note.parsed = body.Copy()
 		p.Book.NotesOrder = append(p.Book.NotesOrder, notelink{id: id, bodyName: name})
 		p.Book.Notes[id] = note
 	default:
