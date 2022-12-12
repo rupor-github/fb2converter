@@ -130,13 +130,31 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 			// NOTE: we are adding .SetTail("\n") to make result readable when debugging, it does not have any other use
 			if p.notesMode == NFloatNew {
 				// new bidirectional mode
-				body := to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n").
-					AddNext("div", attr("class", "floatnote"))
-				body.AddNext("a", attr("epub:type", "noteref"), attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP)
-				for _, c := range note.parsed.ChildElements() {
-					body.AddChild(c.Copy())
+				if len(note.parsed.ChildElements()) == 0 || len(note.parsed.Child) == 0 {
+					p.env.Log.Warn("Unable to interpret parsed note body, ignoring xml...",
+						zap.String("id", nl.id), zap.String("text", note.body), zap.String("xml", getXMLFragmentFromElement(note.parsed, true)))
+					// use old procedure - it will give us badly formatted note
+					to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n").
+						AddNext("p", attr("class", "floatnote")).
+						AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+				} else {
+					aside := to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n")
+					for i, c := range note.parsed.ChildElements() {
+						cc := c.Copy()
+						if i == 0 {
+							cc.CreateAttr("class", "floatnote")
+							// We need to insert back ref anchor into first note xml element as a first child, so popup would recognize it properly
+							el := cc.CreateElement("a")
+							el.Attr = append(el.Attr, *attr("epub:type", "noteref"))
+							el.Attr = append(el.Attr, *attr("href", backRef+"#"+backID))
+							el.SetText(t)
+							el.SetTail(strNBSP)
+							cc.InsertChild(cc.Child[0], el)
+						}
+						aside.AddChild(cc)
+					}
+					aside.AddNext("div", attr("class", "emptyline"))
 				}
-				body.AddNext("div", attr("class", "emptyline"))
 			} else {
 				// old bi-directional mode
 				to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").
@@ -340,6 +358,11 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 		case i == 2:
 			href = p
 		}
+	}
+
+	// special case - transferring note body
+	if to.Tag == "note-root" && len(tag) > 0 && tag != "p" && len(css) == 0 && len(href) == 0 {
+		css, tag = tag, "div"
 	}
 
 	text := from.Text()
