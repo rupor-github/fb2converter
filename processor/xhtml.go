@@ -498,12 +498,13 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	}
 
 	// add bodies of inline and block notes
-	// NOTE: presently ignore note bodies when calculating page length...
 	currentNotes := p.ctx().currentNotes
 	if len(p.ctx().currentNotes) > 0 {
 		// insert inline and block notes
 		if p.notesMode == NInline && tag == "span" {
-			inner = to.AddNext("span", attr("class", "inlinenote")).SetText(currentNotes[0].body)
+			// inner = to.AddNext("span", attr("class", "inlinenote")).SetText(currentNotes[0].body)
+			inner = to.AddNext("span", attr("class", "inlinenote"))
+			p.formatText(currentNotes[0].body, false, false, inner)
 			p.ctx().currentNotes = []*note{}
 		} else if p.notesMode == NBlock && tag == "p" {
 			inner := to.AddNext("div", attr("class", "blocknote"))
@@ -512,7 +513,8 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 				if i, err := strconv.Atoi(t); err == nil {
 					t = fmt.Sprintf("%d) ", i)
 				}
-				inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t).SetTail(n.body)
+				// inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t).SetTail(n.body)
+				p.formatText(n.body, false, true, inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t))
 			}
 			p.ctx().currentNotes = []*note{}
 		}
