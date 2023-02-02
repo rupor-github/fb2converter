@@ -27,6 +27,7 @@ type context struct {
 	header            htmlHeader
 	tocIndex          int
 	currentNotes      []*note // for inline and block notes
+	debug             bool
 }
 
 // newContext creates new empty parsing context.

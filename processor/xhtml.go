@@ -142,7 +142,6 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 					for i, c := range note.parsed.ChildElements() {
 						cc := c.Copy()
 						if i == 0 {
-							cc.CreateAttr("class", "floatnote")
 							// We need to insert back ref anchor into first note xml element as a first child, so popup would recognize it properly
 							el := cc.CreateElement("a")
 							el.Attr = append(el.Attr, *attr("epub:type", "noteref"))
@@ -151,14 +150,24 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 							el.SetTail(strNBSP)
 							cc.InsertChild(cc.Child[0], el)
 						}
+						if cc.Tag == "p" {
+							cc.CreateAttr("class", "floatnote")
+						}
+						for _, a := range cc.FindElements(".//p") {
+							if len(getAttrValue(a, "class")) == 0 {
+								a.CreateAttr("class", "floatnote")
+							}
+						}
 						aside.AddChild(cc)
 					}
 					aside.AddNext("div", attr("class", "emptyline"))
 				}
 			} else {
 				// old bi-directional mode
-				to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").
-					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+				// to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+				p.formatText(strNBSP+note.body, false, true,
+					to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").
+						AddNext("a", attr("href", backRef+"#"+backID)).SetText(t))
 			}
 		}
 	}

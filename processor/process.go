@@ -225,13 +225,13 @@ func (p *Processor) Process() error {
 	// Processing - order of steps and their presence are important as information and context
 	// being built and accumulated...
 
+	if err := p.processDescription(); err != nil {
+		return err
+	}
 	if err := p.processNotes(); err != nil {
 		return err
 	}
 	if err := p.processBinaries(); err != nil {
-		return err
-	}
-	if err := p.processDescription(); err != nil {
 		return err
 	}
 	if err := p.processBodies(); err != nil {
