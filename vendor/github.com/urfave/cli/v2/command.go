@@ -69,6 +69,8 @@ type Command struct {
 
 	// if this is a root "special" command
 	isRoot bool
+
+	separator separatorSpec
 }
 
 type Commands []*Command
@@ -136,6 +138,10 @@ func (c *Command) setup(ctx *Context) {
 		newCmds = append(newCmds, scmd)
 	}
 	c.Subcommands = newCmds
+
+	if c.BashComplete == nil {
+		c.BashComplete = DefaultCompleteWithFlags(c)
+	}
 }
 
 func (c *Command) Run(cCtx *Context, arguments ...string) (err error) {
@@ -148,11 +154,7 @@ func (c *Command) Run(cCtx *Context, arguments ...string) (err error) {
 	set, err := c.parseFlags(&a, cCtx.shellComplete)
 	cCtx.flagSet = set
 
-	if c.isRoot {
-		if checkCompletions(cCtx) {
-			return nil
-		}
-	} else if checkCommandCompletions(cCtx, c.Name) {
+	if checkCompletions(cCtx) {
 		return nil
 	}
 
@@ -275,7 +277,7 @@ func (c *Command) Run(cCtx *Context, arguments ...string) (err error) {
 }
 
 func (c *Command) newFlagSet() (*flag.FlagSet, error) {
-	return flagSet(c.Name, c.Flags)
+	return flagSet(c.Name, c.Flags, c.separator)
 }
 
 func (c *Command) useShortOptionHandling() bool {

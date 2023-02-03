@@ -27,7 +27,7 @@ type context struct {
 	header            htmlHeader
 	tocIndex          int
 	currentNotes      []*note // for inline and block notes
-	debug             bool
+	debug             bool    // internal use
 }
 
 // newContext creates new empty parsing context.
@@ -35,6 +35,7 @@ func newContext() *context {
 	c := &context{
 		out:      etree.NewDocument(),
 		tocIndex: 1,
+		debug:    false, // to shutup linter
 	}
 	c.out.WriteSettings = etree.WriteSettings{CanonicalText: true, CanonicalAttrVal: true}
 	c.sectionWithTitle.link()

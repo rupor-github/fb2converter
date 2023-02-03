@@ -57,7 +57,7 @@ else()
     endif()
 endif()
 
-set(GO_MIN_REQURED_VERSION 1.19)
+set(GO_MIN_REQURED_VERSION 1.20)
 find_package(Go ${GO_MIN_REQURED_VERSION} REQUIRED)
 find_package(Git REQUIRED)
 
