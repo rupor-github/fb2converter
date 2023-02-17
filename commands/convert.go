@@ -243,6 +243,9 @@ func Convert(ctx *cli.Context) (err error) {
 		env.Log.Warn("Send to Kindle could only be used with epub output format, turning off", zap.Stringer("format", format))
 		stk = false
 	}
+	if stk {
+		env.Cfg.Doc.Cover.Convert = true
+	}
 
 	env.Log.Info("Processing starting", zap.String("source", src), zap.String("destination", dst), zap.Stringer("format", format))
 	defer func(start time.Time) {

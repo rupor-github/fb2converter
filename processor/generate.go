@@ -96,6 +96,7 @@ func (p *Processor) generateCover() error {
 	}(time.Now())
 
 	kindle := p.format == OMobi || p.format == OAzw3
+	convert := p.env.Cfg.Doc.Cover.Convert
 	w, h := p.env.Cfg.Doc.Cover.Width, p.env.Cfg.Doc.Cover.Height
 
 	var cover *binImage
@@ -120,19 +121,15 @@ func (p *Processor) generateCover() error {
 	// resize if needed
 	switch p.coverResize {
 	case CoverNone:
-		if kindle && cover.img.Bounds().Dy() < h {
-			if img := imaging.Resize(cover.img, h*cover.img.Bounds().Dx()/cover.img.Bounds().Dy(), h, imaging.Lanczos); img != nil {
-				cover.img = img
-				cover.flags |= imageChanged | imageKindle
-			} else {
-				p.env.Log.Warn("Unable to resize cover image, using as is")
-			}
+		if !convert && (!kindle || cover.img.Bounds().Dy() >= h) {
+			break
 		}
+		fallthrough
 	case CoverKeepAR:
 		if img := imaging.Resize(cover.img, h*cover.img.Bounds().Dx()/cover.img.Bounds().Dy(), h, imaging.Lanczos); img != nil {
 			cover.img = img
 			cover.flags |= imageChanged
-			if kindle {
+			if kindle || convert {
 				cover.flags |= imageKindle
 			}
 		} else {

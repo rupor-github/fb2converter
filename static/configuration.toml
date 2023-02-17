@@ -190,6 +190,9 @@
 		# book_title_from_meta = false
 
 	[document.cover]
+		#---- Process cover images for any output format the same way we do it for Kindle formats: converting to jpeg and resizing
+		#---- it is set to true atomatically when "stk" is requested
+		# always_convert = false
 		#---- If book does not have cover image - use default one. For Amazon formats always true
 		# default = false
 		#---- Will be used as default cover image. If not specified - one will be provided by the program

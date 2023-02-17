@@ -162,6 +162,7 @@ type Doc struct {
 		BookTitleFromMeta bool   `json:"book_title_from_meta"`
 	} `json:"toc"`
 	Cover struct {
+		Convert   bool   `json:"always_convert"`
 		Default   bool   `json:"default"`
 		ImagePath string `json:"image_path"`
 		Width     int    `json:"width"`
