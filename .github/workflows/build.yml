@@ -47,7 +47,7 @@ jobs:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
       run: |
-        CGO_ENABLED=0 go build -mod=vendor -o fb2c fb2c.go
+        CGO_ENABLED=0 go build -o fb2c fb2c.go
         chmod +x fb2c
         zip fb2c-${GOOS}-${GOARCH}-${GITHUB_REF##*/}.zip fb2c
         ls -lah fb2c-${GOOS}-${GOARCH}-${GITHUB_REF##*/}.zip
