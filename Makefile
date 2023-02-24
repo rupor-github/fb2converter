@@ -42,14 +42,17 @@ ifeq ($(shell ls static/sentences | grep .gz | tail -1),)
 endif
 
 build/fb2c:
+	@mkdir -p build
 	CGO_ENABLED=0 go build -o build/fb2c cmd/fb2c/*.go
 	chmod +x build/fb2c
 
 build/fb2epub:
+	@mkdir -p build
 	CGO_ENABLED=0 go build -o build/fb2epub cmd/fb2epub/*.go
 	chmod +x build/fb2epub
 
 build/fb2mobi:
+	@mkdir -p build
 	CGO_ENABLED=0 go build -o build/fb2mobi cmd/fb2mobi/*.go
 	chmod +x build/fb2mobi
 
@@ -57,7 +60,6 @@ build:
 	make misc/version
 	make static/dictionaries
 	make static/sentences
-	mkdir -p build
 	make build/fb2c
 	make build/fb2epub
 	make build/fb2mobi

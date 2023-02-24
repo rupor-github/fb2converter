@@ -40,18 +40,13 @@ jobs:
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
-      run: |
-        mkdir -p build
-	      make build/fb2c
-        ls -lah build
+      run: make build/fb2c
     
     - name: Compress
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
-      run: |
-        zip fb2c-${GOOS}-${GOARCH}-${GITHUB_REF##*/}.zip build/fb2c
-        ls -lah fb2c-${GOOS}-${GOARCH}-${GITHUB_REF##*/}.zip
+      run: zip fb2c-${GOOS}-${GOARCH}-${GITHUB_REF##*/}.zip build/fb2c
 
     - name: Release
       uses: softprops/action-gh-release@v1

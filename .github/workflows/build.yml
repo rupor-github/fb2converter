@@ -40,8 +40,4 @@ jobs:
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
-      run: |
-        env | grep GO
-        mkdir -p build
-	      make build/fb2c
-        ls -lah build
+      run: env | grep GO && make build/fb2c
