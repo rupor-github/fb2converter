@@ -40,6 +40,7 @@ jobs:
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
+        GOPATH: /home/runner/work/fb2converter/fb2converter
       run: make build/fb2c
     
     - name: Compress
