@@ -1,8 +1,8 @@
-//nolint:goconst
 package processor
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -18,10 +18,9 @@ import (
 	_ "image/png"
 
 	"github.com/disintegration/imaging"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/processor/internal/mobi"
+	"fb2converter/processor/internal/mobi"
 )
 
 type binImageProcessingFlags uint8
@@ -57,7 +56,7 @@ func (b *binImage) flush(path string) error {
 
 	newdir := filepath.Join(path, b.relpath)
 	if err := os.MkdirAll(newdir, 0700); err != nil {
-		return errors.Wrapf(err, "unable to create directory %s", newdir)
+		return fmt.Errorf("unable to create directory %s: %w", newdir, err)
 	}
 
 	// Do not touch svg images
@@ -164,12 +163,12 @@ func (b *binImage) flush(path string) error {
 
 	// Sanity - should never happen
 	if len(b.data) == 0 {
-		return errors.Errorf("No image to save %s (%s)", b.id, filepath.Join(newdir, b.fname))
+		return fmt.Errorf("no image to save %s (%s)", b.id, filepath.Join(newdir, b.fname))
 	}
 
 Storing:
 	if err := os.WriteFile(filepath.Join(newdir, b.fname), b.data, 0644); err != nil {
-		return errors.Wrapf(err, "unable to save image (%s)", filepath.Join(newdir, b.fname))
+		return fmt.Errorf("unable to save image %s: %w", filepath.Join(newdir, b.fname), err)
 	}
 	return nil
 }

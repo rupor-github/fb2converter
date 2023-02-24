@@ -10,12 +10,6 @@ set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Generator: ${CMAKE_GENERATOR}")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "********************************************************************************")
-    message(STATUS "*** Do not forget to do \"make deps_vendor\" before switching to Release mode! ***")
-    message(STATUS "********************************************************************************")
-endif()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 # Release installation directory
@@ -63,7 +57,8 @@ else()
     endif()
 endif()
 
-find_package(Go 1.17 REQUIRED)
+set(GO_MIN_REQURED_VERSION 1.20)
+find_package(Go ${GO_MIN_REQURED_VERSION} REQUIRED)
 find_package(Git REQUIRED)
 
 # Make sure we setup go properly
@@ -84,8 +79,8 @@ endif()
 
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 60)
-set(PRJ_VERSION_PATCH 2)
+set(PRJ_VERSION_MINOR 69)
+set(PRJ_VERSION_PATCH 0)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -161,23 +156,34 @@ add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/fb2c_${MSYSTEM_NAME}.zip
     WORKING_DIRECTORY "${PROJECT_BINARY_DIR}")
 
 # make sure go always runs here - it will figure out the rest
-add_custom_target(bin_fb2c ALL
-    DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go ${KINDLEGEN_TARGET}
-    BYPRODUCTS ${FB2C_TARGET}
-    COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${FB2C_TARGET}
-    COMMENT "Building fb2c..."
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_custom_target(bin_fb2c ALL
+        DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go ${KINDLEGEN_TARGET}
+        BYPRODUCTS ${FB2C_TARGET}
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build -gcflags 'all=-N -l' ${GO_MOD_ARGS} -o ${FB2C_TARGET}
+            fb2converter/cmd/fb2c
+        COMMENT "Building fb2c..."
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+else()
+    add_custom_target(bin_fb2c ALL
+        DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go ${KINDLEGEN_TARGET}
+        BYPRODUCTS ${FB2C_TARGET}
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${FB2C_TARGET}
+            fb2converter/cmd/fb2c
+        COMMENT "Building fb2c..."
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+endif()
 
 if(CROSS_GOOS STREQUAL "windows")
     # myhomelib suppport
     add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
         COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
-            github.com/rupor-github/fb2converter/cmd/fb2mobi
+            fb2converter/cmd/fb2mobi
         COMMENT "Building fb2mobi..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
     add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
         COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
-             github.com/rupor-github/fb2converter/cmd/fb2epub
+             fb2converter/cmd/fb2epub
         COMMENT "Building fb2epub..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 endif()
@@ -193,7 +199,7 @@ add_custom_command(OUTPUT ${KINDLEGEN_TARGET}
 ########################################################################################################
 
 # Temporary directory for test results
-execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory tests_results)
+# execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory tests_results)
 
 add_custom_target(test_all
     DEPENDS test_processor test_hyphenator
@@ -204,7 +210,7 @@ add_custom_target(test_processor
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
     COMMAND ${GO_ENV} ${GO_EXECUTABLE} test ${GO_MOD_ARGS} ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_processor.out
-            github.com/rupor-github/fb2converter/processor
+            fb2converter/processor
     COMMENT "processor tests..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
@@ -212,7 +218,7 @@ add_custom_target(test_hyphenator
     DEPENDS ${PROJECT_SOURCE_DIR}/processor/enums_string.go
     COMMAND ${GO_ENV} ${GO_EXECUTABLE} test ${TEST_RUN_ARGS}
             -coverprofile=${PROJECT_BINARY_DIR}/test_hyphenator.out
-            ${GO_MOD_ARGS} github.com/rupor-github/fb2converter/hyphenator
+            ${GO_MOD_ARGS} fb2converter/hyphenator
     COMMENT "hyphenator tests..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
@@ -247,31 +253,16 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # Go linter
     ########################################################################################################
 
-    # Running linters on main target
-    find_program(GO_LINTER golangci-lint PATHS ${PROJECT_BINARY_DIR} NO_DEFAULT_PATH)
-    if(NOT GO_LINTER)
-        set(golangci-lint-ver "1.33.0")
-        message(STATUS "Preparing golangci-lint ${golangci-lint-ver}")
-        file(DOWNLOAD "https://github.com/golangci/golangci-lint/releases/download/v${golangci-lint-ver}/golangci-lint-${golangci-lint-ver}-linux-amd64.tar.gz" ${PROJECT_BINARY_DIR}/golangci-lint.tar.gz
-            INACTIVITY_TIMEOUT 60
-            TIMEOUT 300
-            STATUS DOWNLOAD_RES
-            EXPECTED_HASH SHA256=e2d6082f1df53c5d2c280765000f9e82783ea909ba419c6c4e172936b076031e)
-        list(GET DOWNLOAD_RES 0 RES)
-        list(GET DOWNLOAD_RES 1 MSG)
-        if(RES)
-            message(FATAL_ERROR "${MSG} : ${RES}")
-        endif()
-        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf golangci-lint.tar.gz WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
-        execute_process(COMMAND ${CMAKE_COMMAND} -E copy golangci-lint-${golangci-lint-ver}-linux-amd64/golangci-lint golangci-lint WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
-        execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory golangci-lint-${golangci-lint-ver}-linux-amd64 WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
-        execute_process(COMMAND ${CMAKE_COMMAND} -E remove golangci-lint.tar.gz WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
-        set(GO_LINTER ${PROJECT_BINARY_DIR}/golangci-lint)
-    endif()
+    add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/staticcheck
+        COMMAND GOPATH=${GO_PATH} GOOS= GOARCH= ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -o ${PROJECT_BINARY_DIR}/staticcheck
+            honnef.co/go/tools/cmd/staticcheck
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        COMMENT "Building staticcheck executable...")
 
     add_custom_target(lint
-        COMMAND ${GO_ENV} ${GO_LINTER} run
-        COMMENT "Mega-linting project with ${GO_LINTER}..."
+        DEPENDS ${PROJECT_BINARY_DIR}/staticcheck
+        COMMAND ${PROJECT_BINARY_DIR}/staticcheck -f stylish -tests=false ./...
+        COMMENT "Linting project..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
     ########################################################################################################
@@ -280,15 +271,23 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
     add_custom_target(deps_tidy
         SOURCES ${PROJECT_SOURCE_DIR}/go.mod
-        COMMAND GOPATH=${GO_PATH} ${GO_EXECUTABLE} mod tidy
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} mod tidy -go=${GO_MIN_REQURED_VERSION}
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Cleaning dependencies (go mod tidy)"
         VERBATIM)
 
+    add_custom_target(deps_download
+        SOURCES ${PROJECT_SOURCE_DIR}/go.mod
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} mod download all
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        COMMENT "Downloading dependencies (go mod download)"
+        VERBATIM)
+
     add_custom_target(deps_vendor
         SOURCES ${PROJECT_SOURCE_DIR}/go.mod
-        COMMAND GOPATH=${GO_PATH} ${GO_EXECUTABLE} mod vendor
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} mod vendor
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Creating vendor directory (go mod vendor)"
         VERBATIM)
+
 endif()

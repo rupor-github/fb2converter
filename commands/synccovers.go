@@ -1,17 +1,18 @@
 package commands
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/processor"
-	"github.com/rupor-github/fb2converter/state"
+	"fb2converter/processor"
+	"fb2converter/state"
 )
 
 // SyncCovers reads books in Kindle formats and produces thumbnails for them. Very Kindle specific.
@@ -24,20 +25,23 @@ func SyncCovers(ctx *cli.Context) error {
 		errCode   = 1
 	)
 
-	env := ctx.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
 
 	if len(ctx.Args().Get(0)) == 0 {
-		return cli.NewExitError(errors.New(errPrefix+"book source has not been specified"), errCode)
+		return cli.Exit(errors.New(errPrefix+"book source has not been specified"), errCode)
 	}
 
 	in, err := filepath.Abs(ctx.Args().Get(0))
 	if err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%swrong book source has been specified", errPrefix), errCode)
+		return cli.Exit(fmt.Errorf("%swrong book source has been specified: %w", errPrefix, err), errCode)
+	}
+	if ctx.Args().Len() > 1 {
+		env.Log.Warn("Mailformed command line, too many sources", zap.Strings("ignoring", ctx.Args().Slice()[1:]))
 	}
 
 	dir, file := in, ""
 	if info, err := os.Stat(in); err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%swrong book source has been specified", errPrefix), errCode)
+		return cli.Exit(fmt.Errorf("%swrong book source has been specified: %w", errPrefix, err), errCode)
 	} else if info.Mode().IsRegular() {
 		dir, file = filepath.Split(in)
 	}
@@ -55,7 +59,7 @@ func SyncCovers(ctx *cli.Context) error {
 		}
 	}
 	if len(sysdir) == 0 {
-		return cli.NewExitError(errors.New(errPrefix+"unable to find Kindle system directory along the specified path"), errCode)
+		return cli.Exit(errors.New(errPrefix+"unable to find Kindle system directory along the specified path"), errCode)
 	}
 
 	files, count := 0, 0

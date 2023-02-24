@@ -3,6 +3,8 @@ package commands
 
 import (
 	"archive/zip"
+	"errors"
+	"fmt"
 	"io"
 	"math"
 	"os"
@@ -11,16 +13,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/ianaindex"
 
-	"github.com/rupor-github/fb2converter/archive"
-	"github.com/rupor-github/fb2converter/config"
-	"github.com/rupor-github/fb2converter/processor"
-	"github.com/rupor-github/fb2converter/state"
+	"fb2converter/archive"
+	"fb2converter/config"
+	"fb2converter/processor"
+	"fb2converter/state"
 )
 
 // processBook processes single FB2 file. "src" is part of the source path (always including file name) relative to the original
@@ -28,14 +29,14 @@ import (
 // it will be relative path inside archive or directory (including base file name).
 func processBook(r io.Reader, enc srcEncoding, src, dst string, nodirs, stk, overwrite bool, format processor.OutputFmt, env *state.LocalEnv) error {
 
-	var fname string
+	var fname, id string
 
 	env.Log.Info("Conversion starting", zap.String("from", src))
 	defer func(start time.Time) {
 		if r := recover(); r != nil {
-			env.Log.Error("Conversion ended with panic", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.ByteString("stack", debug.Stack()))
+			env.Log.Error("Conversion ended with panic", zap.Any("panic", r), zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.ByteString("stack", debug.Stack()))
 		} else {
-			env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname))
+			env.Log.Info("Conversion completed", zap.Duration("elapsed", time.Since(start)), zap.String("to", fname), zap.String("ref_id", id))
 		}
 	}(time.Now())
 
@@ -43,12 +44,18 @@ func processBook(r io.Reader, enc srcEncoding, src, dst string, nodirs, stk, ove
 	if err != nil {
 		return err
 	}
+	id = p.Book.ID.String() // store for reference in the log
+
 	if err = p.Process(); err != nil {
 		return err
 	}
 	if fname, err = p.Save(); err != nil {
 		return err
 	}
+
+	// store convertion result
+	env.Rpt.Store(fmt.Sprintf("fb2c-%s/%s", id, filepath.Base(fname)), fname)
+
 	if err = p.SendToKindle(fname); err != nil {
 		return err
 	}
@@ -161,25 +168,28 @@ func Convert(ctx *cli.Context) (err error) {
 		errCode   = 1
 	)
 
-	env := ctx.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
 
 	src := ctx.Args().Get(0)
 	if len(src) == 0 {
-		return cli.NewExitError(errors.New(errPrefix+"no input source has been specified"), errCode)
+		return cli.Exit(errors.New(errPrefix+"no input source has been specified"), errCode)
 	}
 	src, err = filepath.Abs(src)
 	if err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%scleaning source path failed", errPrefix), errCode)
+		return cli.Exit(fmt.Errorf("%snormalizing source path failed", errPrefix), errCode)
 	}
 
 	dst := ctx.Args().Get(1)
 	if len(dst) == 0 {
 		if dst, err = os.Getwd(); err != nil {
-			return cli.NewExitError(errors.Wrapf(err, "%sunable to get working directory", errPrefix), errCode)
+			return cli.Exit(fmt.Errorf("%sunable to get working directory", errPrefix), errCode)
 		}
 	} else {
 		if dst, err = filepath.Abs(dst); err != nil {
-			return cli.NewExitError(errors.Wrapf(err, "%scleaning destination path failed", errPrefix), errCode)
+			return cli.Exit(fmt.Errorf("%snormalizing destination path failed", errPrefix), errCode)
+		}
+		if ctx.Args().Len() > 2 {
+			env.Log.Warn("Mailformed command line, too many destinations", zap.Strings("ignoring", ctx.Args().Slice()[2:]))
 		}
 	}
 
@@ -226,12 +236,15 @@ func Convert(ctx *cli.Context) (err error) {
 	}
 
 	stk := ctx.Bool("stk")
-	if env.Mhl == config.MhlMobi {
-		stk = env.Cfg.Fb2Mobi.SendToKindle
+	if env.Mhl == config.MhlEpub {
+		stk = env.Cfg.Fb2Epub.SendToKindle
 	}
-	if stk && format != processor.OMobi {
-		env.Log.Warn("Send to Kindle could only be used with mobi output format, turning off", zap.Stringer("format", format))
+	if stk && format != processor.OEpub {
+		env.Log.Warn("Send to Kindle could only be used with epub output format, turning off", zap.Stringer("format", format))
 		stk = false
+	}
+	if stk {
+		env.Cfg.Doc.Cover.Convert = true
 	}
 
 	env.Log.Info("Processing starting", zap.String("source", src), zap.String("destination", dst), zap.Stringer("format", format))
@@ -253,12 +266,10 @@ func Convert(ctx *cli.Context) (err error) {
 		if fi.Mode().IsDir() {
 			if len(tail) != 0 {
 				// directory cannot have tail - it would be simple file
-				return cli.NewExitError(
-					errors.Errorf("%sinput source was not found (%s) => (%s)", errPrefix, head, strings.TrimPrefix(src, head)),
-					errCode)
+				return cli.Exit(fmt.Errorf("%sinput source was not found (%s) => (%s)", errPrefix, head, strings.TrimPrefix(src, head)), errCode)
 			}
 			if err := processDir(head, format, nodirs, stk, overwrite, cpage, dst, env); err != nil {
-				return cli.NewExitError(errors.Wrapf(err, "%sunable to process directory", errPrefix), errCode)
+				return cli.Exit(fmt.Errorf("%sunable to process directory", errPrefix), errCode)
 			}
 			break
 		}
@@ -268,14 +279,14 @@ func Convert(ctx *cli.Context) (err error) {
 			ok, err := isArchiveFile(head)
 			if err != nil {
 				// checking format - but cannot open target file
-				return cli.NewExitError(errors.Wrapf(err, "%sunable to check archive type", errPrefix), errCode)
+				return cli.Exit(fmt.Errorf("%sunable to check archive type: %w", errPrefix, err), errCode)
 			}
 
 			if ok {
 				// we need to look inside to see if path makes sense
 				tail = strings.TrimPrefix(strings.TrimPrefix(src, head), string(filepath.Separator))
 				if err := processArchive(head, tail, "", format, nodirs, stk, overwrite, cpage, dst, env); err != nil {
-					return cli.NewExitError(errors.Wrapf(err, "%sunable to process archive", errPrefix), errCode)
+					return cli.Exit(fmt.Errorf("%sunable to process archive: %w", errPrefix, err), errCode)
 				}
 				break
 			}
@@ -284,7 +295,7 @@ func Convert(ctx *cli.Context) (err error) {
 			ok, enc, err = isBookFile(head)
 			if err != nil {
 				// checking format - but cannot open target file
-				return cli.NewExitError(errors.Wrapf(err, "%sunable to check file type", errPrefix), errCode)
+				return cli.Exit(fmt.Errorf("%sunable to check file type: %w", errPrefix, err), errCode)
 
 			}
 
@@ -302,17 +313,13 @@ func Convert(ctx *cli.Context) (err error) {
 				break
 			}
 
-			return cli.NewExitError(
-				errors.Errorf("%sinput was not recognized as FB2 book (%s)", errPrefix, head),
-				errCode)
+			return cli.Exit(fmt.Errorf("%sinput was not recognized as FB2 book (%s)", errPrefix, head), errCode)
 		}
 
-		return cli.NewExitError(
-			errors.Errorf("%sunexpected path mode for (%s) => (%s)", errPrefix, head, strings.TrimPrefix(src, head)),
-			errCode)
+		return cli.Exit(fmt.Errorf("%sunexpected path mode for (%s) => (%s)", errPrefix, head, strings.TrimPrefix(src, head)), errCode)
 	}
 	if len(head) == 0 {
-		return cli.NewExitError(errors.Errorf("%sinput source was not found (%s)", errPrefix, src), errCode)
+		return cli.Exit(fmt.Errorf("%sinput source was not found (%s)", errPrefix, src), errCode)
 	}
 
 	return nil

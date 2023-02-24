@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"net/url"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -13,7 +14,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/rupor-github/fb2converter/config"
+	"fb2converter/config"
 )
 
 const (
@@ -272,4 +273,33 @@ func IsOneOf(name string, names []string) bool {
 		}
 	}
 	return false
+}
+
+const (
+	safeTokenLength = 74
+	rfc8187charset  = "UTF-8''"
+)
+
+func encodeParts(realname string) []string {
+	part, parts := rfc8187charset, []string{}
+	for _, sym := range realname {
+		encoded := url.PathEscape(string(sym))
+		if len(part)+len(encoded) > safeTokenLength {
+			parts = append(parts, part)
+			part = encoded
+			continue
+		}
+		part += encoded
+	}
+	parts = append(parts, part)
+	return parts
+}
+
+// EncodeContentDispFilename prepares parameters for Content-Disposition header in MIME compatible mode.
+func EncodeContentDispFilename(safename, realname string) string {
+	res := `filename="` + safename + `"`
+	for i, name := range encodeParts(realname) {
+		res += fmt.Sprintf("; filename*%d*=%s", i, name)
+	}
+	return res
 }

@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"errors"
 	"fmt"
 	"html"
 	"net/url"
@@ -13,11 +14,11 @@ import (
 	"unicode/utf8"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	tc "golang.org/x/text/cases"
 
-	"github.com/rupor-github/fb2converter/config"
-	"github.com/rupor-github/fb2converter/etree"
+	"fb2converter/config"
+	"fb2converter/etree"
 )
 
 // processBody parses fb2 document body and produces formatted output.
@@ -64,7 +65,6 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	}
 	to, f := p.ctx().createXHTML("", ns...)
 	p.Book.Files = append(p.Book.Files, f)
-	f.nofmt = p.notesMode == NFloatNew // kindle pecularities, requires special tratment
 
 	// To satisfy Amazon's requirements for floating notes we have to create notes body on the fly here, removing most if not
 	// all of existing formatting. At this point we already scanned available notes in ProcessNotes()...
@@ -86,7 +86,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 				tocTitle = t.title
 				inner.AddChild(t.parsed.Copy())
 			} else {
-				tocTitle = strings.Title(p.ctx().bodyName)
+				tocTitle = tc.Title(p.Book.Lang).String(p.ctx().bodyName)
 				inner.AddNext("div", attr("class", "h0")).AddNext("p", attr("class", "title")).SetText(tocTitle)
 			}
 
@@ -127,15 +127,47 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 					}
 				}
 			}
+			// NOTE: we are adding .SetTail("\n") to make result readable when debugging, it does not have any other use
 			if p.notesMode == NFloatNew {
-				// new "preffered" HTML5 method with "aside"
-				to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).
-					AddNext("p", attr("class", "floatnote")).
-					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+				// new bidirectional mode
+				if len(note.parsed.ChildElements()) == 0 || len(note.parsed.Child) == 0 {
+					p.env.Log.Warn("Unable to interpret parsed note body, ignoring xml...",
+						zap.String("id", nl.id), zap.String("text", note.body), zap.String("xml", getXMLFragmentFromElement(note.parsed, true)))
+					// use old procedure - it will give us badly formatted note
+					to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n").
+						AddNext("p", attr("class", "floatnote")).
+						AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+				} else {
+					aside := to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n")
+					for i, c := range note.parsed.ChildElements() {
+						cc := c.Copy()
+						if i == 0 {
+							// We need to insert back ref anchor into first note xml element as a first child, so popup would recognize it properly
+							el := cc.CreateElement("a")
+							el.Attr = append(el.Attr, *attr("epub:type", "noteref"))
+							el.Attr = append(el.Attr, *attr("href", backRef+"#"+backID))
+							el.SetText(t)
+							el.SetTail(strNBSP)
+							cc.InsertChild(cc.Child[0], el)
+						}
+						if cc.Tag == "p" {
+							cc.CreateAttr("class", "floatnote")
+						}
+						for _, a := range cc.FindElements(".//p") {
+							if len(getAttrValue(a, "class")) == 0 {
+								a.CreateAttr("class", "floatnote")
+							}
+						}
+						aside.AddChild(cc)
+					}
+					aside.AddNext("div", attr("class", "emptyline"))
+				}
 			} else {
 				// old bi-directional mode
-				to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).
-					AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+				// to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
+				p.formatText(strNBSP+note.body, false, true,
+					to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").
+						AddNext("a", attr("href", backRef+"#"+backID)).SetText(t))
 			}
 		}
 	}
@@ -261,7 +293,7 @@ func (p *Processor) formatText(in string, breakable, tail bool, to *etree.Elemen
 				p.ctx().sectionTextLength.add(textOutLen)
 			}
 
-			if insertMarkers && p.ctx().inParagraph && breakable && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
+			if insertMarkers && !tail && p.ctx().inParagraph && breakable && p.ctx().pageLength+textOutLen >= p.env.Cfg.Doc.CharsPerPage {
 				if len(textOut) > 0 {
 					bufWriteString(textOut, kobo)
 				}
@@ -337,6 +369,11 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 		}
 	}
 
+	// special case - transferring note body
+	if to.Tag == "note-root" && len(tag) > 0 && tag != "p" && len(css) == 0 && len(href) == 0 {
+		css, tag = tag, "div"
+	}
+
 	text := from.Text()
 	tail := from.Tail()
 
@@ -378,7 +415,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 						if t, ok := p.Book.NoteBodyTitles[note.bodyName]; ok {
 							name = t.title
 						} else {
-							name = strings.Title(note.bodyName)
+							name = tc.Title(p.Book.Lang).String(note.bodyName)
 						}
 						var bodyNumber int
 						if p.Book.NotesBodies > 1 {
@@ -456,10 +493,10 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			} else {
 				// unexpected tag to transfer
 				if from.Tag == "body" || from.Tag == "section" {
-					p.env.Log.Debug("Unexpected tag, ignoring completely", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child)))
+					p.env.Log.Debug("Unexpected tag, ignoring completely", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child, true)))
 					continue
 				}
-				p.env.Log.Debug("Unexpected tag, transferring", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child)))
+				p.env.Log.Debug("Unexpected tag, transferring", zap.String("tag", from.Tag), zap.String("xml", getXMLFragmentFromElement(child, true)))
 				// NOTE: all "unknown" attributes will be lost during this transfer
 				err = p.transfer(child, inner, child.Tag)
 			}
@@ -470,12 +507,13 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	}
 
 	// add bodies of inline and block notes
-	// NOTE: presently ignore note bodies when calculating page length...
 	currentNotes := p.ctx().currentNotes
 	if len(p.ctx().currentNotes) > 0 {
 		// insert inline and block notes
 		if p.notesMode == NInline && tag == "span" {
-			inner = to.AddNext("span", attr("class", "inlinenote")).SetText(currentNotes[0].body)
+			// inner = to.AddNext("span", attr("class", "inlinenote")).SetText(currentNotes[0].body)
+			inner = to.AddNext("span", attr("class", "inlinenote"))
+			p.formatText(currentNotes[0].body, false, false, inner)
 			p.ctx().currentNotes = []*note{}
 		} else if p.notesMode == NBlock && tag == "p" {
 			inner := to.AddNext("div", attr("class", "blocknote"))
@@ -484,7 +522,8 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 				if i, err := strconv.Atoi(t); err == nil {
 					t = fmt.Sprintf("%d) ", i)
 				}
-				inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t).SetTail(n.body)
+				// inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t).SetTail(n.body)
+				p.formatText(n.body, false, true, inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t))
 			}
 			p.ctx().currentNotes = []*note{}
 		}
@@ -553,7 +592,7 @@ func init() {
 		"cite": func(p *Processor, from, to *etree.Element) error {
 			return p.transfer(from, to, "div", "cite")
 		},
-		"empty-line": func(_ *Processor, _, to *etree.Element) error { //nolint:unparam
+		"empty-line": func(_ *Processor, _, to *etree.Element) error {
 			to.AddNext("div", attr("class", "emptyline"))
 			return nil
 		},
@@ -646,10 +685,10 @@ func transferAnchor(p *Processor, from, to *etree.Element) error {
 			}
 		}
 		if len(txt) > 0 || len(from.ChildElements()) > 0 {
-			p.env.Log.Warn("Unable to find href attribute in anchor", zap.String("xml", getXMLFragmentFromElement(from)))
+			p.env.Log.Warn("Unable to find href attribute in anchor", zap.String("xml", getXMLFragmentFromElement(from, true)))
 			return p.transfer(from, to, "a", "empty-href")
 		}
-		p.env.Log.Warn("Unable to find href attribute in anchor, ignoring", zap.String("xml", getXMLFragmentFromElement(from)))
+		p.env.Log.Warn("Unable to find href attribute in anchor, ignoring", zap.String("xml", getXMLFragmentFromElement(from, true)))
 		return nil
 	}
 	// sometimes people are doing strange things with URLs
@@ -837,7 +876,7 @@ func transferImage(p *Processor, from, to *etree.Element) error {
 		}
 	}
 	if len(href) == 0 {
-		p.env.Log.Warn("Encountered image tag without href, skipping", zap.String("path", from.GetPath()), zap.String("xml", getXMLFragmentFromElement(from)))
+		p.env.Log.Warn("Encountered image tag without href, skipping", zap.String("path", from.GetPath()), zap.String("xml", getXMLFragmentFromElement(from, true)))
 		return nil
 	}
 
@@ -852,12 +891,12 @@ func transferImage(p *Processor, from, to *etree.Element) error {
 
 	// oups
 	if len(fname) == 0 {
-		p.env.Log.Warn("Unable to find image for ref-id", zap.String("ref-id", href), zap.String("xml", getXMLFragmentFromElement(from)))
+		p.env.Log.Warn("Unable to find image for ref-id", zap.String("ref-id", href), zap.String("xml", getXMLFragmentFromElement(from, true)))
 		var err error
 		if p.notFound == nil {
 			p.notFound, err = p.getNotFoundImage(len(p.Book.Images))
 			if err != nil {
-				return errors.Wrap(err, "unable to load not-found image")
+				return fmt.Errorf("unable to load not-found image: %w", err)
 			}
 			p.Book.Images = append(p.Book.Images, p.notFound)
 		}

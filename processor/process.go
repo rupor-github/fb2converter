@@ -1,15 +1,12 @@
 // Package processor does actual work.
-//nolint:goconst
 package processor
 
 import (
 	"bytes"
-	"compress/gzip"
 	"encoding/base64"
 	"fmt"
 	"image"
 	"io"
-	"math/rand"
 	"mime"
 	"net/url"
 	"os"
@@ -22,17 +19,15 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
-	"github.com/oklog/ulid"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
 	"gopkg.in/gomail.v2"
 
-	"github.com/rupor-github/fb2converter/config"
-	"github.com/rupor-github/fb2converter/etree"
-	"github.com/rupor-github/fb2converter/state"
+	"fb2converter/config"
+	"fb2converter/etree"
+	"fb2converter/state"
 )
 
 // InputFmt defines type of input we are processing.
@@ -100,7 +95,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 
 	u, err := uuid.NewRandom()
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to generate UUID")
+		return nil, fmt.Errorf("unable to generate UUID: %w", err)
 	}
 
 	notes := ParseNotesString(env.Cfg.Doc.Notes.Mode)
@@ -123,15 +118,10 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 	}
 	var apnx APNXGeneration
 	if kindle {
-		if stk && format == OMobi && env.Cfg.SMTPConfig.IsValid() && env.Cfg.SMTPConfig.DeleteOnSuccess {
-			// Do not create pagemap - we do not need it
+		apnx = ParseAPNXGenerationSring(env.Cfg.Doc.Kindlegen.PageMap)
+		if apnx == UnsupportedAPNXGeneration {
+			env.Log.Warn("Unknown APNX generation option requested, turning off", zap.String("apnx", env.Cfg.Doc.Kindlegen.PageMap))
 			apnx = APNXNone
-		} else {
-			apnx = ParseAPNXGenerationSring(env.Cfg.Doc.Kindlegen.PageMap)
-			if apnx == UnsupportedAPNXGeneration {
-				env.Log.Warn("Unknown APNX generation option requested, turning off", zap.String("apnx", env.Cfg.Doc.Kindlegen.PageMap))
-				apnx = APNXNone
-			}
 		}
 	}
 	var stamp StampPlacement
@@ -194,31 +184,11 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		p.dashTransform.To = string(sym)
 	}
 
-	// re-route temporary directory for debugging
-	if env.Debug {
-		wd, err := os.Getwd()
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to get working directory")
-		}
-		tmpd := filepath.Join(wd, "fb2c_deb")
-		if err = os.MkdirAll(tmpd, 0700); err != nil {
-			return nil, errors.Wrap(err, "unable to create debug directory")
-		}
-		t := time.Now()
-		ulid, err := ulid.New(ulid.Timestamp(t), ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0))
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to allocate ULID")
-		}
-		p.tmpDir = filepath.Join(tmpd, ulid.String()+"_"+filepath.Base(src))
-		if err = os.MkdirAll(p.tmpDir, 0700); err != nil {
-			return nil, errors.Wrap(err, "unable to create temporary directory")
-		}
-	} else {
-		p.tmpDir, err = os.MkdirTemp("", "fb2c-")
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to create temporary directory")
-		}
+	p.tmpDir, err = os.MkdirTemp("", "fb2c-")
+	if err != nil {
+		return nil, fmt.Errorf("unable to create temporary directory: %w", err)
 	}
+	env.Rpt.Store(fmt.Sprintf("fb2c-%s", u.String()), p.tmpDir)
 
 	if unknownEncoding {
 		// input file had no BOM mark - most likely was not Unicode
@@ -229,96 +199,15 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 
 	// Read and parse fb2
 	if _, err := p.doc.ReadFrom(r); err != nil {
-		return nil, errors.Wrap(err, "unable to parse FB2")
+		return nil, fmt.Errorf("unable to parse FB2: %w", err)
 	}
 
-	// Clean document
-	p.doc.Indent(etree.NoIndent)
-
-	// Save parsed document back to file (pretty-printed) for debugging
-	if p.env.Debug {
+	// Save parsed document back to file for debugging
+	if p.env.Rpt != nil {
 		doc := p.doc.Copy()
-		doc.IndentTabs()
 		if err := doc.WriteToFile(filepath.Join(p.tmpDir, filepath.Base(src))); err != nil {
-			return nil, errors.Wrap(err, "unable to write XML")
+			return nil, fmt.Errorf("unable to write XML: %w", err)
 		}
-	}
-
-	// we are ready to convert document
-	return p, nil
-}
-
-// NewEPUB creates EPUB book processor and prepares necessary temporary directories.
-func NewEPUB(r io.Reader, src, dst string, nodirs, stk, overwrite bool, format OutputFmt, env *state.LocalEnv) (*Processor, error) {
-
-	var err error
-
-	var apnx APNXGeneration
-	if format == OAzw3 || format == OMobi {
-		if stk && format == OMobi && env.Cfg.SMTPConfig.IsValid() && env.Cfg.SMTPConfig.DeleteOnSuccess {
-			// Do not create pagemap - we do not need it
-			apnx = APNXNone
-		} else {
-			apnx = ParseAPNXGenerationSring(env.Cfg.Doc.Kindlegen.PageMap)
-			if apnx == UnsupportedAPNXGeneration {
-				env.Log.Warn("Unknown APNX generation option requested, turning off", zap.String("apnx", env.Cfg.Doc.Kindlegen.PageMap))
-				apnx = APNXNone
-			}
-		}
-	}
-
-	p := &Processor{
-		kind:          InEpub,
-		src:           src,
-		dst:           dst,
-		nodirs:        nodirs,
-		stk:           stk,
-		kindlePageMap: apnx,
-		overwrite:     overwrite,
-		format:        format,
-		env:           env,
-	}
-
-	// Fail early
-	if p.kindlegenPath, err = env.Cfg.GetKindlegenPath(); err != nil {
-		return nil, err
-	}
-
-	// re-route temporary directory for debugging
-	if env.Debug {
-		wd, err := os.Getwd()
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to get working directory")
-		}
-		tmpd := filepath.Join(wd, "fb2c_deb")
-		if err = os.MkdirAll(tmpd, 0700); err != nil {
-			return nil, errors.Wrap(err, "unable to create debug directory")
-		}
-		t := time.Now()
-		ulid, err := ulid.New(ulid.Timestamp(t), ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0))
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to allocate ULID")
-		}
-		p.tmpDir = filepath.Join(tmpd, ulid.String()+"_"+filepath.Base(src))
-		if err = os.MkdirAll(p.tmpDir, 0700); err != nil {
-			return nil, errors.Wrap(err, "unable to create temporary directory")
-		}
-	} else {
-		p.tmpDir, err = os.MkdirTemp("", "fb2c-")
-		if err != nil {
-			return nil, errors.Wrap(err, "unable to create temporary directory")
-		}
-	}
-
-	// copy source file to temporary directory - when we decide what else to do with EPUBs this will be very handy
-
-	if destination, err := os.Create(filepath.Join(p.tmpDir, filepath.Base(src))); err == nil {
-		defer destination.Close()
-		if _, err := io.Copy(destination, r); err != nil {
-			return nil, errors.Wrap(err, "unable to copy source")
-		}
-	} else {
-		return nil, errors.Wrap(err, "unable to copy source")
 	}
 
 	// we are ready to convert document
@@ -333,40 +222,16 @@ func (p *Processor) Process() error {
 		return nil
 	}
 
-	// Debugging
-	defer func() {
-		if p.env.Debug && p.kind == InFb2 {
-			// Dump processed book for debugging
-			bname := filepath.Base(p.src)
-			dump, err := os.Create(filepath.Join(p.tmpDir, strings.TrimSuffix(bname, filepath.Ext(p.src))+"-dump.gz"))
-			if err != nil {
-				p.env.Log.Debug("Unable to create file to dump internal state to", zap.Error(err))
-				return
-			}
-			defer dump.Close()
-
-			zdump, err := gzip.NewWriterLevel(dump, gzip.BestSpeed)
-			if err != nil {
-				p.env.Log.Debug("Unable to compress internal state dump", zap.Error(err))
-			}
-			defer zdump.Close()
-
-			zdump.Name = bname
-			zdump.Comment = "fb2c debug dump"
-			p.Book.Dump(zdump)
-		}
-	}()
-
 	// Processing - order of steps and their presence are important as information and context
 	// being built and accumulated...
 
+	if err := p.processDescription(); err != nil {
+		return err
+	}
 	if err := p.processNotes(); err != nil {
 		return err
 	}
 	if err := p.processBinaries(); err != nil {
-		return err
-	}
-	if err := p.processDescription(); err != nil {
 		return err
 	}
 	if err := p.processBodies(); err != nil {
@@ -447,7 +312,7 @@ func (p *Processor) Save() (string, error) {
 // SendToKindle will mail converted file to specified address and remove file if requested.
 func (p *Processor) SendToKindle(fname string) error {
 
-	if !p.stk || p.format != OMobi || len(fname) == 0 {
+	if !p.stk || p.format != OEpub || len(fname) == 0 {
 		return nil
 	}
 
@@ -465,17 +330,51 @@ func (p *Processor) SendToKindle(fname string) error {
 		p.env.Log.Debug("Sending content to Kindle - done", zap.Duration("elapsed", time.Since(start)))
 	}(time.Now())
 
-	m := gomail.NewMessage()
-	m.SetHeader("From", p.env.Cfg.SMTPConfig.From)
-	m.SetAddressHeader("To", p.env.Cfg.SMTPConfig.To, "kindle")
-	m.SetHeader("Subject", "Sent to Kindle")
-	m.SetBody("text/plain", "This email has been automatically sent by fb2converter tool")
-	m.Attach(fname)
+	// NOTE: Content-Type and Content-Disposition headers require special encoding (rfc2231/rfc5987/rfc8187)
 
+	ext := filepath.Ext(fname)
+	fullname := strings.TrimSuffix(filepath.Base(fname), ext)
+	safename := slug.Make(fullname)
+
+	m := gomail.NewMessage(gomail.SetCharset("UTF-8"), gomail.SetEncoding(gomail.Base64))
+	m.SetAddressHeader("From", p.env.Cfg.SMTPConfig.From, "fb2converter ")
+	m.SetAddressHeader("To", p.env.Cfg.SMTPConfig.To, "kindle device")
+	m.SetHeader("Subject", "Sent to Kindle: "+fullname+ext)
+	m.SetBody("text/plain", "This email has been sent by fb2converter")
+	m.Attach(fname,
+		gomail.Rename(safename+ext),
+		gomail.SetHeader(
+			map[string][]string{
+				"Content-Type":        {`application/epub+zip; name="` + mime.BEncoding.Encode("UTF-8", fullname+ext) + `"`},
+				"Content-Disposition": {`attachment; ` + EncodeContentDispFilename(safename+ext, fullname+ext)},
+			},
+		),
+	)
+
+	// debugging
+	if p.env.Rpt != nil {
+		var sf gomail.SendFunc = func(from string, to []string, m io.WriterTo) error {
+			buf, err := os.Create(filepath.Join(p.tmpDir, safename+".mail"))
+			if err != nil {
+				return err
+			}
+			defer buf.Close()
+			_, err = m.WriteTo(buf)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		if err := gomail.Send(sf, m); err != nil {
+			return err
+		}
+	}
+
+	// real send
 	d := gomail.NewDialer(p.env.Cfg.SMTPConfig.Server, p.env.Cfg.SMTPConfig.Port, p.env.Cfg.SMTPConfig.User, p.env.Cfg.SMTPConfig.Password)
 
 	if err := d.DialAndSend(m); err != nil {
-		return errors.Wrap(err, "SentToKindle failed")
+		return fmt.Errorf("SentToKindle failed: %w", err)
 	}
 
 	if p.env.Cfg.SMTPConfig.DeleteOnSuccess {
@@ -497,7 +396,7 @@ func (p *Processor) SendToKindle(fname string) error {
 
 // Clean removes temporary files left after processing.
 func (p *Processor) Clean() error {
-	if p.env.Debug {
+	if p.env.Rpt != nil {
 		// Leave temporary files intact
 		return nil
 	}
@@ -677,7 +576,7 @@ func (p *Processor) processDescription() error {
 				num := getAttrValue(e, "number")
 				if len(num) > 0 {
 					if !govalidator.IsNumeric(num) {
-						p.env.Log.Warn("Sequence number is not an integer, ignoring", zap.String("xml", getXMLFragmentFromElement(e)))
+						p.env.Log.Warn("Sequence number is not an integer, ignoring", zap.String("xml", getXMLFragmentFromElement(e, true)))
 					} else {
 						p.Book.SeqNum, err = strconv.Atoi(num)
 						if err != nil {
@@ -832,13 +731,24 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 			bodyName:   name,
 			bodyNumber: len(notesPerBody),
 		}
+		noteXml := etree.NewDocument()
+		noteXml.CreateElement("note-root")
 		for _, c := range el.ChildElements() {
 			if c.Tag == "title" {
 				note.title = SanitizeTitle(getTextFragment(c))
 			} else {
+				if len(note.body) > 0 {
+					note.body += "\n"
+				}
 				note.body += getFullTextFragment(c)
+				p.ctxPush()
+				if err := p.transfer(c, noteXml.Root(), c.Tag); err != nil {
+					p.env.Log.Warn("Unable to parse notes body", zap.String("path", c.GetPath()), zap.Error(err))
+				}
+				p.ctxPop()
 			}
 		}
+		note.parsed = noteXml.Root().Copy()
 		p.Book.NotesOrder = append(p.Book.NotesOrder, notelink{id: id, bodyName: name})
 		p.Book.Notes[id] = note
 	default:
@@ -1053,6 +963,16 @@ func (p *Processor) processImages() error {
 			for i := len(p.Book.Images) - 1; i >= 0; i-- {
 				if p.Book.Images[i].id == "" {
 					p.Book.Images = append(p.Book.Images[:i], p.Book.Images[i+1:]...)
+				}
+			}
+		}
+		if p.metaOverwrite != nil && p.metaOverwrite.CoverImage == "remove cover" {
+			p.env.Log.Warn("Removing cover image due to meta overwrite")
+			for i := len(p.Book.Images) - 1; i >= 0; i-- {
+				if p.Book.Images[i].id == p.Book.Cover {
+					p.Book.Images = append(p.Book.Images[:i], p.Book.Images[i+1:]...)
+					p.Book.Cover = ""
+					break
 				}
 			}
 		}

@@ -1,9 +1,10 @@
 language: go
-
+arch:
+  - AMD64
+  - ppc64le
 go:
-  - "1.11"
-  - "1.10"
-  - "tip"
+  - "1.13"
+  - "1.14"
 
 before_install:
   - go get -u -v golang.org/x/lint/golint

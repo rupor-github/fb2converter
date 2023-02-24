@@ -2,13 +2,13 @@ package commands
 
 import (
 	"archive/zip"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/h2non/filetype"
-	"github.com/pkg/errors"
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/encoding/unicode/utf32"
 	"golang.org/x/text/transform"
@@ -34,28 +34,6 @@ func isArchiveFile(fname string) (bool, error) {
 		return false, nil
 	}
 	return filetype.Is(header, "zip"), nil
-}
-
-// isEpubFile detects if file is our supported archive.
-func isEpubFile(fname string) (bool, error) {
-
-	if !strings.EqualFold(filepath.Ext(fname), ".epub") {
-		return false, nil
-	}
-
-	file, err := os.Open(fname)
-	if err != nil {
-		return false, err
-	}
-	defer file.Close()
-
-	header := make([]byte, 262)
-	if count, err := file.Read(header); err != nil {
-		return false, err
-	} else if count < 262 {
-		return false, nil
-	}
-	return filetype.Is(header, "epub"), nil
 }
 
 type srcEncoding int
@@ -151,7 +129,7 @@ func isBookFile(fname string) (bool, srcEncoding, error) {
 	if ref, err := file.Seek(0, 0); err != nil {
 		return false, encUnknown, err
 	} else if ref != 0 {
-		return false, encUnknown, errors.Errorf("unable reset file: %s", fname)
+		return false, encUnknown, fmt.Errorf("unable reset file: %s", fname)
 	}
 
 	header := make([]byte, 512)

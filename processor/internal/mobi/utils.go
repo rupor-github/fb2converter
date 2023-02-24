@@ -1,4 +1,3 @@
-//nolint:errcheck
 package mobi
 
 import (
@@ -7,7 +6,6 @@ import (
 	"math/big"
 )
 
-//nolint
 const (
 	// important  pdb header offsets
 	uniqueIDSseed      = 68
@@ -52,7 +50,7 @@ const (
 
 // NOTE: Since I decided to convert verbatim - this is old to_base() implementation originally
 // from calibre.ebooks.mobi.utils. The only change - I am using "proper" 32 base alphabet for encoding.
-// However seems that in most case simply creating new ULID here would be more than enough.
+// However seems that in most case simply creating new ID here would be more than enough.
 func convertToRadix32(id string, min int) []byte {
 
 	// For base 32 encoding
@@ -97,7 +95,7 @@ func getInt32(data []byte, ofs int) int {
 	return int(int32(binary.BigEndian.Uint32(data[ofs:])))
 }
 
-//nolint:deadcode,unused
+//lint:ignore U1000 keep putInt16()
 func putInt16(data []byte, ofs, val int) []byte {
 	buf := make([]byte, 2)
 	binary.BigEndian.PutUint16(buf, uint16(int16(val)))

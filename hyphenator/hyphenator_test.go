@@ -1,26 +1,29 @@
 package hyphenator
 
 import (
+	"compress/gzip"
 	"fmt"
 	"os"
 	"testing"
 )
 
 func buildHyphenator(t *testing.T, lang string) *Hyphenator {
-	fpat, err := os.Open(fmt.Sprintf("../static/dictionaries/hyph-%s.pat.txt", lang))
+	fpat, err := os.Open(fmt.Sprintf("../static/dictionaries/hyph-%s.pat.txt.gz", lang))
 	if err != nil {
-		t.Fatal("Unable to open hyph-en-us.pat.txt", err)
+		t.Fatal("Unable to open hyph-en-us.pat.txt.gz", err)
 	}
-	defer fpat.Close()
+	fpatgz, _ := gzip.NewReader(fpat)
+	defer fpatgz.Close()
 
-	fexc, err := os.Open(fmt.Sprintf("../static/dictionaries/hyph-%s.hyp.txt", lang))
+	fexc, err := os.Open(fmt.Sprintf("../static/dictionaries/hyph-%s.hyp.txt.gz", lang))
 	if err != nil {
-		t.Fatal("Unable to open hyph-en-us.hyp.txt", err)
+		t.Fatal("Unable to open hyph-en-us.hyp.txt.gz", err)
 	}
-	defer fexc.Close()
+	fexcgz, _ := gzip.NewReader(fexc)
+	defer fexcgz.Close()
 
 	h := new(Hyphenator)
-	h.LoadDictionary(lang, fpat, fexc)
+	h.LoadDictionary(lang, fpatgz, fexcgz)
 	return h
 }
 

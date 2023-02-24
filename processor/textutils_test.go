@@ -1,6 +1,8 @@
 package processor
 
 import (
+	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -11,7 +13,7 @@ type testCase struct {
 }
 
 var cases = []testCase{
-	testCase{
+	{
 		in: `#l #f #m`,
 		m: map[string]string{
 			"#l": "Last_Name",
@@ -20,7 +22,7 @@ var cases = []testCase{
 		},
 		out: `Last_Name First_Name Middle_Name`,
 	},
-	testCase{
+	{
 		in: `#l #f{ #m}`,
 		m: map[string]string{
 			"#l": "Last_Name",
@@ -29,7 +31,7 @@ var cases = []testCase{
 		},
 		out: `Last_Name First_Name Middle_Name`,
 	},
-	testCase{
+	{
 		in: `#l #f{ #m}`,
 		m: map[string]string{
 			"#l": "Last_Name",
@@ -38,7 +40,7 @@ var cases = []testCase{
 		},
 		out: `Last_Name First_Name`,
 	},
-	testCase{
+	{
 		in: `#l #f{ aaaaaaaaaa }`,
 		m: map[string]string{
 			"#l": "Last_Name",
@@ -47,7 +49,7 @@ var cases = []testCase{
 		},
 		out: `Last_Name First_Name`,
 	},
-	testCase{
+	{
 		in: `#l{ #f{ #m}}`,
 		m: map[string]string{
 			"#l": "Last_Name",
@@ -56,7 +58,7 @@ var cases = []testCase{
 		},
 		out: `Last_Name First_Name`,
 	},
-	testCase{
+	{
 		in: `#l{ \{mm\} #f{ #m}}`,
 		m: map[string]string{
 			"#l": "Last_Name",
@@ -65,7 +67,7 @@ var cases = []testCase{
 		},
 		out: `Last_Name {mm} First_Name`,
 	},
-	testCase{
+	{
 		in: `#authors #title #author`,
 		m: map[string]string{
 			"#author":  "_single_author_",
@@ -74,7 +76,7 @@ var cases = []testCase{
 		},
 		out: `_multiple_authors_ book-title _single_author_`,
 	},
-	testCase{
+	{
 		in: `#abbrseries #ABBRseries`,
 		m: map[string]string{
 			"#abbrseries": "_a_b_c_",
@@ -93,4 +95,24 @@ func TestReplaceKeywords(t *testing.T) {
 		}
 	}
 	t.Logf("OK - %s: %d cases", t.Name(), len(cases))
+}
+
+var cases1 = []string{
+	"1",
+	"test book.epub",
+	"Знаменитые расследования Мисс Марпл в одном томе .epub",
+}
+
+func TestContentDisposition(t *testing.T) {
+	for i, c := range cases1 {
+		res1 := url.PathEscape(c)
+		res2 := ""
+		for _, part := range encodeParts(c) {
+			res2 += strings.TrimPrefix(part, rfc8187charset)
+		}
+		if res1 != res2 {
+			t.Fatalf("BAD RESULT for case %d [%s]\nEXPECTED:\n[%s]\nGOT:\n[%s]", i+1, c, res1, res2)
+		}
+	}
+	t.Logf("OK - %s: %d cases", t.Name(), len(cases1))
 }

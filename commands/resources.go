@@ -1,39 +1,40 @@
 package commands
 
 import (
+	"errors"
 	"os"
 
-	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
+	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/processor"
-	"github.com/rupor-github/fb2converter/state"
-	"github.com/rupor-github/fb2converter/static"
+	"fb2converter/processor"
+	"fb2converter/state"
+	"fb2converter/static"
 )
 
 // ExportResources is "export" command body.
 func ExportResources(ctx *cli.Context) error {
-
-	// var err error
 
 	const (
 		errPrefix = "export: "
 		errCode   = 1
 	)
 
-	env := ctx.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
+	if ctx.Args().Len() > 1 {
+		env.Log.Warn("Mailformed command line, too many destinations", zap.Strings("ignoring", ctx.Args().Slice()[1:]))
+	}
 
 	fname := ctx.Args().Get(0)
 	if len(fname) == 0 {
-		return cli.NewExitError(errors.New(errPrefix+"destination directory has not been specified"), errCode)
+		return cli.Exit(errors.New(errPrefix+"destination directory has not been specified"), errCode)
 	}
-	//nolint:gocritic
 	if info, err := os.Stat(fname); err != nil && !os.IsNotExist(err) {
-		return cli.NewExitError(errors.New(errPrefix+"unable to access destination directory"), errCode)
+		return cli.Exit(errors.New(errPrefix+"unable to access destination directory"), errCode)
 	} else if err != nil {
-		return cli.NewExitError(errors.New(errPrefix+"destination directory does not exits"), errCode)
+		return cli.Exit(errors.New(errPrefix+"destination directory does not exits"), errCode)
 	} else if !info.IsDir() {
-		return cli.NewExitError(errors.New(errPrefix+"destination is not a directory"), errCode)
+		return cli.Exit(errors.New(errPrefix+"destination is not a directory"), errCode)
 	}
 
 	ignoreNames := map[string]bool{
@@ -44,10 +45,10 @@ func ExportResources(ctx *cli.Context) error {
 
 	if dir, err := static.AssetDir(""); err == nil {
 		for _, a := range dir {
-			if _, ignore := ignoreNames[a]; env.Debug || !ignore {
+			if _, ignore := ignoreNames[a]; !ignore {
 				err = static.RestoreAssets(fname, a)
 				if err != nil {
-					return cli.NewExitError(errors.New(errPrefix+"unable to store resources"), errCode)
+					return cli.Exit(errors.New(errPrefix+"unable to store resources"), errCode)
 				}
 			}
 		}

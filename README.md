@@ -1,23 +1,14 @@
-﻿<p align="center">
-    <h1 align="center">fb2converter</h1>
-    <p align="center">
-        converts fb2 files to epub, kepub, mobi, azw3
-    </p>
-    <p align="center">
-        <a href="https://pkg.go.dev/mod/github.com/rupor-github/fb2converter/?tab=packages"><img alt="GoDoc" src="https://img.shields.io/badge/godoc-reference-blue.svg" /></a>
-        <a href="https://goreportcard.com/report/github.com/rupor-github/fb2converter"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/rupor-github/fb2converter" /></a>
-    </p>
-    <hr>
-</p>
+﻿<h1>   
+    <img src="docs/books.svg" style="vertical-align:middle; width:8%" align="absmiddle"/>
+    <span style="vertical-align:middle;">&nbsp;&nbsp;FB2 converter to EPUB2, KEPUB, MOBI 7/8, AZW3</span>
+</h1>
 
-### A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi).
- 
-  Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter)
-  
-  Russian [forum](https://4pda.ru/forum/index.php?showtopic=942250).
+[![GitHub Release](https://img.shields.io/github/release/rupor-github/fb2converter.svg)](https://github.com/rupor-github/fb2converter/releases)
 
-Aims to be faster than python implementation and much easier to maintain. Simpler configuration, zero dependencies,
-better diagnostics and no installation required.
+### A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi)
+Aims to be faster than python implementation and much easier to maintain. Simpler configuration, zero dependencies, better diagnostics and no installation required.
+
+Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter) and [forum](https://4pda.ru/forum/index.php?showtopic=942250).
 
 ### Essential differences:
 
@@ -28,7 +19,6 @@ better diagnostics and no installation required.
 - no overwriting of configuration parameters from command line, options either specified in configuration file or on command line
 - slightly different hyphenation algorithm (no hyphensReplaceNBSP)
 - fixes and echancements in toc.ncx generation
-- epub processing was separated into its own command "transfer" and any attempts to process epub content were dropped
 - go differs in how it processes images, it is less forgiving than Python's PILLOW and do not have lazy decoding (see use_broken_images configuration option)
 - small changes in result formatting, for example:
   - chapter-end vignette would not be added if chapter does not have text paragraphs
@@ -46,9 +36,12 @@ better diagnostics and no installation required.
 Download from the [releases page](https://github.com/rupor-github/fb2converter/releases) and unpack it in a convenient location.
 
 * Starting with v1.60.1 macOS releases for Intel and Apple silicon are build separately. I do not have `kindlegen` for Apple Silicon - not sure if one even exists, so manage your expectations.
-* Starting with v1.58.0 releases are packed with zip and signed with [minisign](https://jedisct1.github.io/minisign/). Here is public key for verification: RWTNh1aN8DrXq26YRmWO3bPBx4m8jBATGXt4Z96DF4OVSzdCBmoAU+Vq
+* Starting with v1.58.0 releases are packed with zip and signed with [minisign](https://jedisct1.github.io/minisign/). Here is public key for verification:
 
-![key](doc/build_key.png)
+<p>
+    <img src="docs/build_key.svg" style="vertical-align:middle; width:15%" align="absmiddle"/>
+    <span style="vertical-align:middle;">&nbsp;&nbsp;RWTNh1aN8DrXq26YRmWO3bPBx4m8jBATGXt4Z96DF4OVSzdCBmoAU+Vq</span>
+</p>
 
 ### Usage:
 
@@ -59,28 +52,28 @@ Program has detailed logging configured by default (by default conversion.log in
 
 ```
 >>> ./fb2c
+
 NAME:
    fb2converter - fb2 conversion engine
 
 USAGE:
-   fb2c.exe [global options] command [command options] [arguments...]
+   fb2c [global options] command [command options] [arguments...]
 
 VERSION:
    "program version" ("go runtime version") : "git sha string"
 
 COMMANDS:
-     convert     Converts FB2 file(s) to specified format
-     transfer    Prepares EPUB file(s) for transfer (Kindle only!)
-     synccovers  Extracts thumbnails from documents (Kindle only!)
-     dumpconfig  Dumps active configuration (JSON)
-     export      Exports built-in resources for customization
-     help, h     Shows a list of commands or help for one command
+   convert     Converts FB2 file(s) to specified format
+   synccovers  Extracts thumbnails from documents (Kindle only!)
+   dumpconfig  Dumps active configuration (JSON)
+   export      Exports built-in resources for customization
+   help, h     Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --config FILE, -c FILE  load configuration from FILE (YAML, TOML or JSON). if FILE is "-" JSON will be expected from STDIN
-   --debug, -d             leave behind various artifacts for debugging (do not delete intermediate results)
-   --help, -h              show help
-   --version, -v           print the version
+   --config FILE, -c FILE  load configuration from FILE (YAML, TOML or JSON). if FILE is "-" JSON will be expected from STDIN  (accepts multiple inputs)
+   --debug, -d             prepare archive with details of a current run (may overwrite some log settings) (default: false)
+   --help, -h              show help (default: false)
+   --version, -v           print the version (default: false)
 ```
 
 Additional help for any command could be obtained by running `./fb2c help COMMAND-NAME`.
@@ -88,9 +81,9 @@ Additional help for any command could be obtained by running `./fb2c help COMMAN
 ### Examples:
 
 In order to convert all fb2 files in `c:\books\to-read` directory and get results in `d:\out` directory without keeping original subdirectory structure
-sending mobi files to Kindle via e-mail in process execute
+sending files to Kindle via e-mail in process execute
 
-   `fb2c.exe convert --nodirs --stk --to mobi c:\books\to-read d:\out`
+   `fb2c.exe convert --nodirs --stk --to epub c:\books\to-read d:\out`
 
 If you want resulting mobi files to be located alongside with original files, do something like
 
@@ -104,3 +97,10 @@ Windows builds come with full [MyHomeLib](https://github.com/OleksiyPenkov/myhom
 #### NOTE:
 * `fb2mobi.exe` looks for `fb2mobi.toml` in its directory (similarly `fb2epub.exe` looks for `fb2epub.toml`), so any additional customization is easy.
 * __Do not install__ MyHomeLib in either `%ProgramFiles%` or `%ProgramFiles(x86)%` directory - it is bad idea. Since for regular user accounts In Windows those places are __write-protected__ you will have difficulties copying converters there and converters will have problems creating conversion logs which are enabled by default.
+
+### BREAKING CHANGES:
+
+* Starting with version 1.62.0 "Send to Kindle" functionality supported for EPUB files only. This reflects current Amazon intention to completely drop MOBI support on backend. As the result converter drops "transfer" subcommand, disables sending of MOBI files via e-mail and moves support for this from `fb2mobi` to `fb2epub`.
+* Starting with version 1.64.0 `--debug` flag produces zip archive with artifacts for debugging either in directory of the converter or if it is inaccessible in temporary directory. Environment variable FB2C_DEBUG set to "Yes" could be used with `fb2epub.exe` and `fb2mobi.exe` for similar effect. Resulting archive could be shared to facilitate troubleshooting.
+
+

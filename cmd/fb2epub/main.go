@@ -8,9 +8,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 
-	"github.com/rupor-github/fb2converter/config"
-	"github.com/rupor-github/fb2converter/misc"
+	"fb2converter/config"
+	"fb2converter/misc"
 )
 
 // params := Format('"%s" "%s"', [InpFile, ChangeFileExt(OutFile, '.epub')]);
@@ -65,6 +66,10 @@ func main() {
 	config := filepath.Join(filepath.Dir(expath), "fb2epub.toml")
 	if _, err := os.Stat(config); err == nil {
 		args = append(args, "-config", config)
+	}
+
+	if flag := os.Getenv("FB2C_DEBUG"); strings.EqualFold(flag, "yes") {
+		args = append(args, "--debug")
 	}
 
 	args = append(args, "convert")

@@ -16,7 +16,7 @@ import (
 	"github.com/gosimple/slug"
 	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/etree"
+	"fb2converter/etree"
 )
 
 // generateTOCPage creates an HTML page with TOC.
@@ -96,6 +96,7 @@ func (p *Processor) generateCover() error {
 	}(time.Now())
 
 	kindle := p.format == OMobi || p.format == OAzw3
+	convert := p.env.Cfg.Doc.Cover.Convert
 	w, h := p.env.Cfg.Doc.Cover.Width, p.env.Cfg.Doc.Cover.Height
 
 	var cover *binImage
@@ -120,19 +121,15 @@ func (p *Processor) generateCover() error {
 	// resize if needed
 	switch p.coverResize {
 	case CoverNone:
-		if kindle && cover.img.Bounds().Dy() < h {
-			if img := imaging.Resize(cover.img, h*cover.img.Bounds().Dx()/cover.img.Bounds().Dy(), h, imaging.Lanczos); img != nil {
-				cover.img = img
-				cover.flags |= imageChanged | imageKindle
-			} else {
-				p.env.Log.Warn("Unable to resize cover image, using as is")
-			}
+		if !convert && (!kindle || cover.img.Bounds().Dy() >= h) {
+			break
 		}
+		fallthrough
 	case CoverKeepAR:
 		if img := imaging.Resize(cover.img, h*cover.img.Bounds().Dx()/cover.img.Bounds().Dy(), h, imaging.Lanczos); img != nil {
 			cover.img = img
 			cover.flags |= imageChanged
-			if kindle {
+			if kindle || convert {
 				cover.flags |= imageKindle
 			}
 		} else {
@@ -211,7 +208,7 @@ func (ts *stackTOC) push(level int, value *etree.Element) {
 	ts.data = append(ts.data, &stackItem{level, value})
 }
 
-func (ts *stackTOC) pop() (int, *etree.Element) { //nolint:unparam
+func (ts *stackTOC) pop() (int, *etree.Element) {
 	value := ts.data[len(ts.data)-1]
 	ts.data[len(ts.data)-1] = nil
 	ts.data = ts.data[:len(ts.data)-1]
@@ -323,7 +320,7 @@ func (p *Processor) prepareStylesheet() error {
 
 	processURL := func(index int, name string) string {
 
-		if strings.Index(name, "\\") != -1 {
+		if strings.Contains(name, "\\") {
 			p.env.Log.Warn("Stylesheet has bad url with backslashes in the path. Trying to correct...", zap.String("url", name))
 		}
 
@@ -559,7 +556,7 @@ func (p *Processor) generateOPF() error {
 	guide := to.AddNext("guide")
 
 	if len(p.Book.Cover) > 0 && !kindle {
-		guide.AddSame("reference", attr("type", "cover-page"), attr("href", "cover.xhtml"))
+		guide.AddSame("reference", attr("type", "cover-page"), attr("title", "Starts here"), attr("href", "cover.xhtml"))
 	}
 
 	started := false

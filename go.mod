@@ -1,35 +1,52 @@
-module github.com/rupor-github/fb2converter
+module fb2converter
 
-go 1.16
+go 1.20
 
 require (
-	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
-	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/BurntSushi/toml v1.2.1
+	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
+	github.com/bitly/go-simplejson v0.5.0
 	github.com/davecgh/go-spew v1.1.1
-	github.com/disintegration/imaging v1.6.1
+	github.com/disintegration/imaging v1.6.2
 	github.com/fogleman/gg v1.3.0
+	github.com/fsnotify/fsnotify v1.6.0
+	github.com/ghodss/yaml v1.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/google/uuid v1.1.1
-	github.com/gosimple/slug v1.7.0
-	github.com/h2non/filetype v1.0.10
-	github.com/hidez8891/zip v1.0.0-go1.11
-	github.com/micro/go-micro v1.9.1
-	github.com/neurosnap/sentences v1.0.6 // indirect
-	github.com/oklog/ulid v1.3.1
-	github.com/pkg/errors v0.8.1
-	github.com/pkg/profile v1.3.0
-	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
-	github.com/urfave/cli v1.22.4
-	go.uber.org/atomic v1.4.0 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.10.0
-	golang.org/x/crypto v0.0.0-20190829043050-9756ffdc2472
-	golang.org/x/image v0.0.0-20190902063713-cb417be4ba39
-	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297
-	golang.org/x/sys v0.0.0-20190904154756-749cb33beabd
-	golang.org/x/text v0.3.2
-	golang.org/x/tools v0.0.0-20190905173453-6b3d1c9ba8bf
-	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	github.com/google/uuid v1.3.0
+	github.com/gosimple/slug v1.13.1
+	github.com/h2non/filetype v1.1.3
+	github.com/hashicorp/hcl v1.0.0
+	github.com/hidez8891/zip v1.11.0
+	github.com/imdario/mergo v0.3.13
+	github.com/pkg/profile v1.7.0
+	github.com/urfave/cli/v2 v2.24.4
+	go.uber.org/zap v1.24.0
+	golang.org/x/crypto v0.6.0
+	golang.org/x/image v0.5.0
+	golang.org/x/net v0.7.0
+	golang.org/x/sys v0.5.0
+	golang.org/x/term v0.5.0
+	golang.org/x/text v0.7.0
+	golang.org/x/tools v0.6.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/neurosnap/sentences.v1 v1.0.6
+	gopkg.in/neurosnap/sentences.v1 v1.0.7
+	honnef.co/go/tools v0.4.2
+)
+
+require (
+	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/felixge/fgprof v0.9.3 // indirect
+	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/neurosnap/sentences v1.1.2 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
+	golang.org/x/exp/typeparams v0.0.0-20221208152030-732eee02a75a // indirect
+	golang.org/x/mod v0.8.0 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

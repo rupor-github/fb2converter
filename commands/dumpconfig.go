@@ -1,13 +1,14 @@
 package commands
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
-	"github.com/pkg/errors"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 
-	"github.com/rupor-github/fb2converter/state"
+	"fb2converter/state"
 )
 
 // DumpConfig is "dumpconfig" command body.
@@ -20,7 +21,10 @@ func DumpConfig(ctx *cli.Context) error {
 		errCode   = 1
 	)
 
-	env := ctx.GlobalGeneric(state.FlagName).(*state.LocalEnv)
+	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
+	if ctx.Args().Len() > 1 {
+		env.Log.Warn("Mailformed command line, too many destinations", zap.Strings("ignoring", ctx.Args().Slice()[1:]))
+	}
 
 	fname := ctx.Args().Get(0)
 
@@ -28,26 +32,24 @@ func DumpConfig(ctx *cli.Context) error {
 	if len(fname) > 0 {
 		out, err = os.Create(fname)
 		if err != nil {
-			return cli.NewExitError(errors.New(errPrefix+"unable to use destination file"), errCode)
+			return cli.Exit(errors.New(errPrefix+"unable to use destination file"), errCode)
 		}
 		defer out.Close()
+
+		env.Rpt.Store("dump.json", fname)
 
 		env.Log.Info("Dumping configuration", zap.String("file", fname))
 	}
 
 	var data []byte
-	if env.Debug {
-		data, err = env.Cfg.GetBytes()
-	} else {
-		data, err = env.Cfg.GetActualBytes()
-	}
+	data, err = env.Cfg.GetActualBytes()
 	if err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%sunable to get configuration", errPrefix), errCode)
+		return cli.Exit(fmt.Errorf("%sunable to get configuration: %w", errPrefix, err), errCode)
 	}
 
 	_, err = out.Write(data)
 	if err != nil {
-		return cli.NewExitError(errors.Wrapf(err, "%sunable to write configuration", errPrefix), errCode)
+		return cli.Exit(fmt.Errorf("%sunable to write configuration: %w", errPrefix, err), errCode)
 	}
 	return nil
 }
