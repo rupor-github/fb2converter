@@ -40,4 +40,5 @@ jobs:
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
-      run: echo $GOROOT && echo $GOPATH && make build/fb2c
+        # GOPATH: ${{ matrix.goarch }}
+      run: pwd && make build/fb2c
