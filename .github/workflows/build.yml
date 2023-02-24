@@ -1,0 +1,53 @@
+name: Build & release
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ${{ matrix.dist }}
+    name: ${{ matrix.goos }} ${{ matrix.goarch }} build
+    strategy:
+      matrix:
+        include:
+          - dist: ubuntu-latest
+            goos: linux
+            goarch: arm64
+          - dist: ubuntu-latest
+            goos: linux
+            goarch: amd64
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set version
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        mkdir -p misc && cp cmake/version.go.in misc/version.go
+        sed -i "s/@PRJ_VERSION_MAJOR@.@PRJ_VERSION_MINOR@.@PRJ_VERSION_PATCH@/${GITHUB_REF##*/}-${GOOS}-${GOARCH}/g" misc/version.go
+        sed -i "s/@GIT_HASH@/${GITHUB_SHA}/g" misc/version.go
+        cat misc/version.go
+    - name: Download dictionaries
+      run: |
+        cd static/dictionaries
+        wget -r -l1 --no-parent -nd -A.pat.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
+        wget -r -l1 --no-parent -nd -A.hyp.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
+        for a in $(ls *.txt); do gzip $a; done
+    - name: Download sentences
+      run: |
+        cd static/sentences
+        curl -L https://api.github.com/repos/neurosnap/sentences/tarball | tar xz --wildcards '*/data/*.json' --strip-components=2
+        for a in $(ls *.json); do gzip $a; done
+    - name: Install Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.20
+    - name: Build
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: |
+        CGO_ENABLED=0 go build -mod=vendor -o fb2c fb2c.go
+        chmod +x fb2c
+        zip fb2c-${GOOS}-${GOARCH}-${GITHUB_REF##*/}.zip fb2c
+        ls -lah fb2c-${GOOS}-${GOARCH}-${GITHUB_REF##*/}.zip
