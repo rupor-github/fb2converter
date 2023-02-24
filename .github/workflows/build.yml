@@ -18,19 +18,30 @@ jobs:
             goarch: amd64
     steps:
     - uses: actions/checkout@v3
+
+    - name: Set version
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+      run: make misc/version
+
+    - name: Download dictionaries
+      run: make static/dictionaries
+
+    - name: Download sentences
+      run: make static/sentences
+
     - name: Install Go
       uses: actions/setup-go@v3
       with:
         go-version: 1.20
+
     - name: Build
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
       run: |
-        make misc/version
-        make static/dictionaries
-        make static/sentences
+        env | grep GO
         mkdir -p build
-        make build/fb2c
-        zip fb2c-${GOOS}-${GOARCH}-${GITHUB_REF##*/}.zip build/fb2c
-        ls -lah fb2c-${GOOS}-${GOARCH}-${GITHUB_REF##*/}.zip
+	      make build/fb2c
+        ls -lah build
