@@ -50,6 +50,10 @@ else()
         set(CROSS_GOOS linux)
         set(CROSS_GOARCH 386)
         message(STATUS "Targeting 32 bits Linux executable")
+    elseif("$ENV{MSYSTEM_NAME}" STREQUAL "linux_arm64")
+        set(CROSS_GOOS linux)
+        set(CROSS_GOARCH arm64)
+        message(STATUS "Targeting 64 bits Linux ARM executable")
     else()
         # host platform is always linux amd64
         set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/linux/kindlegen")
@@ -80,7 +84,7 @@ endif()
 # Project version number
 set(PRJ_VERSION_MAJOR 1)
 set(PRJ_VERSION_MINOR 69)
-set(PRJ_VERSION_PATCH 0)
+set(PRJ_VERSION_PATCH 1)
 
 if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
@@ -137,7 +141,9 @@ add_custom_target(release
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 set(FB2C_TARGET "${PROJECT_BINARY_DIR}${INSTALL_SUBDIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}")
-set(KINDLEGEN_TARGET "${PROJECT_BINARY_DIR}${INSTALL_SUBDIR}/kindlegen${CMAKE_EXECUTABLE_SUFFIX}")
+if(DEFINED KINDLEGEN)
+    set(KINDLEGEN_TARGET "${PROJECT_BINARY_DIR}${INSTALL_SUBDIR}/kindlegen${CMAKE_EXECUTABLE_SUFFIX}")
+endif()
 list(APPEND ZIP_DEPS ${PROJECT_BINARY_DIR}/changelog.txt ${FB2C_TARGET} ${KINDLEGEN_TARGET})
 if(CROSS_GOOS STREQUAL "windows")
     # myhomelib suppport
@@ -188,11 +194,13 @@ if(CROSS_GOOS STREQUAL "windows")
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 endif()
 
-add_custom_command(OUTPUT ${KINDLEGEN_TARGET}
-    DEPENDS ${KINDLEGEN}
-    COMMAND ${CMAKE_COMMAND} -E copy ${KINDLEGEN} ${KINDLEGEN_TARGET}
-    COMMENT "Copying kindlegen..."
-    WORKING_DIRECTORY "${PROJECT_BINARY_DIR}")
+if(DEFINED KINDLEGEN)
+    add_custom_command(OUTPUT ${KINDLEGEN_TARGET}
+        DEPENDS ${KINDLEGEN}
+        COMMAND ${CMAKE_COMMAND} -E copy ${KINDLEGEN} ${KINDLEGEN_TARGET}
+        COMMENT "Copying kindlegen..."
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}")
+endif()
 
 ########################################################################################################
 # Test targets: to test various parts of the system specify multiple test targets
