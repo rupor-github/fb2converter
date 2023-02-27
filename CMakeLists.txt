@@ -12,57 +12,54 @@ message(STATUS "Generator: ${CMAKE_GENERATOR}")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
-# Release installation directory
-if(CMAKE_CROSSCOMPILING)
-    if(MSYSTEM_NAME STREQUAL "win32")
-        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/windows/kindlegen.exe")
-        set(CROSS_GOOS windows)
-        set(CROSS_GOARCH 386)
-        set(INSTALL_SUBDIR "/fb2converter")
-        message(STATUS "Targeting 32 bits Windows executable")
-    elseif(MSYSTEM_NAME STREQUAL "win64")
-        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/windows/kindlegen.exe")
-        set(CROSS_GOOS windows)
-        set(CROSS_GOARCH amd64)
-        set(INSTALL_SUBDIR "/fb2converter")
-        message(STATUS "Targeting 64 bits Windows executable")
-    elseif(MSYSTEM_NAME STREQUAL "darwin_amd64")
-        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/macos/kindlegen")
-        set(CROSS_GOOS darwin)
-        set(CROSS_GOARCH amd64)
-        message(STATUS "Targeting 64 bits Darwin AMD executable")
-    elseif(MSYSTEM_NAME STREQUAL "darwin_arm64")
-        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/macos/kindlegen")  # will this work?
-        set(CROSS_GOOS darwin)
-        set(CROSS_GOARCH arm64)
-        message(STATUS "Targeting 64 bits Darwin ARM executable")
-    else()
-        message(FATAL_ERROR "Currently unsuppored environment \"${MSYSTEM_NAME}\". CMake willl exit now.")
-    endif()
+if (NOT "$ENV{MSYSTEM_NAME}" STREQUAL "")
+    set(MSYSTEM_NAME "$ENV{MSYSTEM_NAME}" CACHE INTERNAL "Copied from environment")
 else()
-    if (NOT "$ENV{MSYSTEM_NAME}" STREQUAL "")
-        set(MSYSTEM_NAME "$ENV{MSYSTEM_NAME}" CACHE INTERNAL "Copied from environment")
-    else()
-        set(MSYSTEM_NAME "linux_amd64" CACHE INTERNAL "Host environment")
-    endif()
-    if("$ENV{MSYSTEM_NAME}" STREQUAL "linux_i386")
-        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/linux/kindlegen")
-        set(CROSS_GOOS linux)
-        set(CROSS_GOARCH 386)
-        message(STATUS "Targeting 32 bits Linux executable")
-    elseif("$ENV{MSYSTEM_NAME}" STREQUAL "linux_arm64")
-        set(CROSS_GOOS linux)
-        set(CROSS_GOARCH arm64)
-        message(STATUS "Targeting 64 bits Linux ARM executable")
-    else()
-        # host platform is always linux amd64
-        set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/linux/kindlegen")
-        message(STATUS "Targeting 64 bits Linux executable")
-    endif()
+    set(MSYSTEM_NAME "linux_amd64" CACHE INTERNAL "Host environment")
 endif()
 
-set(GO_MIN_REQURED_VERSION 1.20)
-find_package(Go ${GO_MIN_REQURED_VERSION} REQUIRED)
+if(MSYSTEM_NAME STREQUAL "win32")
+    set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/windows/kindlegen.exe")
+    set(CROSS_GOOS windows)
+    set(CROSS_GOARCH 386)
+    set(INSTALL_SUBDIR "/fb2converter")
+    set(CROSS_EXECUTABLE_SUFFIX ".exe") # we are not using cmake cross compilation abilities
+    message(STATUS "Targeting 32 bits Windows executable")
+elseif(MSYSTEM_NAME STREQUAL "win64")
+    set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/windows/kindlegen.exe")
+    set(CROSS_GOOS windows)
+    set(CROSS_GOARCH amd64)
+    set(INSTALL_SUBDIR "/fb2converter")
+    set(CROSS_EXECUTABLE_SUFFIX ".exe") # we are not using cmake cross compilation abilities
+    message(STATUS "Targeting 64 bits Windows executable")
+elseif(MSYSTEM_NAME STREQUAL "darwin_amd64")
+    set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/macos/kindlegen")
+    set(CROSS_GOOS darwin)
+    set(CROSS_GOARCH amd64)
+    message(STATUS "Targeting 64 bits Darwin AMD executable")
+elseif(MSYSTEM_NAME STREQUAL "darwin_arm64")
+    set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/macos/kindlegen")  # will this work?
+    set(CROSS_GOOS darwin)
+    set(CROSS_GOARCH arm64)
+    message(STATUS "Targeting 64 bits Darwin ARM executable")
+elseif(MSYSTEM_NAME STREQUAL "linux_arm64")
+    set(CROSS_GOOS linux)
+    set(CROSS_GOARCH arm64)
+    message(STATUS "Targeting 64 bits Linux ARM executable")
+elseif(MSYSTEM_NAME STREQUAL "linux_i386")
+    set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/linux/kindlegen")
+    set(CROSS_GOOS linux)
+    set(CROSS_GOARCH 386)
+    message(STATUS "Targeting 32 bits Linux executable")
+elseif(MSYSTEM_NAME STREQUAL "linux_amd64")
+    # host platform is always linux amd64
+    set(KINDLEGEN "${PROJECT_SOURCE_DIR}/kindlegen/linux/kindlegen")
+    message(STATUS "Targeting 64 bits Linux executable")
+else()
+    message(FATAL_ERROR "Currently unsuppored environment \"${MSYSTEM_NAME}\".")
+endif()
+
+find_package(Go REQUIRED)
 find_package(Git REQUIRED)
 
 # Make sure we setup go properly
@@ -81,12 +78,21 @@ endif()
 # Setting up versioning
 ########################################################################################################
 
-# Project version number
-set(PRJ_VERSION_MAJOR 1)
-set(PRJ_VERSION_MINOR 69)
-set(PRJ_VERSION_PATCH 1)
+# Project version number - comes from release version tag
+set(GIT_REF $ENV{GITHUB_REF})
+if(GIT_REF MATCHES "refs/tags/v([0-9]+)\\.([0-9]+)\\.?([0-9]*[-a-zA-Z0-9+]*)")
+    set(PRJ_VERSION_MAJOR ${CMAKE_MATCH_1})
+    set(PRJ_VERSION_MINOR ${CMAKE_MATCH_2})
+    set(PRJ_VERSION_PATCH ${CMAKE_MATCH_3})
+else()
+    set(PRJ_VERSION_MAJOR 0)
+    set(PRJ_VERSION_MINOR 0)
+    set(PRJ_VERSION_PATCH "0-dev")
+endif()
 
-if (EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
+if(DEFINED ENV{GITHUB_SHA})
+    set(GIT_HASH "$ENV{GITHUB_SHA}")
+elseif(EXISTS "${PROJECT_SOURCE_DIR}/.git" AND IS_DIRECTORY "${PROJECT_SOURCE_DIR}/.git")
     execute_process(COMMAND ${CMAKE_SOURCE_DIR}/cmake/githash.sh ${GIT_EXECUTABLE}
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         RESULT_VARIABLE res
@@ -99,9 +105,6 @@ else()
     set(GIT_HASH "no-git")
 endif()
 configure_file("${PROJECT_SOURCE_DIR}/cmake/version.go.in" "${PROJECT_SOURCE_DIR}/misc/version.go")
-
-# distribute history
-execute_process(COMMAND ${CMAKE_COMMAND} -E env ${GIT_EXECUTABLE} changelog --all --tag "${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR}.${PRJ_VERSION_PATCH}" --stdout OUTPUT_FILE ${PROJECT_BINARY_DIR}/changelog.txt ERROR_QUIET)
 
 message(STATUS "Building version \"${PRJ_VERSION_MAJOR}.${PRJ_VERSION_MINOR}.${PRJ_VERSION_PATCH}\" git \"${GIT_HASH}\"")
 
@@ -136,18 +139,17 @@ endif()
 
 add_custom_target(release
     DEPENDS ${PROJECT_SOURCE_DIR}/fb2c_${MSYSTEM_NAME}.zip
-    COMMAND ${CMAKE_SOURCE_DIR}/cmake/sign.sh ${MSYSTEM_NAME}
     COMMENT "Building release..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
-set(FB2C_TARGET "${PROJECT_BINARY_DIR}${INSTALL_SUBDIR}/fb2c${CMAKE_EXECUTABLE_SUFFIX}")
+set(FB2C_TARGET "${PROJECT_BINARY_DIR}${INSTALL_SUBDIR}/fb2c${CROSS_EXECUTABLE_SUFFIX}")
 if(DEFINED KINDLEGEN)
-    set(KINDLEGEN_TARGET "${PROJECT_BINARY_DIR}${INSTALL_SUBDIR}/kindlegen${CMAKE_EXECUTABLE_SUFFIX}")
+    set(KINDLEGEN_TARGET "${PROJECT_BINARY_DIR}${INSTALL_SUBDIR}/kindlegen${CROSS_EXECUTABLE_SUFFIX}")
 endif()
-list(APPEND ZIP_DEPS ${PROJECT_BINARY_DIR}/changelog.txt ${FB2C_TARGET} ${KINDLEGEN_TARGET})
+list(APPEND ZIP_DEPS ${FB2C_TARGET} ${KINDLEGEN_TARGET})
 if(CROSS_GOOS STREQUAL "windows")
     # myhomelib suppport
-    list(APPEND ZIP_DEPS ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CMAKE_EXECUTABLE_SUFFIX} ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CMAKE_EXECUTABLE_SUFFIX})
+    list(APPEND ZIP_DEPS ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CROSS_EXECUTABLE_SUFFIX} ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CROSS_EXECUTABLE_SUFFIX})
 endif()
 # strip path for archive content
 foreach(fname ${ZIP_DEPS})
@@ -182,13 +184,13 @@ endif()
 
 if(CROSS_GOOS STREQUAL "windows")
     # myhomelib suppport
-    add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
-        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CMAKE_EXECUTABLE_SUFFIX}
+    add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CROSS_EXECUTABLE_SUFFIX}
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2mobi/fb2mobi${CROSS_EXECUTABLE_SUFFIX}
             fb2converter/cmd/fb2mobi
         COMMENT "Building fb2mobi..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
-    add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
-        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CMAKE_EXECUTABLE_SUFFIX}
+    add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CROSS_EXECUTABLE_SUFFIX}
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} build ${GO_MOD_ARGS} -trimpath -o ${PROJECT_BINARY_DIR}/fb2epub/fb2epub${CROSS_EXECUTABLE_SUFFIX}
              fb2converter/cmd/fb2epub
         COMMENT "Building fb2epub..."
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
@@ -279,7 +281,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
     add_custom_target(deps_tidy
         SOURCES ${PROJECT_SOURCE_DIR}/go.mod
-        COMMAND ${GO_ENV} ${GO_EXECUTABLE} mod tidy -go=${GO_MIN_REQURED_VERSION}
+        COMMAND ${GO_ENV} ${GO_EXECUTABLE} mod tidy -go=${GO_LANG_VERSION}
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Cleaning dependencies (go mod tidy)"
         VERBATIM)
