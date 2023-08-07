@@ -18,6 +18,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hidez8891/zip v1.11.0
 	github.com/imdario/mergo v0.3.13
+	github.com/neurosnap/sentences v1.1.2
 	github.com/pkg/profile v1.7.0
 	github.com/urfave/cli/v2 v2.24.4
 	go.uber.org/zap v1.24.0
@@ -29,7 +30,6 @@ require (
 	golang.org/x/text v0.7.0
 	golang.org/x/tools v0.6.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/neurosnap/sentences.v1 v1.0.7
 	honnef.co/go/tools v0.4.2
 )
 
@@ -40,7 +40,6 @@ require (
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
-	github.com/neurosnap/sentences v1.1.2 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
