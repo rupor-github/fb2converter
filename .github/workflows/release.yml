@@ -1,9 +1,6 @@
 name: fb2converter release
 
-on:
-  create:
-    tags:
-    - "_v*.*.*"
+on: workflow_dispatch # disable workflow
 
 permissions:
   contents: write
