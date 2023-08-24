@@ -3,6 +3,7 @@ package mobi
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"math/big"
 )
 
@@ -87,25 +88,13 @@ func convertToRadix32(id string, min int) []byte {
 	return res
 }
 
-func getInt16(data []byte, ofs int) int {
-	return int(int16(binary.BigEndian.Uint16(data[ofs:])))
+func getUInt16(data []byte, ofs int) int {
+	return int(binary.BigEndian.Uint16(data[ofs:]))
 }
 
 func getInt32(data []byte, ofs int) int {
+	// in the up to date mobi format, all those are uint32 but I am yet to encounter a situation when int32 is not enough.
 	return int(int32(binary.BigEndian.Uint32(data[ofs:])))
-}
-
-//lint:ignore U1000 keep putInt16()
-func putInt16(data []byte, ofs, val int) []byte {
-	buf := make([]byte, 2)
-	binary.BigEndian.PutUint16(buf, uint16(int16(val)))
-	if len(data) == 0 {
-		return buf
-	}
-	for i := 0; i < len(buf); i++ {
-		data[ofs+i] = buf[i]
-	}
-	return buf
 }
 
 func putInt32(data []byte, ofs, val int) []byte {
@@ -122,9 +111,9 @@ func putInt32(data []byte, ofs, val int) []byte {
 
 func getSectionAddr(data []byte, secno int) (int, int) {
 
-	nsec := getInt16(data, numberOfPdbRecords)
+	nsec := getUInt16(data, numberOfPdbRecords)
 	if secno < 0 || secno >= nsec {
-		panic("secno out of range")
+		panic(fmt.Sprintf("secno %d is out of range [0, %d]", secno, nsec))
 	}
 
 	var start, end int
@@ -253,7 +242,7 @@ func nullSection(data []byte, secno int) []byte {
 
 	var datalst bytes.Buffer
 
-	nsec := getInt16(data, numberOfPdbRecords)
+	nsec := getUInt16(data, numberOfPdbRecords)
 	secstart, secend := getSectionAddr(data, secno)
 	zerosecstart, _ := getSectionAddr(data, 0)
 	dif := secend - secstart
@@ -282,7 +271,7 @@ func writeSection(data []byte, secno int, secdata []byte) []byte {
 
 	var datalst bytes.Buffer
 
-	nsec := getInt16(data, numberOfPdbRecords)
+	nsec := getUInt16(data, numberOfPdbRecords)
 	secstart, secend := getSectionAddr(data, secno)
 	zerosecstart, _ := getSectionAddr(data, 0)
 	dif := len(secdata) - (secend - secstart)
@@ -320,7 +309,7 @@ func deleteSectionRange(data []byte, firstsec, lastsec int) []byte {
 	_, lastsecend := getSectionAddr(data, lastsec)
 	zerosecstart, _ := getSectionAddr(data, 0)
 	dif := lastsecend - firstsecstart + 8*(lastsec-firstsec+1)
-	nsec := getInt16(data, numberOfPdbRecords)
+	nsec := getUInt16(data, numberOfPdbRecords)
 
 	datalst.Write(data[:uniqueIDSseed])
 	binary.Write(&datalst, binary.BigEndian, uint32(2*(nsec-(lastsec-firstsec+1))+1))
@@ -352,7 +341,7 @@ func insertSectionRange(datasrc []byte, firstsec, lastsec int, datadst []byte, t
 
 	var datalst bytes.Buffer
 
-	nsec := getInt16(datadst, numberOfPdbRecords)
+	nsec := getUInt16(datadst, numberOfPdbRecords)
 	zerosecstart, _ := getSectionAddr(datadst, 0)
 	insstart, _ := getSectionAddr(datadst, targetsec)
 	nins := lastsec - firstsec + 1

@@ -37,14 +37,22 @@ type TokenExistential interface {
 	IsEllipsis(*Token) bool
 	// True if the token text is that of an initial.
 	IsInitial(*Token) bool
+	// True if the token text is that of an number as part of a list.
+	IsListNumber(*Token) bool
 	// True if the token text is that of a number.
 	IsNumber(*Token) bool
 	// True if the token is either a number or is alphabetic.
 	IsNonPunct(*Token) bool
+	// True if the token is first part of a coordinate.
+	IsCoordinatePartOne(*Token) bool
+	// True if the token is second part of a coordinate.
+	IsCoordinatePartTwo(*Token) bool
 	// Does this token end with a period?
 	HasPeriodFinal(*Token) bool
 	// Does this token end with a punctuation and a quote?
 	HasSentEndChars(*Token) bool
+	// Does this token end with ambigiuous punctuation?
+	HasUnreliableEndChars(*Token) bool
 }
 
 // TokenParser is the primary token interface that determines the context and type of a tokenized word.
@@ -208,9 +216,24 @@ func (p *DefaultWordTokenizer) IsInitial(t *Token) bool {
 	return t.reInitial.MatchString(t.Tok)
 }
 
+// IsInitial is true if the token text is that of a list number.
+func (p *DefaultWordTokenizer) IsListNumber(t *Token) bool {
+	return t.reListNumber.MatchString(t.Tok)
+}
+
 // IsAlpha is true if the token text is all alphabetic.
 func (p *DefaultWordTokenizer) IsAlpha(t *Token) bool {
 	return t.reAlpha.MatchString(t.Tok)
+}
+
+// IsCoordinatePartTwo is true if the token text might be the second part of a coordiate.
+func (p *DefaultWordTokenizer) IsCoordinatePartOne(t *Token) bool {
+	return strings.Compare(t.Tok, "N°.") == 0
+}
+
+// IsCoordinatePartTwo is true if the token text might be the second part of a coordiate.
+func (p *DefaultWordTokenizer) IsCoordinatePartTwo(t *Token) bool {
+	return t.reCoordinateSecondPart.MatchString(t.Tok)
 }
 
 // IsNonPunct is true if the token is either a number or is alphabetic.
@@ -259,6 +282,20 @@ func (p *DefaultWordTokenizer) HasSentEndChars(t *Token) bool {
 	return false
 }
 
+// Find any punctuation that might mean the end of a sentence but doesn't have to
+func (p *DefaultWordTokenizer) HasUnreliableEndChars(t *Token) bool {
+	enders := []string{
+		`."`, `.'`, `.)`, `.’`, `.”`,
+		`?"`, `?'`, `?)`, `?’`, `?”`,
+		`!"`, `!'`, `!)`, `!’`, `!”`,
+	}
+	for _, ender := range enders {
+		if strings.HasSuffix(t.Tok, ender) {
+			return true
+		}
+	}
+	return false
+}
 func IsCjkPunct(r rune) bool {
 	switch r {
 	case '。', '；', '！', '？':

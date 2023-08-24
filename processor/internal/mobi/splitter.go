@@ -130,7 +130,7 @@ func (s *Splitter) produceCombo(data []byte, u []byte, nonPersonal bool) {
 
 	// store data for page map
 	var pdata []byte
-	srcs, numSrcs := getInt32(rec0, firstNonText), getInt16(data, numberOfPdbRecords)
+	srcs, numSrcs := getInt32(rec0, firstNonText), getUInt16(data, numberOfPdbRecords)
 	if srcs >= 0 && numSrcs > 0 {
 		for i := srcs; i < numSrcs; i++ {
 			d := readSection(data, i)
@@ -294,7 +294,7 @@ func (s *Splitter) produceKF8(data []byte, u []byte, nonPersonal, forceASIN bool
 
 	// store data for page map
 	var pdata []byte
-	srcs, numSrcs := getInt32(rec0, firstNonText), getInt16(data, numberOfPdbRecords)
+	srcs, numSrcs := getInt32(rec0, firstNonText), getUInt16(data, numberOfPdbRecords)
 	if srcs >= 0 && numSrcs > 0 {
 		for i := srcs; i < numSrcs; i++ {
 			d := readSection(data, i)
@@ -304,7 +304,7 @@ func (s *Splitter) produceKF8(data []byte, u []byte, nonPersonal, forceASIN bool
 		}
 	}
 
-	firstimage, lastimage := getInt32(rec0, firstRescRecord), getInt16(rec0, lastContentIndex)
+	firstimage, lastimage := getInt32(rec0, firstRescRecord), getUInt16(rec0, lastContentIndex)
 	if lastimage < 0 {
 		// find the lowest of the next sections
 		for _, ofs := range []int{fcisIndex, flisIndex, datpIndex, huffTableOffset} {
@@ -450,19 +450,19 @@ func (s *Splitter) processPageData(data []byte) {
 	// NOTE: In some cases kindlegen puts additional word in the header, which looks like length of the offset map.
 	// So far this only happens during "transfer" on foreign epub files. We will ignore it for now, but have to
 	// account for it to avoid panic. KindleUnpack does not seem to know about it yet.
-	ver := getInt16(data, 0x0A)
+	ver := getUInt16(data, 0x0A)
 	revlen := getInt32(data, 0x10+(ver-1)*4)
 
 	// skip over header, revision string length data, and revision string
 	ofs := 0x14 + (ver-1)*4 + revlen
-	pmlen, pmnn, pmbits := getInt16(data, ofs+2), getInt16(data, ofs+4), getInt16(data, ofs+6)
+	pmlen, pmnn, pmbits := getUInt16(data, ofs+2), getUInt16(data, ofs+4), getUInt16(data, ofs+6)
 
 	pmstr, pmoff := data[ofs+8:ofs+8+pmlen], data[ofs+8+pmlen:]
 
 	var pageOffsets []int
 	wordRead, wordSize := getInt32, 4
 	if pmbits == 16 {
-		wordRead, wordSize = getInt16, 2
+		wordRead, wordSize = getUInt16, 2
 	}
 	for i, ofs := 0, 0; i < pmnn; i, ofs = i+1, ofs+wordSize {
 		od := wordRead(pmoff, ofs)

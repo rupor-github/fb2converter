@@ -74,7 +74,7 @@ func (r *Reader) produceThumbnail(data []byte) {
 
 	rec0 := readSection(data, 0)
 
-	if getInt16(rec0, cryptoType) != 0 {
+	if getUInt16(rec0, cryptoType) != 0 {
 		r.log.Debug("Encrypted book", zap.String("file", r.fname))
 		return
 	}

@@ -75,6 +75,7 @@ github.com/imdario/mergo
 ## explicit; go 1.12
 # github.com/neurosnap/sentences v1.1.2
 ## explicit; go 1.18
+github.com/neurosnap/sentences
 # github.com/pkg/profile v1.7.0
 ## explicit; go 1.13
 github.com/pkg/profile
@@ -200,9 +201,6 @@ gopkg.in/alexcesaro/quotedprintable.v3
 # gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 ## explicit
 gopkg.in/gomail.v2
-# gopkg.in/neurosnap/sentences.v1 v1.0.7
-## explicit
-gopkg.in/neurosnap/sentences.v1
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit; go 1.15
 gopkg.in/yaml.v2

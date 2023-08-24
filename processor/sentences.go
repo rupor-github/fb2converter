@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"unicode"
 
+	"github.com/neurosnap/sentences"
 	"go.uber.org/zap"
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
-	"gopkg.in/neurosnap/sentences.v1"
 
 	"fb2converter/static"
 )
@@ -87,6 +88,20 @@ func splitSentences(t *tokenizer, in string) []string {
 
 	for _, s := range t.t.Tokenize(in) {
 		res = append(res, s.Text)
+	}
+
+	// Sentences tokenizer has a funny way of working - sentence trailing spaces belong to the next sentence. That puts off
+	// kepub viewer on Kobo devices. I do not want to change external "github.com/neurosnap/sentences" module - will do careful inplace
+	// mockery right here instead.
+
+	for i := 0; i < len(res)-1; i++ {
+		for idx, sym := range res[i+1] {
+			if !unicode.IsSpace(sym) {
+				res[i] = res[i] + res[i+1][0:idx]
+				res[i+1] = res[i+1][idx:]
+				break
+			}
+		}
 	}
 	return res
 }
