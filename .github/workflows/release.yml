@@ -3,7 +3,7 @@ name: fb2converter release
 on:
   create:
     tags:
-    - "v*.*.*"
+    - "_v*.*.*"
 
 permissions:
   contents: write
