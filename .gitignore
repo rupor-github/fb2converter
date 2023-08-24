@@ -22,3 +22,5 @@ misc/version.go
 !static/resources/LinLibertine_RBah.ttf.gz
 fb2c_*.zip
 fb2c_*.minisig
+
+/.devcontainer
