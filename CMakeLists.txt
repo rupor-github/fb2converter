@@ -126,6 +126,10 @@ list(APPEND GO_ENV
     CGO_ENABLED=0
     )
 
+if(GO_LANG_VERSION STREQUAL "1.21")
+    list(APPEND GO_ENV GOEXPERIMENT=loopvar)
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(TEST_RUN_ARGS "-v")
     set(GO_MOD_ARGS "-mod=mod")

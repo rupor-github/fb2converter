@@ -4,11 +4,12 @@ import (
 	"errors"
 	"time"
 
+	"dario.cat/mergo"
+
 	"fb2converter/go-micro/config/encoder"
 	"fb2converter/go-micro/config/encoder/json"
 	"fb2converter/go-micro/config/reader"
 	"fb2converter/go-micro/config/source"
-	"github.com/imdario/mergo"
 )
 
 type jsonReader struct {
