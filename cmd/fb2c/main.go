@@ -239,10 +239,13 @@ DESTINATION:
 				&cli.IntFlag{Name: "height", Value: 470, Usage: "height of the resulting thumbnail (default: 470)"},
 				&cli.BoolFlag{Name: "stretch", Usage: "do not preserve thumbnail aspect ratio when resizing"},
 			},
-			ArgsUsage: "SOURCE",
+			ArgsUsage: "SOURCE [DESTINATION]",
 			CustomHelpTemplate: fmt.Sprintf(`%s
 SOURCE:
 	full path to file/directory on mounted device
+DESTINATION:
+    always a path, output file name(s) and extension will be derived from other parameters
+    if present - converter will not try to construct kindle thumbnails directory, will use destination instead
 
 Synchronizes kindle thumbnails with books already in Kindle memory so Kindle home page looks better.
 `, cli.CommandHelpTemplate),

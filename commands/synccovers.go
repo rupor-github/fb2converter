@@ -18,8 +18,6 @@ import (
 // SyncCovers reads books in Kindle formats and produces thumbnails for them. Very Kindle specific.
 func SyncCovers(ctx *cli.Context) error {
 
-	// var err error
-
 	const (
 		errPrefix = "synccovers: "
 		errCode   = 1
@@ -27,16 +25,18 @@ func SyncCovers(ctx *cli.Context) error {
 
 	env := ctx.Generic(state.FlagName).(*state.LocalEnv)
 
-	if len(ctx.Args().Get(0)) == 0 {
+	if ctx.Args().Len() > 2 {
+		env.Log.Warn("Mailformed command line", zap.Strings("ignoring", ctx.Args().Slice()[1:]))
+	}
+
+	src := ctx.Args().Get(0)
+	if len(src) == 0 {
 		return cli.Exit(errors.New(errPrefix+"book source has not been specified"), errCode)
 	}
 
-	in, err := filepath.Abs(ctx.Args().Get(0))
+	in, err := filepath.Abs(src)
 	if err != nil {
-		return cli.Exit(fmt.Errorf("%swrong book source has been specified: %w", errPrefix, err), errCode)
-	}
-	if ctx.Args().Len() > 1 {
-		env.Log.Warn("Mailformed command line, too many sources", zap.Strings("ignoring", ctx.Args().Slice()[1:]))
+		return cli.Exit(fmt.Errorf("%snormalizing book source path failed: %w", errPrefix, err), errCode)
 	}
 
 	dir, file := in, ""
@@ -50,16 +50,43 @@ func SyncCovers(ctx *cli.Context) error {
 	height := ctx.Int("height")
 	stretch := ctx.Bool("stretch")
 
-	var sysdir string
-	// let's see if we could locate kindle directory
-	for head, tail := filepath.Split(strings.TrimSuffix(dir, string(os.PathSeparator))); len(tail) > 0; head, tail = filepath.Split(strings.TrimSuffix(head, string(os.PathSeparator))) {
-		sysdir = filepath.Join(head, "system", "thumbnails")
-		if info, err := os.Stat(sysdir); err == nil && info.IsDir() {
-			break
+	var dst string
+	if ctx.Args().Len() == 1 {
+		// let's see if we could locate kindle directory
+		for head, tail := filepath.Split(strings.TrimSuffix(dir, string(os.PathSeparator))); len(tail) > 0; head, tail = filepath.Split(strings.TrimSuffix(head, string(os.PathSeparator))) {
+			dst = filepath.Join(head, "system", "thumbnails")
+			if info, err := os.Stat(dst); err == nil && info.IsDir() {
+				break
+			}
 		}
-	}
-	if len(sysdir) == 0 {
-		return cli.Exit(errors.New(errPrefix+"unable to find Kindle system directory along the specified path"), errCode)
+		info, err := os.Stat(dst)
+		if os.IsNotExist(err) {
+			return cli.Exit(fmt.Errorf("%sunable to find Kindle thumbnails directory along the specified path", errPrefix), errCode)
+		} else if err != nil {
+			return cli.Exit(fmt.Errorf("%swrong Kindle source path has been specified: %w", errPrefix, err), errCode)
+		}
+		if !info.IsDir() {
+			return cli.Exit(fmt.Errorf("%sthumbnails path must be a directory", errPrefix), errCode)
+		}
+	} else {
+		// ignore kindle directory logic
+		dst = ctx.Args().Get(1)
+
+		if len(dst) == 0 {
+			return cli.Exit(fmt.Errorf("%sempty destination path has been specified", errPrefix), errCode)
+		}
+		if dst, err = filepath.Abs(dst); err != nil {
+			return cli.Exit(fmt.Errorf("%snormalizing destination path failed", errPrefix), errCode)
+		}
+		info, err := os.Stat(dst)
+		if os.IsNotExist(err) {
+			return cli.Exit(fmt.Errorf("%sdestination path must exist", errPrefix), errCode)
+		} else if err != nil {
+			return cli.Exit(fmt.Errorf("%swrong destination path has been specified: %w", errPrefix, err), errCode)
+		}
+		if !info.IsDir() {
+			return cli.Exit(fmt.Errorf("%sdestination path must be a directory", errPrefix), errCode)
+		}
 	}
 
 	files, count := 0, 0
@@ -69,7 +96,7 @@ func SyncCovers(ctx *cli.Context) error {
 		if strings.EqualFold(ext, ".mobi") || strings.EqualFold(ext, ".azw3") {
 			env.Log.Debug("Creating thumbnail", zap.String("file", path))
 			files++
-			created, err := processor.ProduceThumbnail(path, sysdir, width, height, stretch, env.Log)
+			created, err := processor.ProduceThumbnail(path, dst, width, height, stretch, env.Log)
 			if err != nil {
 				return err
 			}
@@ -80,7 +107,7 @@ func SyncCovers(ctx *cli.Context) error {
 		return nil
 	}
 
-	env.Log.Info("Thumbnail extraction starting", zap.String("kindle directory", sysdir))
+	env.Log.Info("Thumbnail extraction starting", zap.String("kindle directory", dst))
 	defer func(start time.Time) {
 		env.Log.Info("Thumbnail extraction completed", zap.Duration("elapsed", time.Since(start)), zap.Int("files", files), zap.Int("extracted", count))
 	}(time.Now())
