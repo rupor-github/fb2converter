@@ -235,8 +235,8 @@ DESTINATION:
 			Before: wrap.beforeCommandRun,
 			After:  wrap.afterCommandRun,
 			Flags: []cli.Flag{
-				&cli.IntFlag{Name: "width", Value: 330, Usage: "width of the resulting thumbnail (default: 330)"},
-				&cli.IntFlag{Name: "height", Value: 470, Usage: "height of the resulting thumbnail (default: 470)"},
+				&cli.IntFlag{Name: "width", Value: 330, DefaultText: "330", Usage: "width of the resulting thumbnail"},
+				&cli.IntFlag{Name: "height", Value: 470, DefaultText: "470", Usage: "height of the resulting thumbnail"},
 				&cli.BoolFlag{Name: "stretch", Usage: "do not preserve thumbnail aspect ratio when resizing"},
 			},
 			ArgsUsage: "SOURCE [DESTINATION]",
