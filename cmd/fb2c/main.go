@@ -195,7 +195,7 @@ func main() {
 		&cli.GenericFlag{Name: state.FlagName, Hidden: true, Usage: "--internal--", Value: state.NewLocalEnv()},
 		&cli.IntFlag{Name: "mhl", Value: config.MhlNone, Hidden: true, Usage: "--internal--"},
 
-		&cli.StringSliceFlag{Name: "config", Aliases: []string{"c"}, Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
+		&cli.StringSliceFlag{Name: "config", Aliases: []string{"c"}, DefaultText: "", Usage: "load configuration from `FILE` (YAML, TOML or JSON). if FILE is \"-\" JSON will be expected from STDIN"},
 		&cli.BoolFlag{Name: "debug", Aliases: []string{"d"}, Usage: "prepare archive with details of a current run (may overwrite some log settings)"},
 	}
 
@@ -208,18 +208,18 @@ func main() {
 			After:  wrap.afterCommandRun,
 			Flags: []cli.Flag{
 				&cli.StringFlag{Name: "to", Value: "epub", Usage: "conversion output `TYPE` (supported types: epub, kepub, azw3, mobi)"},
-				&cli.BoolFlag{Name: "nodirs", Usage: "when producing output do not keep input directory structure"},
-				&cli.BoolFlag{Name: "stk", Usage: "send converted file to kindle (epub only)"},
-				&cli.BoolFlag{Name: "ow", Usage: "continue even if destination exits, overwrite files"},
+				&cli.BoolFlag{Name: "nodirs", Aliases: []string{"nd"}, Usage: "when producing output do not keep input directory structure"},
+				&cli.BoolFlag{Name: "sendtokindle", Aliases: []string{"stk"}, Usage: "send converted file to kindle via e-mail (epub only)"},
+				&cli.BoolFlag{Name: "overwrite", Aliases: []string{"ow"}, Usage: "continue even if destination exits, overwrite files"},
 				&cli.StringFlag{Name: "force-zip-cp", Usage: "Force `ENCODING` for ALL file names in archives (see IANA.org for character set names)"},
 			},
 			ArgsUsage: "SOURCE [DESTINATION]",
 			CustomHelpTemplate: fmt.Sprintf(`%sSOURCE:
     path to fb2 file(s) to process, following formats are supported:
-        path to a file: [path]file.fb2
-        path to a directory: [path]directory - recursively process all files under directory (symbolic links are not followed)
-        path to archive with path inside archive to a particular fb2 file: [path]archive.zip[archive path]/file.fb2
-        path to archive with path inside archive: [path]archive.zip[archive path] - recursively process all fb2 files under archive path
+        path to a file: "[path_to_file]file.fb2"
+        path to a directory: "[path_to_directory]directory" - recursively process all files under directory (symbolic links are not followed)
+        path to archive with path inside archive to a particular fb2 file: "[path_to_archive]archive.zip[path_in_archive]/file.fb2"
+        path to archive with path inside archive: "[path_to_archive]archive.zip[path_in_archive]" - recursively process all fb2 files under archive path
 
     When working on archive recursively only fb2 files will be considered, processing of archives inside archives is not supported.
 
