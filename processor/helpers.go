@@ -61,13 +61,12 @@ func (p *Processor) getStylesheet() (*dataFile, error) {
 // getDefaultCover returns binary element for "default" cover image if one is configured or built in otherwise.
 func (p *Processor) getDefaultCover(i int) (*binImage, error) {
 
-	var (
-		err error
-		b   = &binImage{
-			log:     p.env.Log,
-			relpath: filepath.Join(DirContent, DirImages),
-		}
-	)
+	var err error
+	b := &binImage{
+		jpegQuality: p.env.Cfg.Doc.JPEGQuality,
+		log:         p.env.Log,
+		relpath:     filepath.Join(DirContent, DirImages),
+	}
 
 	fname := p.env.Cfg.Doc.Cover.ImagePath
 	if len(fname) > 0 && len(p.env.Cfg.Path) > 0 {
@@ -104,13 +103,12 @@ func (p *Processor) getDefaultCover(i int) (*binImage, error) {
 // getNotFoundImage returns binary element for "not found" image.
 func (p *Processor) getNotFoundImage(i int) (*binImage, error) {
 
-	var (
-		err error
-		b   = &binImage{
-			log:     p.env.Log,
-			relpath: filepath.Join(DirContent, DirImages),
-		}
-	)
+	var err error
+	b := &binImage{
+		jpegQuality: p.env.Cfg.Doc.JPEGQuality,
+		log:         p.env.Log,
+		relpath:     filepath.Join(DirContent, DirImages),
+	}
 
 	if b.data, err = static.Asset(path.Join(DirResources, "not_found.png")); err != nil {
 		return nil, fmt.Errorf("unable to get image not_found.png: %w", err)
@@ -170,7 +168,7 @@ func (p *Processor) getVignetteFile(level, vignette string) string {
 		}
 	}
 
-	b := &binImage{log: p.env.Log}
+	b := &binImage{jpegQuality: p.env.Cfg.Doc.JPEGQuality, log: p.env.Log}
 
 	var err error
 	if len(p.env.Cfg.Path) > 0 {

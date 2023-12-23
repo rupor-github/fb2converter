@@ -6,16 +6,18 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"image/png"
 	"os"
 	"path/filepath"
 
 	// additional supported image formats
-	_ "golang.org/x/image/bmp"
-	_ "golang.org/x/image/tiff"
-	_ "golang.org/x/image/webp"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+
+	_ "golang.org/x/image/bmp"
+	_ "golang.org/x/image/tiff"
+	_ "golang.org/x/image/webp"
 
 	"github.com/disintegration/imaging"
 	"go.uber.org/zap"
@@ -26,10 +28,10 @@ import (
 type binImageProcessingFlags uint8
 
 const (
-	imageKindle binImageProcessingFlags = 1 << iota
+	imageChanged binImageProcessingFlags = 1 << iota
+	imageKindle
 	imageOpaquePNG
 	imageScale
-	imageChanged
 )
 
 type binImage struct {
@@ -41,6 +43,7 @@ type binImage struct {
 	relpath     string // always relative to "root" directory - usually temporary working directory
 	flags       binImageProcessingFlags
 	scaleFactor float64
+	jpegQuality int
 	img         image.Image
 	imgType     string
 	data        []byte
@@ -64,7 +67,7 @@ func (b *binImage) flush(path string) error {
 		goto Storing
 	}
 
-	// See if processing is needed
+	// See if processing is needed - imageChanged
 	if b.flags != 0 {
 
 		// Just in case
@@ -129,7 +132,7 @@ func (b *binImage) flush(path string) error {
 		var buf = new(bytes.Buffer)
 		switch targetType {
 		case "png":
-			if err := imaging.Encode(buf, b.img, imaging.PNG); err != nil {
+			if err := imaging.Encode(buf, b.img, imaging.PNG, imaging.PNGCompressionLevel(png.BestCompression)); err != nil {
 				b.log.Error("Unable to encode processed PNG, skipping",
 					zap.String("id", b.id),
 					zap.Error(err))
@@ -138,7 +141,7 @@ func (b *binImage) flush(path string) error {
 			b.imgType = "png"
 			b.ct = "image/png"
 		case "jpeg":
-			if err := imaging.Encode(buf, b.img, imaging.JPEG, imaging.JPEGQuality(75)); err != nil {
+			if err := imaging.Encode(buf, b.img, imaging.JPEG, imaging.JPEGQuality(b.jpegQuality)); err != nil {
 				b.log.Error("Unable to encode processed image, skipping",
 					zap.String("id", b.id),
 					zap.Error(err))

@@ -126,6 +126,8 @@ type Doc struct {
 	ChapterLevel          int      `json:"chapter_level"`
 	SeqNumPos             int      `json:"series_number_positions"`
 	RemovePNGTransparency bool     `json:"remove_png_transparency"`
+	OptimizeImages        bool     `json:"optimize_images"`
+	JPEGQuality           int      `json:"jpeq_quality_level"`
 	ImagesScaleFactor     float64  `json:"images_scale_factor"`
 	Stylesheet            string   `json:"style"`
 	CharsPerPage          int      `json:"characters_per_page"`
@@ -222,6 +224,7 @@ var defaultConfig = []byte(`{
     "characters_per_page": 2300,
     "pages_per_file": 2147483647,
     "fix_zip_format": true,
+    "jpeq_quality_level": 75,
     "dropcaps": {
       "ignore_symbols": "'\"-.…0123456789‒–—«»“”\u003c\u003e"
     },
@@ -375,6 +378,9 @@ func BuildConfig(fnames ...string) (*Config, error) {
 	// some defaults
 	if conf.Doc.Kindlegen.CompressionLevel < 0 || conf.Doc.Kindlegen.CompressionLevel > 2 {
 		conf.Doc.Kindlegen.CompressionLevel = 1
+	}
+	if conf.Doc.JPEGQuality < 40 || conf.Doc.JPEGQuality > 100 {
+		conf.Doc.JPEGQuality = 75
 	}
 	// to keep old behavior
 	if len(conf.Doc.AuthorFormatMeta) == 0 {

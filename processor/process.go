@@ -27,6 +27,7 @@ import (
 
 	"fb2converter/config"
 	"fb2converter/etree"
+	jpegq "fb2converter/jpegquality"
 	"fb2converter/state"
 )
 
@@ -820,13 +821,14 @@ func (p *Processor) processBinaries() error {
 		if strings.HasSuffix(strings.ToLower(declaredCT), "svg") {
 			// Special case - do not touch SVG
 			p.Book.Images = append(p.Book.Images, &binImage{
-				log:     p.env.Log,
-				id:      id,
-				ct:      "image/svg+xml",
-				fname:   fmt.Sprintf("bin%08d.svg", i),
-				relpath: filepath.Join(DirContent, DirImages),
-				imgType: "svg",
-				data:    dst,
+				log:         p.env.Log,
+				id:          id,
+				ct:          "image/svg+xml",
+				fname:       fmt.Sprintf("bin%08d.svg", i),
+				relpath:     filepath.Join(DirContent, DirImages),
+				imgType:     "svg",
+				jpegQuality: p.env.Cfg.Doc.JPEGQuality,
+				data:        dst,
 			})
 			continue
 		}
@@ -862,14 +864,15 @@ func (p *Processor) processBinaries() error {
 
 		// fill in image info
 		b := &binImage{
-			log:     p.env.Log,
-			id:      id,
-			ct:      detectedCT,
-			fname:   fmt.Sprintf("bin%08d.%s", i, imgType),
-			relpath: filepath.Join(DirContent, DirImages),
-			img:     img,
-			imgType: imgType,
-			data:    dst,
+			log:         p.env.Log,
+			id:          id,
+			ct:          detectedCT,
+			fname:       fmt.Sprintf("bin%08d.%s", i, imgType),
+			relpath:     filepath.Join(DirContent, DirImages),
+			jpegQuality: p.env.Cfg.Doc.JPEGQuality,
+			img:         img,
+			imgType:     imgType,
+			data:        dst,
 		}
 
 		if !doNotTouch {
@@ -883,6 +886,27 @@ func (p *Processor) processBinaries() error {
 			if p.env.Cfg.Doc.ImagesScaleFactor > 0 && (imgType == "png" || imgType == "jpeg") {
 				b.flags |= imageScale
 				b.scaleFactor = p.env.Cfg.Doc.ImagesScaleFactor
+			}
+			if p.env.Cfg.Doc.OptimizeImages && imgType == "png" {
+				// forcefully reencode image
+				b.flags |= imageChanged
+			}
+			if p.env.Cfg.Doc.OptimizeImages && imgType == "jpeg" {
+				if jr, err := jpegq.NewWithBytes(dst); err != nil {
+					p.env.Log.Warn("Unable to detect JPEG quality level, skipping...", zap.String("id", id), zap.Error(err))
+				} else if q := jr.Quality(); q > p.env.Cfg.Doc.JPEGQuality {
+					p.env.Log.Debug("JPEG quality level higher than requested, reencoding...",
+						zap.String("id", id),
+						zap.Int("detected", q),
+						zap.Int("requested", p.env.Cfg.Doc.JPEGQuality))
+					// forcefully reencode with requested quality level
+					b.flags |= imageChanged
+				} else {
+					p.env.Log.Debug("JPEG quality level already lower than requested, skipping...",
+						zap.String("id", id),
+						zap.Int("detected", q),
+						zap.Int("requested", p.env.Cfg.Doc.JPEGQuality))
+				}
 			}
 		}
 		p.Book.Images = append(p.Book.Images, b)
@@ -935,10 +959,8 @@ func (p *Processor) processImages() error {
 					haveFirstCover = true
 					// Since we are here anyway - let's see if we need to correct cover information
 					if p.metaOverwrite != nil && len(p.metaOverwrite.CoverImage) > 0 {
-						var (
-							err error
-							b   = &binImage{id: b.id, log: p.env.Log, relpath: filepath.Join(DirContent, DirImages)}
-						)
+						var err error
+						b := &binImage{id: b.id, log: p.env.Log, relpath: filepath.Join(DirContent, DirImages), jpegQuality: p.env.Cfg.Doc.JPEGQuality}
 						fname := p.metaOverwrite.CoverImage
 						if !filepath.IsAbs(fname) {
 							fname = filepath.Join(p.env.Cfg.Path, fname)

@@ -48,8 +48,17 @@
 
 	# When true program removes transparency on PNG files - Kindle eInc devices do not handle it well
 	remove_png_transparency = false
+
 	#---- Forcefully resize all images (but cover) with specified ratio
 	# images_scale_factor = 0
+
+	#---- Forcefully recompress all supported images (presently JPEG, PNG)
+	#---- For JPEG quality respects "jpeg_quality_level" - if detected level for an image is higher than requested one image will be re-encoded
+	#---- For PNG best compression_level is always specified
+	#---- use on your own risk - results may vary
+	# optimize_images = false
+	#---- JPEG quality level to use, percentage points (40% - 100%), when not specified or wrong 75% is used
+	# jpeq_quality_level = 75
 
 	#---- Pattern to format book title
 	#---- "#title"         - book title
