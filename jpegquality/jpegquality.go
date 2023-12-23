@@ -8,18 +8,13 @@ import (
 
 // Errors
 var (
-	ErrInvalidJPEG  = errors.New("Invalid JPEG header")
-	ErrWrongTable   = errors.New("ERROR: Wrong size for quantization table")
+	ErrInvalidJPEG  = errors.New("invalid JPEG header")
+	ErrWrongTable   = errors.New("wrong size for quantization table")
 	ErrShortSegment = errors.New("short segment length")
-	ErrShortDQT     = errors.New("DQT section too short")
+	ErrShortDQT     = errors.New("section DQT is too short")
 )
 
 // Fixed bug base on HuangYeWuDeng [ttys3/jpegquality](https://github.com/ttys3/jpegquality/commit/6176ce2bb32baad02c5b3dcd977dbc2eab406312)
-
-// idct.go
-const blockSize = 64 // A DCT block is 8x8.
-
-type block [blockSize]int32
 
 const (
 	//from  /usr/lib/go/src/image/jpeg/reader.go
@@ -27,8 +22,6 @@ const (
 	dqtMarker = 0xdb // Define Quantization Table.
 	maxTq     = 3
 )
-
-var quant [maxTq + 1]block // Quantization tables, in zig-zag order.
 
 // for the DQT marker -- start --
 // Sample quantization tables from JPEG spec --- only needed for
@@ -197,7 +190,7 @@ func (jr *jpegReader) readQuality() (q int, err error) {
 				}
 			}
 
-			if 0 != len(reftable) { // terse output includes quality
+			if len(reftable) != 0 { // terse output includes quality
 				var qual float64
 				cumsf /= 64.0 // mean scale factor
 				cumsf2 /= 64.0
@@ -218,13 +211,6 @@ func (jr *jpegReader) readQuality() (q int, err error) {
 		}
 
 	}
-}
-
-func getTableName(index int) string {
-	if index > 0 {
-		return "chrominance"
-	}
-	return "luminance"
 }
 
 func (jr *jpegReader) readMarker() int {

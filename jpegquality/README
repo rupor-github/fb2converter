@@ -5,4 +5,4 @@ Taken from https://github.com/liut/jpegquality
 Under MIT license
 
 Original code has not been maintained for a while (go 1.12) so I decided to make a copy.
-I removed all debug logging - would not know what to do with the information anyways.
+I removed all debug logging - would not know what to do with the information anyways and made some changes to satisfy linter.
