@@ -97,6 +97,7 @@ func (b *binImage) flush(path string) error {
 		}
 
 		// PNG transparency
+		var pngModified bool
 		if b.flags&imageOpaquePNG != 0 {
 
 			opaque := func(im image.Image) bool {
@@ -112,6 +113,7 @@ func (b *binImage) flush(path string) error {
 				draw.Draw(opaqueImg, b.img.Bounds(), &image.Uniform{color.RGBA{255, 255, 255, 255}}, image.Point{}, draw.Src)
 				draw.Draw(opaqueImg, b.img.Bounds(), b.img, image.Point{}, draw.Over)
 				b.img = opaqueImg
+				pngModified = true
 			}
 		}
 
@@ -139,6 +141,19 @@ func (b *binImage) flush(path string) error {
 			}
 			b.imgType = "png"
 			b.ct = "image/png"
+			// do no harm
+			if pngModified {
+				b.data = buf.Bytes()
+			} else if len(b.data) != 0 && buf.Len() < len(b.data) {
+				b.log.Debug("Reencoded PNG",
+					zap.String("id", b.id),
+					zap.Float32("ratio", float32(buf.Len())/float32(len(b.data))))
+				b.data = buf.Bytes()
+			} else {
+				b.log.Debug("Using original PNG",
+					zap.String("id", b.id),
+					zap.Float32("ratio", float32(buf.Len())/float32(len(b.data))))
+			}
 		case "jpeg":
 			if err := imaging.Encode(buf, b.img, imaging.JPEG, imaging.JPEGQuality(b.jpegQuality)); err != nil {
 				b.log.Error("Unable to encode processed image, skipping",
@@ -154,13 +169,16 @@ func (b *binImage) flush(path string) error {
 			if jfifAdded {
 				b.log.Debug("Inserting jpeg JFIF APP0 marker segment", zap.String("id", b.id))
 			}
+			b.log.Debug("Reencoded JPEG",
+				zap.String("id", b.id),
+				zap.Float32("ratio", float32(buf.Len())/float32(len(b.data))))
+			b.data = buf.Bytes()
 		default:
 			b.log.Warn("Unable to process image - unsupported format, skipping",
 				zap.String("id", b.id),
 				zap.String("type", b.imgType))
 			goto Storing
 		}
-		b.data = buf.Bytes()
 	}
 
 	// Sanity - should never happen
