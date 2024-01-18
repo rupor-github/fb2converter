@@ -104,7 +104,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		env.Log.Warn("Unknown notes mode requested, switching to default", zap.String("mode", env.Cfg.Doc.Notes.Mode))
 		notes = NDefault
 	}
-	if notes != NFloat && notes != NFloatOld && notes != NFloatNew && env.Cfg.Doc.Notes.Renumber {
+	if notes != NFloat && notes != NFloatOld && notes != NFloatNew && notes != NFloatNewMore && env.Cfg.Doc.Notes.Renumber {
 		env.Log.Warn("Notes can be renumbered in floating modes only, ignoring", zap.String("mode", env.Cfg.Doc.Notes.Mode))
 	}
 	toct := ParseTOCTypeString(env.Cfg.Doc.TOC.Type)

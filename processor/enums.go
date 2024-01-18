@@ -38,6 +38,7 @@ const (
 	NFloat                              // float
 	NFloatOld                           // float-old
 	NFloatNew                           // float-new
+	NFloatNewMore                       // float-new-more
 	UnsupportedNotesFmt                 //
 )
 

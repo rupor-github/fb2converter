@@ -44,7 +44,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	if p.notesMode == NDefault || !IsOneOf(p.ctx().bodyName, p.env.Cfg.Doc.Notes.BodyNames) {
 		// initialize first XHTML buffer
 		ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
-		if p.notesMode == NFloatNew {
+		if p.notesMode == NFloatNew || p.notesMode == NFloatNewMore {
 			ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
 		}
 		to, f := p.ctx().createXHTML("", ns...)
@@ -53,14 +53,14 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 		return p.transfer(from, to)
 	}
 
-	if p.notesMode != NFloat && p.notesMode != NFloatOld && p.notesMode != NFloatNew {
+	if p.notesMode < NFloat {
 		// NOTE: for block and inline notes we do not need to save XHTML, have nothing to put there
 		return nil
 	}
 
 	// initialize XHTML buffer for notes
 	ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
-	if p.notesMode == NFloatNew {
+	if p.notesMode == NFloatNew || p.notesMode == NFloatNewMore {
 		ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
 	}
 	to, f := p.ctx().createXHTML("", ns...)
@@ -128,7 +128,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 				}
 			}
 			// NOTE: we are adding .SetTail("\n") to make result readable when debugging, it does not have any other use
-			if p.notesMode == NFloatNew {
+			if p.notesMode == NFloatNew || p.notesMode == NFloatNewMore {
 				// new bidirectional mode
 				if len(note.parsed.ChildElements()) == 0 || len(note.parsed.Child) == 0 {
 					p.env.Log.Warn("Unable to interpret parsed note body, ignoring xml...",
@@ -139,7 +139,9 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 						AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
 				} else {
 					aside := to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n")
-					for i, c := range note.parsed.ChildElements() {
+					children := note.parsed.ChildElements()
+					first := true
+					for i, c := range children {
 						cc := c.Copy()
 						if i == 0 {
 							// We need to insert back ref anchor into first note xml element as a first child, so popup would recognize it properly
@@ -153,10 +155,10 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 						if cc.Tag == "p" {
 							cc.CreateAttr("class", "floatnote")
 						}
-						for _, a := range cc.FindElements(".//p") {
-							if len(getAttrValue(a, "class")) == 0 {
-								a.CreateAttr("class", "floatnote")
-							}
+						if p.notesMode == NFloatNewMore && len(children) > 1 && cc.Tag == "p" && first {
+							// indicate that note body has more than one paragraph
+							cc.CreateCharData(" (…etc.)")
+							first = false
 						}
 						aside.AddChild(cc)
 					}
@@ -164,7 +166,6 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 				}
 			} else {
 				// old bi-directional mode
-				// to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").AddNext("a", attr("href", backRef+"#"+backID)).SetText(t).SetTail(strNBSP + note.body)
 				p.formatText(strNBSP+note.body, false, true,
 					to.AddNext("p", attr("class", "floatnote"), attr("id", nl.id)).SetTail("\n").
 						AddNext("a", attr("href", backRef+"#"+backID)).SetText(t))
@@ -407,6 +408,8 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			case NFloatOld:
 				fallthrough
 			case NFloatNew:
+				fallthrough
+			case NFloatNewMore:
 				if note, ok := p.Book.Notes[noteID]; !ok {
 					css = "linkanchor"
 				} else {
@@ -460,7 +463,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			attrs[0] = attr("id", newid)
 			attrs[1] = attr("class", css)
 			attrs[2] = attr("href", href)
-			if p.notesMode == NFloatNew && tag == "a" {
+			if (p.notesMode == NFloatNew || p.notesMode == NFloatNewMore) && tag == "a" {
 				attrs = append(attrs, attr("epub:type", "noteref"))
 			}
 			inner = to.AddNext(tag, attrs...)
@@ -629,7 +632,7 @@ func transferSubtitle(p *Processor, from, to *etree.Element) error {
 				if t == dv && !p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 					// open next XHTML
 					ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
-					if p.notesMode == NFloatNew {
+					if p.notesMode == NFloatNew || p.notesMode == NFloatNewMore {
 						ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
 					}
 					var f *dataFile
@@ -655,7 +658,7 @@ func transferParagraph(p *Processor, from, to *etree.Element) error {
 			!p.ctx().inHeader && !p.ctx().inSubHeader && len(p.ctx().bodyName) == 0 && !p.ctx().specialParagraph {
 			// open next XHTML
 			ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
-			if p.notesMode == NFloatNew {
+			if p.notesMode == NFloatNew || p.notesMode == NFloatNewMore {
 				ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
 			}
 			var f *dataFile
@@ -805,7 +808,7 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 		if len(p.ctx().bodyName) == 0 && p.ctx().header.Int() < p.env.Cfg.Doc.ChapterLevel {
 			// open next XHTML
 			ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
-			if p.notesMode == NFloatNew {
+			if p.notesMode == NFloatNew || p.notesMode == NFloatNewMore {
 				ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
 			}
 			var f *dataFile

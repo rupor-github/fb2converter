@@ -35,12 +35,13 @@ func _() {
 	_ = x[NFloat-3]
 	_ = x[NFloatOld-4]
 	_ = x[NFloatNew-5]
-	_ = x[UnsupportedNotesFmt-6]
+	_ = x[NFloatNewMore-6]
+	_ = x[UnsupportedNotesFmt-7]
 }
 
-const _NotesFmt_name = "defaultinlineblockfloatfloat-oldfloat-new"
+const _NotesFmt_name = "defaultinlineblockfloatfloat-oldfloat-newfloat-new-more"
 
-var _NotesFmt_index = [...]uint8{0, 7, 13, 18, 23, 32, 41, 41}
+var _NotesFmt_index = [...]uint8{0, 7, 13, 18, 23, 32, 41, 55, 55}
 
 func (i NotesFmt) String() string {
 	if i < 0 || i >= NotesFmt(len(_NotesFmt_index)-1) {
