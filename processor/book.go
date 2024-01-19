@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 	"golang.org/x/text/language"
 
 	"fb2converter/config"
@@ -25,7 +26,6 @@ type tocEntry struct {
 // Notes collected during parsing.
 type note struct {
 	title      string
-	number     int
 	bodyName   string
 	bodyNumber int
 	body       string
@@ -53,18 +53,20 @@ type Book struct {
 	Annotation string
 	Date       string
 	// book structure
-	TOC            []*tocEntry       // collected TOC entries
-	Files          []*dataFile       // generated content
-	Pages          map[string]int    // additional pages per file (file -> pages)
-	Images         []*binImage       // parsed <binary> tags - book images
-	Vignettes      []*binImage       // used vignette images
-	LinksLocations map[string]string // link ID -> file (in what file link id is)
-	NoteBodyTitles map[string]*note  // body name -> (note title, parsed title body)
-	Notes          map[string]*note  // note ID -> (title, body)
-	NotesOrder     []notelink        // notes in order of discovery
-	NotesBodies    int               // number of processed notes bodies
-	Data           []*dataFile       // various files: stylesheet, fonts...
-	Meta           []*dataFile       // container meta-info
+	TOC              []*tocEntry       // collected TOC entries
+	Files            []*dataFile       // generated content
+	Pages            map[string]int    // additional pages per file (file -> pages)
+	Images           []*binImage       // parsed <binary> tags - book images
+	Vignettes        []*binImage       // used vignette images
+	LinksLocations   map[string]string // link ID -> file (in what file link id is)
+	NoteBodyTitles   map[string]*note  // body name -> (note title, parsed title body)
+	Notes            map[string]*note  // note ID -> (title, body)
+	NotesParseOrder  []notelink        // notes in original order of parsing
+	NotesBodyCount   int               // number of notes bodies parsed
+	NotesUsageOrder  []string          // notes in order of usage (when encountered)
+	NotesPerBodyUsed map[string]int    // number of notes per body as encountered on use
+	Data             []*dataFile       // various files: stylesheet, fonts...
+	Meta             []*dataFile       // container meta-info
 	// parsing context
 	context      *context
 	contextStack []*context
@@ -75,15 +77,59 @@ type Book struct {
 // NewBook returns pointer to book.
 func NewBook(u uuid.UUID, name string) *Book {
 	return &Book{
-		ID:             u,
-		Title:          name,
-		Lang:           language.Russian,
-		Pages:          make(map[string]int),
-		LinksLocations: make(map[string]string),
-		NoteBodyTitles: make(map[string]*note),
-		Notes:          make(map[string]*note),
-		context:        newContext(),
+		ID:               u,
+		Title:            name,
+		Lang:             language.Russian,
+		Pages:            make(map[string]int),
+		LinksLocations:   make(map[string]string),
+		NoteBodyTitles:   make(map[string]*note),
+		Notes:            make(map[string]*note),
+		NotesPerBodyUsed: make(map[string]int),
+		context:          newContext(),
 	}
+}
+
+// ReorderNotes reorders NotesOrder in accordance with NotesUsageOrder.
+func (b *Book) ReorderNotes(log *zap.Logger) bool {
+
+	// sanity check
+	if len(b.NotesParseOrder) == 0 || len(b.Notes) == 0 {
+		return false
+	}
+
+	// create map of notes order
+	npo := make(map[string]notelink, len(b.NotesParseOrder))
+	for _, nl := range b.NotesParseOrder {
+		npo[nl.id] = nl
+	}
+
+	// reorder everything using usage order
+	nuo := make(map[string]bool, len(b.NotesUsageOrder))
+	notes := make([]notelink, 0, len(b.NotesUsageOrder))
+	for _, id := range b.NotesUsageOrder {
+		var (
+			nl notelink
+			ok bool
+		)
+		if nl, ok = npo[id]; !ok {
+			log.Debug("Unable to locate used note link in notes order", zap.String("id", id))
+			return false
+		}
+		if _, ok := nuo[id]; !ok {
+			notes = append(notes, nl)
+			nuo[id] = ok
+		}
+	}
+
+	log.Debug("Reordering notes data",
+		zap.Int("Number of notes", len(b.Notes)),
+		zap.Int("Number of notes links before", len(b.NotesParseOrder)),
+		zap.Int("Number of notes links after", len(notes)),
+		zap.Int("Number of anchors", len(b.NotesUsageOrder)),
+	)
+
+	b.NotesParseOrder = notes
+	return true
 }
 
 // BookAuthors returns authors as a single string.

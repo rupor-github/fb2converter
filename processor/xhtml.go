@@ -26,37 +26,64 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 
 	// setup processing context
 	if index != 0 {
-		// always ignore first body name - it is main body
 		p.ctx().bodyName = getAttrValue(from, "name")
+	} else {
+		// always ignore first body name - it is main body
+		p.ctx().bodyName = ""
 	}
-
 	p.ctx().header = 0
 	p.ctx().firstBodyTitle = true
 
-	p.env.Log.Debug("Parsing body - start", zap.String("name", p.ctx().bodyName))
+	if p.notesMode != NDefault && IsOneOf(p.ctx().bodyName, p.env.Cfg.Doc.Notes.BodyNames) {
+		return nil
+	}
+
+	p.env.Log.Debug("Parsing document body - start", zap.String("name", p.ctx().bodyName))
 	defer func(start time.Time) {
-		p.env.Log.Debug("Parsing body - done",
+		p.env.Log.Debug("Parsing document body - done",
 			zap.Duration("elapsed", time.Since(start)),
 			zap.String("name", p.ctx().bodyName),
+			zap.Int("index", index),
 		)
 	}(time.Now())
 
-	if p.notesMode == NDefault || !IsOneOf(p.ctx().bodyName, p.env.Cfg.Doc.Notes.BodyNames) {
-		// initialize first XHTML buffer
-		ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
-		if p.notesMode == NFloatNew || p.notesMode == NFloatNewMore {
-			ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
-		}
-		to, f := p.ctx().createXHTML("", ns...)
-		p.Book.Files = append(p.Book.Files, f)
-		p.Book.Pages[f.fname] = 0
-		return p.transfer(from, to)
+	// initialize first XHTML buffer
+	ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
+	if p.notesMode == NFloatNew || p.notesMode == NFloatNewMore {
+		ns = append(ns, attr("xmlns:epub", `http://www.idpf.org/2007/ops`))
 	}
+	to, f := p.ctx().createXHTML("", ns...)
+	p.Book.Files = append(p.Book.Files, f)
+	p.Book.Pages[f.fname] = 0
+	return p.transfer(from, to)
+}
 
-	if p.notesMode < NFloat {
-		// NOTE: for block and inline notes we do not need to save XHTML, have nothing to put there
+// processNotesBody parses fb2 notes bodies and produces formatted output.
+func (p *Processor) processNotesBody(index int, from *etree.Element) (err error) {
+
+	// setup processing context
+	if index != 0 {
+		p.ctx().bodyName = getAttrValue(from, "name")
+	} else {
+		// always ignore first body name - it is main body
+		p.ctx().bodyName = ""
+	}
+	p.ctx().header = 0
+	p.ctx().firstBodyTitle = true
+
+	if p.notesMode < NFloat || !IsOneOf(p.ctx().bodyName, p.env.Cfg.Doc.Notes.BodyNames) {
+		// processing was done by processBody
 		return nil
 	}
+
+	p.env.Log.Debug("Parsing notes body - start", zap.String("name", p.ctx().bodyName))
+	defer func(start time.Time) {
+		p.env.Log.Debug("Parsing notes body - done",
+			zap.Duration("elapsed", time.Since(start)),
+			zap.String("name", p.ctx().bodyName),
+			zap.Int("index", index),
+		)
+	}(time.Now())
 
 	// initialize XHTML buffer for notes
 	ns := []*etree.Attr{attr("xmlns", `http://www.w3.org/1999/xhtml`)}
@@ -66,9 +93,10 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 	to, f := p.ctx().createXHTML("", ns...)
 	p.Book.Files = append(p.Book.Files, f)
 
-	// To satisfy Amazon's requirements for floating notes we have to create notes body on the fly here, removing most if not
-	// all of existing formatting. At this point we already scanned available notes in ProcessNotes()...
-	for i, nl := range p.Book.NotesOrder {
+	// To satisfy Amazon's requirements for floating notes we have to create notes body on the fly here.
+	// At this point we already scanned available notes in ProcessNotes()...
+	var noteNumber int
+	for i, nl := range p.Book.NotesParseOrder {
 
 		// title section
 		if i == 0 {
@@ -115,8 +143,9 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 				backRef = "nowhere"
 			}
 			var t string
+			noteNumber++
 			if p.env.Cfg.Doc.Notes.Renumber {
-				t = strconv.Itoa(note.number) + "."
+				t = strconv.Itoa(noteNumber) + "."
 			} else {
 				t = "***."
 				if len(note.title) > 0 {
@@ -140,6 +169,10 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 				} else {
 					aside := to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n")
 					children := note.parsed.ChildElements()
+					if children[0].Tag != "p" {
+						// to get properly formatted note we need to have <p> tag first
+						children = append([]*etree.Element{etree.NewElement("p")}, children...)
+					}
 					first := true
 					for i, c := range children {
 						cc := c.Copy()
@@ -155,6 +188,11 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 						if cc.Tag == "p" {
 							cc.CreateAttr("class", "floatnote")
 						}
+						for _, a := range cc.FindElements(".//p") {
+							if len(getAttrValue(a, "class")) == 0 {
+								a.CreateAttr("class", "floatnote")
+							}
+						}
 						if p.notesMode == NFloatNewMore && len(children) > 1 && cc.Tag == "p" && first {
 							// indicate that note body has more than one paragraph
 							cc.CreateCharData(" (…etc.)")
@@ -162,7 +200,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 						}
 						aside.AddChild(cc)
 					}
-					aside.AddNext("div", attr("class", "emptyline"))
+					aside.AddNext("div", attr("class", "emptyline")).SetTail("\n")
 				}
 			} else {
 				// old bi-directional mode
@@ -414,6 +452,15 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 					css = "linkanchor"
 				} else {
 					if p.env.Cfg.Doc.Notes.Renumber {
+
+						// save the order in which links to notes are encountered in original document
+						p.Book.NotesUsageOrder = append(p.Book.NotesUsageOrder, noteID)
+						// and save note number as was encuntered in original document
+						if _, ok := p.Book.NotesPerBodyUsed[note.bodyName]; !ok {
+							p.Book.NotesPerBodyUsed[note.bodyName] = 0
+						}
+						p.Book.NotesPerBodyUsed[note.bodyName]++
+
 						var name string
 						if t, ok := p.Book.NoteBodyTitles[note.bodyName]; ok {
 							name = t.title
@@ -421,10 +468,10 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 							name = tc.Title(p.Book.Lang).String(note.bodyName)
 						}
 						var bodyNumber int
-						if p.Book.NotesBodies > 1 {
-							bodyNumber = note.bodyNumber
+						if p.Book.NotesBodyCount > 1 {
+							bodyNumber = len(p.Book.NotesPerBodyUsed) //note.bodyNumber
 						}
-						text = ReplaceKeywords(p.env.Cfg.Doc.Notes.Format, CreateAnchorLinkKeywordsMap(name, bodyNumber, note.number))
+						text = ReplaceKeywords(p.env.Cfg.Doc.Notes.Format, CreateAnchorLinkKeywordsMap(name, bodyNumber, p.Book.NotesPerBodyUsed[note.bodyName]))
 						processChildren = false
 					}
 					// NOTE: modifying attribute on SOURCE node!
@@ -514,7 +561,6 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	if len(p.ctx().currentNotes) > 0 {
 		// insert inline and block notes
 		if p.notesMode == NInline && tag == "span" {
-			// inner = to.AddNext("span", attr("class", "inlinenote")).SetText(currentNotes[0].body)
 			inner = to.AddNext("span", attr("class", "inlinenote"))
 			p.formatText(currentNotes[0].body, false, false, inner)
 			p.ctx().currentNotes = []*note{}
@@ -525,7 +571,6 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 				if i, err := strconv.Atoi(t); err == nil {
 					t = fmt.Sprintf("%d) ", i)
 				}
-				// inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t).SetTail(n.body)
 				p.formatText(n.body, false, true, inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t))
 			}
 			p.ctx().currentNotes = []*note{}

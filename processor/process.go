@@ -226,13 +226,15 @@ func (p *Processor) Process() error {
 	// Processing - order of steps and their presence are important as information and context
 	// being built and accumulated...
 
-	if err := p.processDescription(); err != nil {
+	// some notes are trying to have images in them, so this should go first
+	if err := p.processBinaries(); err != nil {
 		return err
 	}
+	// any part of the book could potentially have notes, so this should go next
 	if err := p.processNotes(); err != nil {
 		return err
 	}
-	if err := p.processBinaries(); err != nil {
+	if err := p.processDescription(); err != nil {
 		return err
 	}
 	if err := p.processBodies(); err != nil {
@@ -692,17 +694,31 @@ func (p *Processor) processBodies() error {
 		}
 	}
 
+	// in order to properly place floating notes we have do it here
+
+	if p.env.Cfg.Doc.Notes.Renumber {
+		if !p.Book.ReorderNotes(p.env.Log) {
+			p.env.Log.Warn("Unable to reorder notes, note links and note titles could differ")
+		}
+	}
+
+	for i, body := range p.doc.FindElements("./FictionBook/body") {
+		if err := p.processNotesBody(i, body); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, notesPerBody map[string]int) {
+func (p *Processor) parseNoteSectionElement(el *etree.Element, bodyName string, bodyNumber int) {
 
 	switch {
 	case el.Tag == "title":
 		// Sometimes note section has separate title - we want to use it in TOC
 		t := SanitizeTitle(getTextFragment(el))
 		if len(t) > 0 {
-			if _, ok := p.Book.NoteBodyTitles[name]; ok {
+			if _, ok := p.Book.NoteBodyTitles[bodyName]; ok {
 				// second title section in the same notes body - ignore for now
 				p.env.Log.Debug("Attempt to stick different notes type/title into single document body. Ignoring...", zap.String("title", t))
 				return
@@ -716,21 +732,19 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 			p.ctxPop()
 
 			child := ctx.out.FindElement("./*")
-			p.Book.NoteBodyTitles[name] = &note{
+			p.Book.NoteBodyTitles[bodyName] = &note{
 				title:      t,
 				body:       getTextFragment(child),
-				bodyName:   name,
-				bodyNumber: len(notesPerBody),
+				bodyName:   bodyName,
+				bodyNumber: bodyNumber,
 				parsed:     child.Copy(),
 			}
 		}
 	case el.Tag == "section" && getAttrValue(el, "id") != "":
 		id := getAttrValue(el, "id")
-		notesPerBody[name]++
 		note := &note{
-			number:     notesPerBody[name],
-			bodyName:   name,
-			bodyNumber: len(notesPerBody),
+			bodyName:   bodyName,
+			bodyNumber: bodyNumber,
 		}
 		noteXml := etree.NewDocument()
 		noteXml.CreateElement("note-root")
@@ -750,12 +764,12 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 			}
 		}
 		note.parsed = noteXml.Root().Copy()
-		p.Book.NotesOrder = append(p.Book.NotesOrder, notelink{id: id, bodyName: name})
+		p.Book.NotesParseOrder = append(p.Book.NotesParseOrder, notelink{id: id, bodyName: bodyName})
 		p.Book.Notes[id] = note
 	default:
 		// Sometimes there are sections inside sections to no end...
 		for _, section := range el.ChildElements() {
-			p.parseNoteSectionElement(section, name, notesPerBody)
+			p.parseNoteSectionElement(section, bodyName, bodyNumber)
 		}
 	}
 }
@@ -768,23 +782,32 @@ func (p *Processor) processNotes() error {
 		p.env.Log.Debug("Parsing notes - done",
 			zap.Duration("elapsed", time.Since(start)),
 			zap.Int("body titles", len(p.Book.NoteBodyTitles)),
-			zap.Int("notes bodies", p.Book.NotesBodies),
-			zap.Int("notes", len(p.Book.NotesOrder)),
+			zap.Int("notes bodies", p.Book.NotesBodyCount),
+			zap.Int("notes", len(p.Book.NotesParseOrder)),
 		)
 	}(time.Now())
 
-	notesPerBody := make(map[string]int)
-	for _, el := range p.doc.FindElements("./FictionBook/body[@name]") {
+	// in order to properly generate notes links during renumbering we need to
+	// know exact notes body count before processing notes (because sometimes
+	// there are cross links between notes
+	bodies := p.doc.FindElements("./FictionBook/body[@name]")
+	for _, el := range bodies {
 		name := getAttrValue(el, "name")
 		if !IsOneOf(name, p.env.Cfg.Doc.Notes.BodyNames) {
 			continue
 		}
-		notesPerBody[name] = 0
+		p.Book.NotesBodyCount++
+	}
+	// and now actual parsing for notes bodies
+	for i, el := range bodies {
+		name := getAttrValue(el, "name")
+		if !IsOneOf(name, p.env.Cfg.Doc.Notes.BodyNames) {
+			continue
+		}
 		for _, section := range el.ChildElements() {
-			p.parseNoteSectionElement(section, name, notesPerBody)
+			p.parseNoteSectionElement(section, name, i)
 		}
 	}
-	p.Book.NotesBodies = len(notesPerBody)
 	return nil
 }
 
