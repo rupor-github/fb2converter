@@ -26,10 +26,11 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 
 	// setup processing context
 	if index != 0 {
-		// always ignore first body name - it is main body
 		p.ctx().bodyName = getAttrValue(from, "name")
+	} else {
+		// always ignore first body name - it is main body
+		p.ctx().bodyName = ""
 	}
-
 	p.ctx().header = 0
 	p.ctx().firstBodyTitle = true
 
@@ -140,6 +141,10 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 				} else {
 					aside := to.AddNext("aside", attr("id", nl.id), attr("epub:type", "footnote")).SetTail("\n")
 					children := note.parsed.ChildElements()
+					if children[0].Tag != "p" {
+						// to get properly formatted note we need to have <p> tag first
+						children = append([]*etree.Element{etree.NewElement("p")}, children...)
+					}
 					first := true
 					for i, c := range children {
 						cc := c.Copy()
@@ -154,6 +159,11 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 						}
 						if cc.Tag == "p" {
 							cc.CreateAttr("class", "floatnote")
+						}
+						for _, a := range cc.FindElements(".//p") {
+							if len(getAttrValue(a, "class")) == 0 {
+								a.CreateAttr("class", "floatnote")
+							}
 						}
 						if p.notesMode == NFloatNewMore && len(children) > 1 && cc.Tag == "p" && first {
 							// indicate that note body has more than one paragraph
@@ -463,7 +473,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			attrs[0] = attr("id", newid)
 			attrs[1] = attr("class", css)
 			attrs[2] = attr("href", href)
-			if (p.notesMode == NFloatNew || p.notesMode == NFloatNewMore) && tag == "a" {
+			if (p.notesMode == NFloatNew || p.notesMode == NFloatNewMore) && tag == "a" && css == "anchor" {
 				attrs = append(attrs, attr("epub:type", "noteref"))
 			}
 			inner = to.AddNext(tag, attrs...)
@@ -514,7 +524,6 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	if len(p.ctx().currentNotes) > 0 {
 		// insert inline and block notes
 		if p.notesMode == NInline && tag == "span" {
-			// inner = to.AddNext("span", attr("class", "inlinenote")).SetText(currentNotes[0].body)
 			inner = to.AddNext("span", attr("class", "inlinenote"))
 			p.formatText(currentNotes[0].body, false, false, inner)
 			p.ctx().currentNotes = []*note{}
@@ -525,7 +534,6 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 				if i, err := strconv.Atoi(t); err == nil {
 					t = fmt.Sprintf("%d) ", i)
 				}
-				// inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t).SetTail(n.body)
 				p.formatText(n.body, false, true, inner.AddNext("p").AddNext("span", attr("class", "notenum")).SetText(t))
 			}
 			p.ctx().currentNotes = []*note{}

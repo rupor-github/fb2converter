@@ -226,13 +226,14 @@ func (p *Processor) Process() error {
 	// Processing - order of steps and their presence are important as information and context
 	// being built and accumulated...
 
-	if err := p.processDescription(); err != nil {
+	// notes may contain images, so we need to process them first
+	if err := p.processBinaries(); err != nil {
 		return err
 	}
 	if err := p.processNotes(); err != nil {
 		return err
 	}
-	if err := p.processBinaries(); err != nil {
+	if err := p.processDescription(); err != nil {
 		return err
 	}
 	if err := p.processBodies(); err != nil {
@@ -709,6 +710,9 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 			}
 			ctx := p.ctxPush()
 			ctx.inHeader = true
+			// we know exactly what name would be
+			ctx.fname = GenSafeName(name) + ".xhtml"
+			// we know exactly what name would be
 			if err := p.transfer(el, &ctx.out.Element, "div", "h0"); err != nil {
 				p.env.Log.Warn("Unable to parse notes body title", zap.String("path", el.GetPath()), zap.Error(err))
 			}
@@ -742,7 +746,9 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, name string, note
 					note.body += "\n"
 				}
 				note.body += getFullTextFragment(c)
-				p.ctxPush()
+				ctx := p.ctxPush()
+				// we know exactly what name would be
+				ctx.fname = GenSafeName(name) + ".xhtml"
 				if err := p.transfer(c, noteXml.Root(), c.Tag); err != nil {
 					p.env.Log.Warn("Unable to parse notes body", zap.String("path", c.GetPath()), zap.Error(err))
 				}
