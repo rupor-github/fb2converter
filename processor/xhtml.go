@@ -427,6 +427,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			p.env.Log.Warn("unable to parse note href", zap.String("href", href), zap.Error(err))
 		} else {
 			noteID = u.Fragment
+			p.env.Log.Debug("AAAA a link", zap.String("id", noteID), zap.String("fname", p.ctx().fname))
 			switch p.notesMode {
 			case NDefault:
 				if _, ok := p.Book.Notes[noteID]; !ok {
@@ -452,7 +453,6 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 					css = "linkanchor"
 				} else {
 					if p.env.Cfg.Doc.Notes.Renumber {
-
 						// save the order in which links to notes are encountered in original document
 						p.Book.NotesUsageOrder = append(p.Book.NotesUsageOrder, noteID)
 						// and save note number as was encuntered in original document
@@ -472,6 +472,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 							bodyNumber = len(p.Book.NotesPerBodyUsed) //note.bodyNumber
 						}
 						text = ReplaceKeywords(p.env.Cfg.Doc.Notes.Format, CreateAnchorLinkKeywordsMap(name, bodyNumber, p.Book.NotesPerBodyUsed[note.bodyName]))
+						p.env.Log.Debug("AAAA generate", zap.String("id", noteID), zap.String("fname", p.ctx().fname), zap.String("text", text))
 						processChildren = false
 					}
 					// NOTE: modifying attribute on SOURCE node!
@@ -510,7 +511,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 			attrs[0] = attr("id", newid)
 			attrs[1] = attr("class", css)
 			attrs[2] = attr("href", href)
-			if (p.notesMode == NFloatNew || p.notesMode == NFloatNewMore) && tag == "a" {
+			if (p.notesMode == NFloatNew || p.notesMode == NFloatNewMore) && tag == "a" && css == "anchor" {
 				attrs = append(attrs, attr("epub:type", "noteref"))
 			}
 			inner = to.AddNext(tag, attrs...)

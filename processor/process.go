@@ -725,6 +725,8 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, bodyName string, 
 			}
 			ctx := p.ctxPush()
 			ctx.inHeader = true
+			// we know exactly what name would be
+			ctx.fname = GenSafeName(bodyName) + ".xhtml"
 			if err := p.transfer(el, &ctx.out.Element, "div", "h0"); err != nil {
 				p.env.Log.Warn("Unable to parse notes body title", zap.String("path", el.GetPath()), zap.Error(err))
 			}
@@ -756,7 +758,9 @@ func (p *Processor) parseNoteSectionElement(el *etree.Element, bodyName string, 
 					note.body += "\n"
 				}
 				note.body += getFullTextFragment(c)
-				p.ctxPush()
+				ctx := p.ctxPush()
+				// we know exactly what name would be
+				ctx.fname = GenSafeName(bodyName) + ".xhtml"
 				if err := p.transfer(c, noteXml.Root(), c.Tag); err != nil {
 					p.env.Log.Warn("Unable to parse notes body", zap.String("path", c.GetPath()), zap.Error(err))
 				}
