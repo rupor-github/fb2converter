@@ -13,14 +13,14 @@
 # build specific
 build/
 build_*/
+release/
+release_*/
 misc/version.go
-static/dictionaries/*.txt
 static/dictionaries/*.txt.gz
-static/sentences/*.json
 static/sentences/*.json.gz
-!static/sentences/russian.json
 !static/sentences/russian.json.gz
+!static/sentences/hungarian.json.gz
+!static/sentences/icelandic.json.gz
+!static/sentences/korean.json.gz
 !kindlegen/windows/kindlegen.exe
 !static/resources/LinLibertine_RBah.ttf.gz
-fb2c_*.zip
-fb2c_*.minisig
