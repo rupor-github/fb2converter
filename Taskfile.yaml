@@ -12,7 +12,7 @@ silent: true
 vars:
   DEV_BUILD_DIR: 'build'
   REL_BUILD_DIR: 'release'
-  GO_PATH: '{{env "GOPATH"}}'
+  GO_PATH: '{{env "GPATH"}}'
   TEMP:    '{{env "TEMP"}}'
   # this is coming from github actions
   REF_VER: '{{regexFind "refs/tags/v[0-9]+\\.[0-9]+\\.?[0-9]*[-a-zA-Z0-9+]*" (env "GITHUB_REF")}}'
@@ -20,15 +20,7 @@ vars:
 env:
   CGO_ENABLED: '0'
   # this should work for most cases
-  GOPATH:
-    |
-    {{if .GO_PATH}}
-      '{{.GO_PATH}}'
-    {{else if .TEMP}}
-      '{{joinPath .TEMP "gopkg_fb2c"}}'
-    {{else}}
-      '/tmp/gopkg_fb2c'
-    {{end}}
+  GOPATH: '{{if .GO_PATH}}{{.GO_PATH}}{{else if .TEMP}}{{joinPath .TEMP "gopkg_fb2c"}}{{else}}/tmp/gopkg_fb2c{{end}}'
 
 tasks:
 
