@@ -1,8 +1,6 @@
 module fb2converter
 
-go 1.21
-
-toolchain go1.21.5
+go 1.22.0
 
 require (
 	dario.cat/mergo v1.0.0
@@ -15,22 +13,22 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/gosimple/slug v1.13.1
 	github.com/h2non/filetype v1.1.3
 	github.com/hashicorp/hcl v1.0.0
 	github.com/hidez8891/zip v1.11.0
 	github.com/neurosnap/sentences v1.1.2
 	github.com/pkg/profile v1.7.0
-	github.com/urfave/cli/v2 v2.26.0
+	github.com/urfave/cli/v2 v2.27.1
 	go.uber.org/zap v1.26.0
-	golang.org/x/crypto v0.17.0
-	golang.org/x/image v0.14.0
-	golang.org/x/net v0.19.0
-	golang.org/x/sys v0.15.0
-	golang.org/x/term v0.15.0
+	golang.org/x/crypto v0.19.0
+	golang.org/x/image v0.15.0
+	golang.org/x/net v0.21.0
+	golang.org/x/sys v0.17.0
+	golang.org/x/term v0.17.0
 	golang.org/x/text v0.14.0
-	golang.org/x/tools v0.16.1
+	golang.org/x/tools v0.17.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	honnef.co/go/tools v0.4.6
 )

@@ -1,0 +1,306 @@
+version: '3'
+
+output: 'group'
+silent: true
+
+# Used commands: cp, rm, mkdir, wget, cirl, find, grep, tar, git, cat, go, gofmt, 7z
+#
+# NOTE: I did not find a good way to check if they are available. Using task preconditions
+# works, but is kind of useless as task will fail anyways and creating a special task to
+# check is ugly as it needs to be in the dependencies for every target...
+
+vars:
+  DEV_BUILD_DIR: 'build'
+  REL_BUILD_DIR: 'release'
+  GO_PATH: '{{env "GOPATH"}}'
+  TEMP:    '{{env "TEMP"}}'
+  # this is coming from github actions
+  REF_VER: '{{regexFind "refs/tags/v[0-9]+\\.[0-9]+\\.?[0-9]*[-a-zA-Z0-9+]*" (env "GITHUB_REF")}}'
+
+env:
+  CGO_ENABLED: '0'
+  # this should work for most cases
+  GOPATH:
+    |
+    {{if .GO_PATH}}
+      '{{.GO_PATH}}'
+    {{else if .TEMP}}
+      '{{joinPath .TEMP "gopkg_fb2c"}}'
+    {{else}}
+      '/tmp/gopkg_fb2c'
+    {{end}}
+
+tasks:
+
+  default:
+    desc: Builds development version for host OS
+    aliases: [debug]
+    deps:
+      - task: copy-file
+        vars: { SRC: '{{joinPath "scripts" "pre-commit"}}', DST: '{{joinPath ".git" "hooks" "pre-commit"}}' }
+      - task: copy-file
+        vars: { SRC: '{{joinPath "kindlegen" (OS) "kindlegen"}}{{.SUFFIX}}', DST: '{{joinPath .DEV_BUILD_DIR "kindlegen"}}{{.SUFFIX}}' }
+      - task: get-dictionaries
+      - task: get-sentences
+      - task: generate-enums
+    cmds:
+      - task: go-build
+        vars: { FLAGS: 'debug', PACKAGE: './cmd/fb2c', TARGET: '{{joinPath .DEV_BUILD_DIR "fb2c"}}{{exeExt}}' }
+
+  release:
+    desc: Cross-builds release for all supported platforms
+    deps: [ get-dictionaries, get-sentences ]
+    cmds:
+      - mkdir -p '{{.REL_BUILD_DIR}}'
+      - for: [linux-amd64, linux-arm64, linux-386, darwin-amd64, darwin-arm64, windows-amd64-.exe, windows-arm64-.exe, windows-386-.exe]
+        task: release-for-platform-{{with $arch := split "-" .ITEM}}{{$arch._0}}{{end}}
+        vars:
+          GOOS:   '{{with $arch := split "-" .ITEM}}{{$arch._0}}{{end}}'
+          GOARCH: '{{with $arch := split "-" .ITEM}}{{$arch._1}}{{end}}'
+          SUFFIX: '{{with $arch := split "-" .ITEM}}{{$arch._2}}{{end}}'
+
+  release-for-platform-windows:
+    internal: true
+    desc: Builds release for specified platform
+    requires:
+      vars: [GOOS, GOARCH, SUFFIX]
+    label: release-for-platform-windows-{{.GOOS}}-{{.GOARCH}}
+    vars:
+      BUILD_DIR: '{{.REL_BUILD_DIR}}_{{.GOOS}}_{{.GOARCH}}'
+      REL_NAME:  '{{joinPath .REL_BUILD_DIR "fb2c"}}-{{.GOOS}}-{{.GOARCH}}'
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - defer: rm -rf {{.BUILD_DIR}}
+      - task: copy-file
+        vars: { SRC: '{{joinPath "kindlegen" .GOOS "kindlegen"}}{{.SUFFIX}}', DST: '{{joinPath .BUILD_DIR "fb2converter" "kindlegen"}}{{.SUFFIX}}' }
+      - task: go-build
+        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2c', TARGET: '{{joinPath .BUILD_DIR "fb2converter" "fb2c"}}{{.SUFFIX}}' }
+      - task: go-build
+        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2epub', TARGET: '{{joinPath .BUILD_DIR "fb2epub" "fb2epub"}}{{.SUFFIX}}' }
+      - task: go-build
+        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2mobi', TARGET: '{{joinPath .BUILD_DIR "fb2bmobi" "fb2mobi"}}{{.SUFFIX}}' }
+      - echo "Archiving release \"{{.REL_NAME}}.zip\""
+      - 7z a -r -bd -bso0 -tzip {{.REL_NAME}} ./{{.BUILD_DIR}}/*
+    status:
+      - test -f '{{.REL_NAME}}.zip'
+
+  release-for-platform-linux:
+    internal: true
+    desc: Builds release for specified platform
+    requires:
+      vars: [GOOS, GOARCH, SUFFIX]
+    label: release-for-platform-linux-{{.GOOS}}-{{.GOARCH}}
+    vars:
+      BUILD_DIR: '{{.REL_BUILD_DIR}}_{{.GOOS}}_{{.GOARCH}}'
+      REL_NAME:  '{{joinPath .REL_BUILD_DIR "fb2c"}}-{{.GOOS}}-{{.GOARCH}}'
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - defer: rm -rf {{.BUILD_DIR}}
+      - task: copy-file
+        vars: { SRC: '{{joinPath "kindlegen" .GOOS "kindlegen"}}{{.SUFFIX}}', DST: '{{joinPath .BUILD_DIR "kindlegen"}}{{.SUFFIX}}' }
+      - task: go-build
+        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2c', TARGET: '{{joinPath .BUILD_DIR "fb2c"}}{{.SUFFIX}}' }
+      - echo "Archiving release \"{{.REL_NAME}}.zip\""
+      - 7z a -r -bd -bso0 -tzip {{.REL_NAME}} ./{{.BUILD_DIR}}/*
+    status:
+      - test -f '{{.REL_NAME}}.zip'
+
+  release-for-platform-darwin:
+    internal: true
+    desc: Builds release for specified platform
+    requires:
+      vars: [GOOS, GOARCH, SUFFIX]
+    label: release-for-platform-darwin-{{.GOOS}}-{{.GOARCH}}
+    vars:
+      BUILD_DIR: '{{.REL_BUILD_DIR}}_{{.GOOS}}_{{.GOARCH}}'
+      REL_NAME:  '{{joinPath .REL_BUILD_DIR "fb2c"}}-{{.GOOS}}-{{.GOARCH}}'
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - defer: rm -rf {{.BUILD_DIR}}
+      - task: copy-file
+        vars: { SRC: '{{joinPath "kindlegen" .GOOS "kindlegen"}}{{.SUFFIX}}', DST: '{{joinPath .BUILD_DIR "kindlegen"}}{{.SUFFIX}}' }
+      - task: go-build
+        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2c', TARGET: '{{joinPath .BUILD_DIR "fb2c"}}{{.SUFFIX}}' }
+      - echo "Archiving release \"{{.REL_NAME}}.zip\""
+      - 7z a -r -bd -bso0 -tzip {{.REL_NAME}} ./{{.BUILD_DIR}}/*
+    status:
+      - test -f '{{.REL_NAME}}.zip'
+
+  generate-enums:
+    internal: true
+    desc: Generates fmt.Stringer interfaces for specified enum types
+    vars:
+      STRINGER: '{{joinPath .DEV_BUILD_DIR "stringer"}}{{exeExt}}'
+      INPUT:    'processor/enums.go'
+      OUTPUT:   'processor/enums_string.go'
+    cmds:
+      - task: go-build
+        vars: { PACKAGE: 'golang.org/x/tools/cmd/stringer', TARGET: '{{.STRINGER}}' }
+      - echo "Generating enums"
+      - |
+        ./{{.STRINGER}} -linecomment \
+          -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement,CoverProcessing \
+          -output processor/enums_string.go \
+          processor/enums.go
+    sources:
+      - '{{.INPUT}}'
+    genetates:
+      - '{{.OUTPUT}}'
+
+  lint:
+    desc: Lints whole project
+    vars:
+      LINTER: '{{joinPath .DEV_BUILD_DIR "staticcheck"}}{{exeExt}}'
+    cmds:
+      - task: go-build
+        vars: { PACKAGE: 'honnef.co/go/tools/cmd/staticcheck', TARGET: '{{.LINTER}}' }
+      - echo "Linting project"
+      - ./{{.LINTER}} -f stylish -tests=false ./...
+
+  go-build:
+    internal: true
+    run: when_changed
+    desc: Builds binary using go toolchain
+    requires:
+      vars: [PACKAGE, TARGET]
+    label: go-build-{{.PACKAGE}}-{{.TARGET}}
+    env: { GOOS: '{{default "linux" .GOOS}}', GOARCH: '{{default "amd64" .GOARCH}}' }
+    vars:
+      GOARGS: |
+        {{- if eq .FLAGS "debug" -}}
+          -mod=mod -gcflags 'all=-N -l'
+        {{- else if eq .FLAGS "release" -}}
+          -mod=vendor -trimpath
+        {{- else -}}
+          -mod=mod -trimpath
+        {{- end -}}
+    cmds:
+      - task: project-version
+      - echo "Building \"{{base .TARGET}}\" binary for \"$GOOS:$GOARCH\" from \"{{.PACKAGE}}\""
+      - go build {{.GOARGS}} -o '{{.TARGET}}' '{{.PACKAGE}}'
+    sources:
+      - './**/*.go'
+    generates:
+      - '{{.TARGET}}'
+    status:
+      - test -f '{{.TARGET}}'
+
+  project-version:
+    internal: true
+    run: when_changed
+    desc: Generates "misc.go/version.go" file with version info to be used on runtime
+    vars:
+      VER:  '{{if .REF_VER}}{{regexFind "[0-9]+\\.[0-9]+\\.?[0-9]*[-a-zA-Z0-9+]*" .REF_VER}}{{else}}0.0.0-dev{{end}}'
+      DIR:  '{{joinPath .ROOT_DIR "misc"}}'
+      FILE: '{{joinPath .ROOT_DIR "misc" "version.go"}}'
+      GIT_HASH:
+        sh: git rev-list -1 HEAD
+      GIT_STATUS:
+        sh: git diff --shortstat
+    cmds:
+      - echo "Version {{.VER}} {{.GIT_HASH}}{{if .GIT_STATUS}}*{{end}}"
+      - mkdir -p {{.DIR}}
+      - |
+        cat << EOF > {{.FILE}}
+        package misc
+
+        func GetVersion() string {
+            return "{{.VER}}"
+        }
+
+        func GetGitHash() string {
+            return "{{.GIT_HASH}}{{if .GIT_STATUS}}*{{end}}"
+        }
+        EOF
+      - gofmt -w {{.FILE}}
+    sources:
+      - '{{joinPath ".git" "index"}}'
+    generates:
+      - '{{.FILE}}'
+    status:
+      - test -f '{{.FILE}}
+
+  get-dictionaries:
+    internal: true
+    run: once
+    desc: Get dictionary rules for all supported languages
+    vars:
+      DIR: '{{joinPath "static" "dictionaries"}}'
+    dir: '{{.DIR}}'
+    cmds:
+      - rm -f *.txt
+      - echo "Downloading dictionary patterns from \"ctan.math.utah.edu\""
+      - wget -q -r -l1 --no-parent -nd -A.pat.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
+      - wget -q -r -l1 --no-parent -nd -A.hyp.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
+      - gzip -q -f hyph-*.txt
+    status:
+      - find -type f -name 'hyph-*.txt.gz' | grep -q .
+
+  get-sentences:
+    internal: true
+    run: once
+    desc: Get NLTK training data
+    vars:
+      DIR: '{{joinPath "static" "sentences"}}'
+    dir: '{{.DIR}}'
+    cmds:
+      - rm -f *.json
+      - echo "Downloading NLTK training data from \"neurosnap/sentences\""
+      - curl -s -L https://api.github.com/repos/neurosnap/sentences/tarball | tar xz --wildcards '*/data/*.json' --strip-components=2
+      - gzip -q -f *.json
+    status:
+      - |
+        find -type f -name '*.json.gz' \
+          -not -name 'russian.json.gz' \
+          -not -name 'icelandic.json.gz' \
+          -not -name 'korean.json.gz' \
+          -not -name 'hungarian.json.gz' | grep -q .
+
+  copy-file:
+    internal: true
+    run: when_changed
+    desc: Copies source file to destination
+    requires:
+      vars: [SRC, DST]
+    label: copy-file-{{.SRC}}-{{.DST}}
+    cmds:
+      - echo "Copying \"{{.SRC}}\" to \"{{.DST}}\""
+      - mkdir -p {{dir .DST}}
+      - cp '{{.SRC}}' '{{.DST}}'
+    sources:
+      - '{{.SRC}}'
+    genetates:
+      - '{{.DST}}'
+    status:
+      - test -f '{{.DST}}'
+
+  go-tidy:
+    desc: Tidy Go modules
+    aliases: [tidy]
+    vars:
+      GO_VER: '{{default "" (regexFind "[0-9]+\\.[0-9]+\\.?[0-9]*[-a-zA-Z0-9+]*" (env "CUR_PROJECT_TYPE"))}}'
+    cmds:
+      - go mod tidy{{if .GO_VER}} -go={{.GO_VER}}{{end}}
+
+  go-vendor:
+    desc: Creates vendor directory for release build
+    aliases: [vendor]
+    cmds:
+      - go mod vendor
+
+  clean:
+    desc: Cleans all build release aritfacts
+    cmds:
+      - |
+        find '{{joinPath "static" "sentences"}}' -type f \
+          -name '*.json.gz' \
+          -not -name 'russian.json.gz' \
+          -not -name 'icelandic.json.gz' \
+          -not -name 'korean.json.gz' \
+          -not -name 'hungarian.json.gz' \
+          -delete -printf "removed '%p'\n"
+      - |
+        find '{{joinPath "static" "dictionaries"}}' -type f \
+          -name 'hyph-*.txt.gz' \
+          -delete -printf "removed '%p'\n"
+      - rm -rfv {{.REL_BUILD_DIR}}
