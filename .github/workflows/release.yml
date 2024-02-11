@@ -42,7 +42,7 @@ jobs:
         password: ${{ secrets.minisign_password }}
 
     - name: List results
-      run: ls -lah fb2c-*
+      run: ls -lah release/
 
     - name: Upload release
       uses: softprops/action-gh-release@v1
