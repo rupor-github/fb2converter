@@ -433,7 +433,9 @@ func (p *Processor) prepareOutputName() string {
 			return dirs
 		}
 
-		name = filepath.FromSlash(ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat, CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.AuthorFormatFileName, p.env.Cfg.Doc.SeqNumPos)))
+		name = filepath.FromSlash(
+			ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat,
+				CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.AuthorFormatFileName, p.env.Cfg.Doc.SeqNumPos, p.env.Cfg.Doc.SeqFirstWordLen)))
 		if len(name) > 0 {
 			first := true
 			dirs := make([]string, 0, 16)

@@ -447,7 +447,7 @@ func (p *Processor) generateOPF() error {
 
 	var title string
 	if len(p.env.Cfg.Doc.TitleFormat) > 0 {
-		title = ReplaceKeywords(p.env.Cfg.Doc.TitleFormat, CreateTitleKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos, p.src))
+		title = ReplaceKeywords(p.env.Cfg.Doc.TitleFormat, CreateTitleKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos, p.env.Cfg.Doc.SeqFirstWordLen, p.src))
 	}
 	if len(title) == 0 {
 		title = p.Book.Title

@@ -164,8 +164,43 @@ func CreateAuthorKeywordsMap(an *config.AuthorName) map[string]string {
 	return rd
 }
 
+func firstWordSeq(seq string, l int) (word string) {
+	if l <= 0 {
+		l = utf8.RuneCountInString(seq)
+	}
+	nonSpace := 0
+	for _, r := range seq {
+		if nonSpace >= l {
+			return
+		}
+		if unicode.IsSpace(r) {
+			if nonSpace > 0 {
+				return
+			}
+			continue
+		}
+		word += string(r)
+		nonSpace++
+	}
+	return
+}
+
+func abbrSeq(seq string) (abbr string) {
+	for _, w := range strings.Fields(seq) {
+		for len(w) > 0 {
+			r, l := utf8.DecodeRuneInString(w)
+			if r != utf8.RuneError && unicode.IsLetter(r) {
+				abbr += string(r)
+				break
+			}
+			w = w[l:]
+		}
+	}
+	return
+}
+
 // CreateTitleKeywordsMap prepares keywords map for replacement.
-func CreateTitleKeywordsMap(b *Book, pos int, src string) map[string]string {
+func CreateTitleKeywordsMap(b *Book, pos, wlen int, src string) map[string]string {
 	rd := make(map[string]string)
 	rd["#title"] = ""
 	if len(b.Title) > 0 {
@@ -178,6 +213,7 @@ func CreateTitleKeywordsMap(b *Book, pos int, src string) map[string]string {
 	rd["#series"], rd["#abbrseries"], rd["#ABBRseries"] = "", "", ""
 	if len(b.SeqName) > 0 {
 		rd["#series"] = b.SeqName
+		rd["#series_first_word"] = firstWordSeq(b.SeqName, wlen)
 		abbr := abbrSeq(b.SeqName)
 		if len(abbr) > 0 {
 			rd["#abbrseries"] = strings.ToLower(abbr)
@@ -196,22 +232,8 @@ func CreateTitleKeywordsMap(b *Book, pos int, src string) map[string]string {
 	return rd
 }
 
-func abbrSeq(seq string) (abbr string) {
-	for _, w := range strings.Split(seq, " ") {
-		for len(w) > 0 {
-			r, l := utf8.DecodeRuneInString(w)
-			if r != utf8.RuneError && unicode.IsLetter(r) {
-				abbr += string(r)
-				break
-			}
-			w = w[l:]
-		}
-	}
-	return
-}
-
 // CreateFileNameKeywordsMap prepares keywords map for replacement.
-func CreateFileNameKeywordsMap(b *Book, format string, pos int) map[string]string {
+func CreateFileNameKeywordsMap(b *Book, format string, pos, wlen int) map[string]string {
 	rd := make(map[string]string)
 	rd["#title"] = ""
 	if len(b.Title) > 0 {
@@ -220,6 +242,7 @@ func CreateFileNameKeywordsMap(b *Book, format string, pos int) map[string]strin
 	rd["#series"], rd["#abbrseries"], rd["#ABBRseries"] = "", "", ""
 	if len(b.SeqName) > 0 {
 		rd["#series"] = b.SeqName
+		rd["#series_first_word"] = firstWordSeq(b.SeqName, wlen)
 		abbr := abbrSeq(b.SeqName)
 		if len(abbr) > 0 {
 			rd["#abbrseries"] = strings.ToLower(abbr)

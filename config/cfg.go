@@ -125,6 +125,7 @@ type Doc struct {
 	ChapterPerFile        bool     `json:"chapter_per_file"`
 	ChapterLevel          int      `json:"chapter_level"`
 	SeqNumPos             int      `json:"series_number_positions"`
+	SeqFirstWordLen       int      `json:"series_first_word_length"`
 	RemovePNGTransparency bool     `json:"remove_png_transparency"`
 	OptimizeImages        bool     `json:"optimize_images"`
 	JPEGQuality           int      `json:"jpeq_quality_level"`
@@ -221,6 +222,7 @@ var defaultConfig = []byte(`{
     "chapter_per_file": true,
     "chapter_level": 2147483647,
     "series_number_positions": 2,
+    "series_first_word_length": 4,
     "characters_per_page": 2300,
     "pages_per_file": 2147483647,
     "fix_zip_format": true,

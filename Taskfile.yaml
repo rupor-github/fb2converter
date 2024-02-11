@@ -39,9 +39,23 @@ tasks:
       - task: go-build
         vars: { FLAGS: 'debug', PACKAGE: './cmd/fb2c', TARGET: '{{joinPath .DEV_BUILD_DIR "fb2c"}}{{exeExt}}' }
 
+  test:
+    desc: Runs all available tests
+    deps: [test-hyphenator, test-processor]
+
+  test-processor:
+    desc: Runs tests on processor package
+    cmds:
+      - go test -v -mod=mod -gcflags 'all=-N -l' -coverprofile={{joinPath .DEV_BUILD_DIR "test_processor.out"}} ./processor
+
+  test-hyphenator:
+    desc: Runs tests on hyphenator package
+    cmds:
+      - go test -v -mod=mod -gcflags 'all=-N -l' -coverprofile={{joinPath .DEV_BUILD_DIR "test_hyphenator.out"}} ./hyphenator
+
   release:
     desc: Cross-builds release for all supported platforms
-    deps: [ get-dictionaries, get-sentences ]
+    deps: [get-dictionaries, get-sentences]
     cmds:
       - mkdir -p '{{.REL_BUILD_DIR}}'
       - for: [linux-amd64, linux-arm64, linux-386, darwin-amd64, darwin-arm64, windows-amd64-.exe, windows-arm64-.exe, windows-386-.exe]

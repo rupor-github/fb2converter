@@ -97,14 +97,58 @@ func TestReplaceKeywords(t *testing.T) {
 	t.Logf("OK - %s: %d cases", t.Name(), len(cases))
 }
 
-var cases1 = []string{
+type testCaseWord struct {
+	cut int
+	in  string
+	out string
+}
+
+var casesFirstWord = []testCaseWord{
+	{4, "  abbreviated case", "abbr"},
+	{4, "  abb case", "abb"},
+	{4, "abbreviated case", "abbr"},
+	{0, "abbreviated case", "abbreviated"},
+	{5, "abbr case", "abbr"},
+	{4, "          ", ""},
+	{4, " ", ""},
+	{-1, "abbra case", "abbra"},
+}
+
+func TestFirstWord(t *testing.T) {
+	for i, c := range casesFirstWord {
+		res := firstWordSeq(c.in, c.cut)
+		if res != c.out {
+			t.Fatalf("BAD RESULT for case %d\nEXPECTED:\n[%s]\nGOT:\n[%s]\ncut len - %d", i+1, c.out, res, c.cut)
+		}
+	}
+	t.Logf("OK - %s: %d cases", t.Name(), len(casesFirstWord))
+}
+
+var casesAbbr = []testCaseWord{
+	{0, "  abbreviated case", "ac"},
+	{0, "abbreviated case", "ac"},
+	{0, "abbr case more", "acm"},
+	{0, "          ", ""},
+}
+
+func TestAbbr(t *testing.T) {
+	for i, c := range casesAbbr {
+		res := abbrSeq(c.in)
+		if res != c.out {
+			t.Fatalf("BAD RESULT for case %d\nEXPECTED:\n[%s]\nGOT:\n[%s]", i+1, c.out, res)
+		}
+	}
+	t.Logf("OK - %s: %d cases", t.Name(), len(casesFirstWord))
+}
+
+var casesDisposition = []string{
 	"1",
 	"test book.epub",
 	"Знаменитые расследования Мисс Марпл в одном томе .epub",
 }
 
 func TestContentDisposition(t *testing.T) {
-	for i, c := range cases1 {
+	for i, c := range casesDisposition {
 		res1 := url.PathEscape(c)
 		res2 := ""
 		for _, part := range encodeParts(c) {
@@ -114,5 +158,5 @@ func TestContentDisposition(t *testing.T) {
 			t.Fatalf("BAD RESULT for case %d [%s]\nEXPECTED:\n[%s]\nGOT:\n[%s]", i+1, c, res1, res2)
 		}
 	}
-	t.Logf("OK - %s: %d cases", t.Name(), len(cases1))
+	t.Logf("OK - %s: %d cases", t.Name(), len(casesDisposition))
 }

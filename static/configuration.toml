@@ -61,18 +61,21 @@
 	# jpeq_quality_level = 75
 
 	#---- Pattern to format book title
-	#---- "#title"         - book title
-	#---- "#file_name"     - name of original FB2 file (no path, no extension)
-	#---- "#file_name_ext" - name of original FB2 file (no path)
-	#---- "#series"        - name of sequence book belongs to
-	#---- "#abbrseries"    - abbreviated #series, lower case
-	#---- "#ABBRseries"    - abbreviated #series, upper case
-	#---- "#number"        - number in a series
-	#---- "#padnumber"     - number in a series padded with zeros to "series_number_positions"
-	#---- "#date"          - date specified in a book description
+	#---- "#title"             - book title
+	#---- "#file_name"         - name of original FB2 file (no path, no extension)
+	#---- "#file_name_ext"     - name of original FB2 file (no path)
+	#---- "#series"            - name of sequence book belongs to
+	#---- "#series_first_word" - first word in the name of series book belongs to, up to "series_first_word_length" letters
+	#---- "#abbrseries"        - abbreviated #series, lower case
+	#---- "#ABBRseries"        - abbreviated #series, upper case
+	#---- "#number"            - number in a series
+	#---- "#padnumber"         - number in a series padded with zeros to "series_number_positions"
+	#---- "#date"              - date specified in a book description
 	title_format = "{(#ABBRseries{ - #padnumber}) }#title"
 	#---- How many positions padded series number will take
-	series_number_positions = 2
+	# series_number_positions = 2
+	#---- How many letters take from first word of series name, if less or equal 0 - take whole word, if word is shorter than specified - take whole word only
+	# series_first_word_length = 4
 
 	#---- Patterns to format author name (#author, #autors) in different places
 	#---- "#f"  - first name
@@ -86,16 +89,17 @@
 
 	#---- Output file name pattern - output file will have name created using FB2 information
 	#---- NOTE: watch out for path separators, directories will be created!
-	#---- "#title"      - book title
-	#---- "#series"     - name of sequence book belongs to
-	#---- "#abbrseries" - abbreviated #series, lower case
-	#---- "#ABBRseries" - abbreviated #series, upper case
-	#---- "#number"     - number in a series
-	#---- "#padnumber"  - number in a series padded with zeros to "series_number_positions"
-	#---- "#authors"    - list of all authors (each formatted as specified in "author_format")
-	#---- "#author"     - name of the first author (formatted as specified in "author_format"). If more then one - it will
-	#----                 be indicated with either ", et al" or " и др" depending on book language
-	#---- "#bookid"     - Book UUID (either parsed from or genrated based of fb2 information)
+	#---- "#title"             - book title
+	#---- "#series"            - name of sequence book belongs to
+	#---- "#series_first_word" - first word in the name of series book belongs to, up to "series_first_word_length" letters
+	#---- "#abbrseries"        - abbreviated #series, lower case
+	#---- "#ABBRseries"        - abbreviated #series, upper case
+	#---- "#number"            - number in a series
+	#---- "#padnumber"         - number in a series padded with zeros to "series_number_positions"
+	#---- "#authors"           - list of all authors (each formatted as specified in "author_format")
+	#---- "#author"            - name of the first author (formatted as specified in "author_format"). If more then one - it will
+	#----                        be indicated with either ", et al" or " и др" depending on book language
+	#---- "#bookid"            - Book UUID (either parsed from or genrated based of fb2 information)
 	# file_name_format = "{#author - }#title"
 
 	#---- Slugify/transliterate output file name - after all other processing on file name is completed
