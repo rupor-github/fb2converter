@@ -224,7 +224,7 @@ tasks:
     generates:
       - '{{.FILE}}'
     status:
-      - test -f '{{.FILE}}
+      - test -f '{{.FILE}}'
 
   get-dictionaries:
     internal: true
