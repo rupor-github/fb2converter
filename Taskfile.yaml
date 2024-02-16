@@ -17,6 +17,9 @@ vars:
   # this is coming from github actions
   REF_VER: '{{regexFind "refs/tags/v[0-9]+\\.[0-9]+\\.?[0-9]*[-a-zA-Z0-9+]*" (env "GITHUB_REF")}}'
 
+  TATN: { sh: '{{if (env "TERM")}}tput setaf 4{{end}}' }
+  TOFF: { sh: '{{if (env "TERM")}}tput sgr0{{end}}' }
+
 env:
   CGO_ENABLED: '0'
   # this should work for most cases
@@ -84,8 +87,8 @@ tasks:
       - task: go-build
         vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2epub', TARGET: '{{joinPath .BUILD_DIR "fb2epub" "fb2epub"}}{{.SUFFIX}}' }
       - task: go-build
-        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2mobi', TARGET: '{{joinPath .BUILD_DIR "fb2bmobi" "fb2mobi"}}{{.SUFFIX}}' }
-      - echo "Archiving release \"{{.REL_NAME}}.zip\""
+        vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2mobi', TARGET: '{{joinPath .BUILD_DIR "fb2mobi" "fb2mobi"}}{{.SUFFIX}}' }
+      - echo "{{.TATN}}Archiving release \"{{.REL_NAME}}.zip\"{{.TOFF}}"
       - 7z a -r -bd -bso0 -tzip {{.REL_NAME}} ./{{.BUILD_DIR}}/*
     status:
       - test -f '{{.REL_NAME}}.zip'
@@ -106,7 +109,7 @@ tasks:
         vars: { SRC: '{{joinPath "kindlegen" .GOOS "kindlegen"}}{{.SUFFIX}}', DST: '{{joinPath .BUILD_DIR "kindlegen"}}{{.SUFFIX}}' }
       - task: go-build
         vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2c', TARGET: '{{joinPath .BUILD_DIR "fb2c"}}{{.SUFFIX}}' }
-      - echo "Archiving release \"{{.REL_NAME}}.zip\""
+      - echo "{{.TATN}}Archiving release \"{{.REL_NAME}}.zip\"{{.TOFF}}"
       - 7z a -r -bd -bso0 -tzip {{.REL_NAME}} ./{{.BUILD_DIR}}/*
     status:
       - test -f '{{.REL_NAME}}.zip'
@@ -127,7 +130,7 @@ tasks:
         vars: { SRC: '{{joinPath "kindlegen" .GOOS "kindlegen"}}{{.SUFFIX}}', DST: '{{joinPath .BUILD_DIR "kindlegen"}}{{.SUFFIX}}' }
       - task: go-build
         vars: { GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2c', TARGET: '{{joinPath .BUILD_DIR "fb2c"}}{{.SUFFIX}}' }
-      - echo "Archiving release \"{{.REL_NAME}}.zip\""
+      - echo "{{.TATN}}Archiving release \"{{.REL_NAME}}.zip\"{{.TOFF}}"
       - 7z a -r -bd -bso0 -tzip {{.REL_NAME}} ./{{.BUILD_DIR}}/*
     status:
       - test -f '{{.REL_NAME}}.zip'
@@ -141,8 +144,8 @@ tasks:
       OUTPUT:   'processor/enums_string.go'
     cmds:
       - task: go-build
-        vars: { PACKAGE: 'golang.org/x/tools/cmd/stringer', TARGET: '{{.STRINGER}}' }
-      - echo "Generating enums"
+        vars: { FLAGS: 'xtool', PACKAGE: 'golang.org/x/tools/cmd/stringer', TARGET: '{{.STRINGER}}' }
+      - echo "{{.TATN}}Generating enums{{.TOFF}}"
       - |
         ./{{.STRINGER}} -linecomment \
           -type OutputFmt,NotesFmt,TOCPlacement,TOCType,APNXGeneration,StampPlacement,CoverProcessing \
@@ -150,7 +153,7 @@ tasks:
           processor/enums.go
     sources:
       - '{{.INPUT}}'
-    genetates:
+    generates:
       - '{{.OUTPUT}}'
 
   lint:
@@ -159,8 +162,8 @@ tasks:
       LINTER: '{{joinPath .DEV_BUILD_DIR "staticcheck"}}{{exeExt}}'
     cmds:
       - task: go-build
-        vars: { PACKAGE: 'honnef.co/go/tools/cmd/staticcheck', TARGET: '{{.LINTER}}' }
-      - echo "Linting project"
+        vars: { FLAGS: 'xtool', PACKAGE: 'honnef.co/go/tools/cmd/staticcheck', TARGET: '{{.LINTER}}' }
+      - echo "{{.TATN}}Linting project{{.TOFF}}"
       - ./{{.LINTER}} -f stylish -tests=false ./...
 
   go-build:
@@ -168,8 +171,8 @@ tasks:
     run: when_changed
     desc: Builds binary using go toolchain
     requires:
-      vars: [PACKAGE, TARGET]
-    label: go-build-{{.PACKAGE}}-{{.TARGET}}
+      vars: [PACKAGE, TARGET, FLAGS]
+    label: go-build-{{.PACKAGE}}-{{.TARGET}}-{{.FLAGS}}
     env: { GOOS: '{{default "linux" .GOOS}}', GOARCH: '{{default "amd64" .GOARCH}}' }
     vars:
       GOARGS: |
@@ -177,19 +180,19 @@ tasks:
           -mod=mod -gcflags 'all=-N -l'
         {{- else if eq .FLAGS "release" -}}
           -mod=vendor -trimpath
-        {{- else -}}
+        {{- else if eq .FLAGS "xtool" -}}
           -mod=mod -trimpath
+        {{- else -}}
+        {{fail "go build flags could be \"debug\", \"release\" or \"xtool\" only!"}}
         {{- end -}}
     cmds:
       - task: project-version
-      - echo "Building \"{{base .TARGET}}\" binary for \"$GOOS:$GOARCH\" from \"{{.PACKAGE}}\""
+      - echo "{{.TATN}}Building \"{{base .TARGET}}\" binary for \"$GOOS:$GOARCH\" from \"{{.PACKAGE}}\"{{.TOFF}}"
       - go build {{.GOARGS}} -o '{{.TARGET}}' '{{.PACKAGE}}'
     sources:
       - './**/*.go'
     generates:
       - '{{.TARGET}}'
-    status:
-      - test -f '{{.TARGET}}'
 
   project-version:
     internal: true
@@ -204,7 +207,7 @@ tasks:
       GIT_STATUS:
         sh: git diff --shortstat
     cmds:
-      - echo "Version {{.VER}} {{.GIT_HASH}}{{if .GIT_STATUS}}*{{end}}"
+      - echo "{{.TATN}}Version {{.VER}} {{.GIT_HASH}}{{if .GIT_STATUS}}*{{end}}{{.TOFF}}"
       - mkdir -p {{.DIR}}
       - |
         cat << EOF > {{.FILE}}
@@ -235,7 +238,7 @@ tasks:
     dir: '{{.DIR}}'
     cmds:
       - rm -f *.txt
-      - echo "Downloading dictionary patterns from \"ctan.math.utah.edu\""
+      - echo "{{.TATN}}Downloading dictionary patterns from \"ctan.math.utah.edu\"{{.TOFF}}"
       - wget -q -r -l1 --no-parent -nd -A.pat.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
       - wget -q -r -l1 --no-parent -nd -A.hyp.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
       - gzip -q -f hyph-*.txt
@@ -251,7 +254,7 @@ tasks:
     dir: '{{.DIR}}'
     cmds:
       - rm -f *.json
-      - echo "Downloading NLTK training data from \"neurosnap/sentences\""
+      - echo "{{.TATN}}Downloading NLTK training data from \"neurosnap/sentences\"{{.TOFF}}"
       - curl -s -L https://api.github.com/repos/neurosnap/sentences/tarball | tar xz --wildcards '*/data/*.json' --strip-components=2
       - gzip -q -f *.json
     status:
@@ -270,12 +273,12 @@ tasks:
       vars: [SRC, DST]
     label: copy-file-{{.SRC}}-{{.DST}}
     cmds:
-      - echo "Copying \"{{.SRC}}\" to \"{{.DST}}\""
+      - echo "{{.TATN}}Copying \"{{.SRC}}\" to \"{{.DST}}\"{{.TOFF}}"
       - mkdir -p {{dir .DST}}
       - cp '{{.SRC}}' '{{.DST}}'
     sources:
       - '{{.SRC}}'
-    genetates:
+    generates:
       - '{{.DST}}'
     status:
       - test -f '{{.DST}}'
@@ -310,3 +313,4 @@ tasks:
           -name 'hyph-*.txt.gz' \
           -delete -printf "removed '%p'\n"
       - rm -rfv {{.REL_BUILD_DIR}}
+      - rm -fv .task/checksum/*
