@@ -488,7 +488,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 
 	// add node text
 	if len(text) > 0 {
-		p.formatText(text, from.Tag == "p", false, inner)
+		p.formatText(text, from.Tag == "p" || from.Tag == "v", false, inner)
 	}
 
 	if processChildren {
@@ -542,7 +542,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 
 	// and do not forget node tail
 	if len(tail) > 0 {
-		p.formatText(tail, from.Tag == "p", true, inner)
+		p.formatText(tail, from.Tag == "p" || from.Tag == "v", true, inner)
 	}
 	return nil
 }

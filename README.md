@@ -1,4 +1,4 @@
-﻿<h1>   
+﻿<h1>
     <img src="docs/books.svg" style="vertical-align:middle; width:8%" align="absmiddle"/>
     <span style="vertical-align:middle;">&nbsp;&nbsp;FB2 converter to EPUB2, KEPUB, MOBI 7/8, AZW3</span>
 </h1>
@@ -18,7 +18,7 @@ Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter) a
 - no "default" external configuration, path to configuration file has to be supplied - always
 - no overwriting of configuration parameters from command line, options either specified in configuration file or on command line
 - slightly different hyphenation algorithm (no hyphensReplaceNBSP)
-- fixes and echancements in toc.ncx generation
+- fixes and enhancements in toc.ncx generation
 - go differs in how it processes images, it is less forgiving than Python's PILLOW and do not have lazy decoding (see use_broken_images configuration option)
 - small changes in result formatting, for example:
   - chapter-end vignette would not be added if chapter does not have text paragraphs
