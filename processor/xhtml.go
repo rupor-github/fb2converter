@@ -382,7 +382,12 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 
 	// special case - transferring note body
 	if to.Tag == "note-root" && len(tag) > 0 && tag != "p" && len(css) == 0 && len(href) == 0 {
-		css, tag = tag, "div"
+		if tag != "image" {
+			css, tag = tag, "div"
+		} else {
+			// special case - some notes may contain images, but not inside paragraphs...
+			return transferImage(p, from, to)
+		}
 	}
 
 	text := from.Text()
