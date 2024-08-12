@@ -193,8 +193,15 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 
 	if unknownEncoding {
 		// input file had no BOM mark - most likely was not Unicode
+		// in this mode we will try and respect as many HTML named character references as possible, since creator of the
+		// document did not have any choice
+		entities, err := prepareHTMLNamedEntities()
+		if err != nil {
+			return nil, fmt.Errorf("unable to write prepare HTML named entities: %w", err)
+		}
 		p.doc.ReadSettings = etree.ReadSettings{
 			CharsetReader: charset.NewReaderLabel,
+			Entity:        entities,
 		}
 	}
 

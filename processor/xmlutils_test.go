@@ -168,3 +168,10 @@ func TestTextFragment(t *testing.T) {
 	}
 	t.Logf("OK - %s: %d cases", t.Name(), len(cases))
 }
+
+func TestEntities(t *testing.T) {
+	if _, err := prepareHTMLNamedEntities(); err != nil {
+		t.Fatal(err)
+	}
+
+}
