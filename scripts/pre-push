@@ -4,19 +4,17 @@
 
 # run security/vulnerabilities scanner prior to pushing to repo
 
-scanner=trivy
+scanner=govulncheck
 
-# detect if "trivy" is installed
+# detect if scanner is installed
 if ! command -v ${scanner} &> /dev/null; then
-  echo "==== ${scanner} is not installed"
-  echo "     to install it follow instructions on https://github.com/aquasecurity/trivy/blob/main/docs/getting-started/installation.md#debianubuntu"
-  exit 1
+    echo "==== ${scanner} is not installed. Make sure it is installed and path is set correctly"
+    echo
+    echo "     To install it you could use something similar to \"GOBIN=<DIR_OF_YOUR_CHOICE> go install golang.org/x/vuln/cmd/govulncheck@latest\""
+    echo "     and make sure that <DIR_OF_YOUR_CHOICE> is added to PATH"
+    exit 1
 fi
 
-echo "==== running vulnerabilities scanner (${scanner}) from $0"
-echo "     to accept risks create a .trivyignore file in repo's root"
-echo "     See https://github.com/aquasecurity/trivy/blob/main/docs/docs/vulnerability/examples/filter.md#by-vulnerability-ids"
-echo
+echo "==== running ${scanner} from $0"
 
-# without the --exit-code 1 flag - trivy always exists with 0
-${scanner} --exit-code 1 fs --ignore-unfixed .
+${scanner} ./...
