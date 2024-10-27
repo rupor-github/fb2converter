@@ -1,4 +1,4 @@
-# dario.cat/mergo v1.0.0
+# dario.cat/mergo v1.0.1
 ## explicit; go 1.13
 dario.cat/mergo
 # github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
@@ -11,7 +11,7 @@ github.com/asaskevich/govalidator
 # github.com/bitly/go-simplejson v0.5.1
 ## explicit; go 1.17
 github.com/bitly/go-simplejson
-# github.com/cpuguy83/go-md2man/v2 v2.0.4
+# github.com/cpuguy83/go-md2man/v2 v2.0.5
 ## explicit; go 1.11
 github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
@@ -78,7 +78,7 @@ github.com/pkg/profile
 # github.com/russross/blackfriday/v2 v2.1.0
 ## explicit
 github.com/russross/blackfriday/v2
-# github.com/urfave/cli/v2 v2.27.4
+# github.com/urfave/cli/v2 v2.27.5
 ## explicit; go 1.18
 github.com/urfave/cli/v2
 # github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1
@@ -98,13 +98,10 @@ go.uber.org/zap/internal/exit
 go.uber.org/zap/internal/pool
 go.uber.org/zap/internal/stacktrace
 go.uber.org/zap/zapcore
-# golang.org/x/crypto v0.26.0
-## explicit; go 1.20
-golang.org/x/crypto/ssh/terminal
 # golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678
 ## explicit; go 1.18
 golang.org/x/exp/typeparams
-# golang.org/x/image v0.19.0
+# golang.org/x/image v0.21.0
 ## explicit; go 1.18
 golang.org/x/image/bmp
 golang.org/x/image/ccitt
@@ -119,10 +116,10 @@ golang.org/x/image/tiff/lzw
 golang.org/x/image/vp8
 golang.org/x/image/vp8l
 golang.org/x/image/webp
-# golang.org/x/mod v0.20.0
-## explicit; go 1.18
+# golang.org/x/mod v0.21.0
+## explicit; go 1.22.0
 golang.org/x/mod/semver
-# golang.org/x/net v0.28.0
+# golang.org/x/net v0.30.0
 ## explicit; go 1.18
 golang.org/x/net/html
 golang.org/x/net/html/atom
@@ -130,16 +127,16 @@ golang.org/x/net/html/charset
 # golang.org/x/sync v0.8.0
 ## explicit; go 1.18
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.23.0
+# golang.org/x/sys v0.26.0
 ## explicit; go 1.18
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
-# golang.org/x/term v0.23.0
+# golang.org/x/term v0.25.0
 ## explicit; go 1.18
 golang.org/x/term
-# golang.org/x/text v0.17.0
+# golang.org/x/text v0.19.0
 ## explicit; go 1.18
 golang.org/x/text/cases
 golang.org/x/text/encoding
@@ -165,8 +162,8 @@ golang.org/x/text/language/display
 golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
-# golang.org/x/tools v0.24.0
-## explicit; go 1.19
+# golang.org/x/tools v0.26.0
+## explicit; go 1.22.0
 golang.org/x/tools/cmd/stringer
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/passes/inspect
@@ -189,7 +186,6 @@ golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/packagesinternal
 golang.org/x/tools/internal/pkgbits
 golang.org/x/tools/internal/stdlib
-golang.org/x/tools/internal/tokeninternal
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 golang.org/x/tools/internal/versions
@@ -202,7 +198,7 @@ gopkg.in/gomail.v2
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit; go 1.15
 gopkg.in/yaml.v2
-# honnef.co/go/tools v0.5.0
+# honnef.co/go/tools v0.5.1
 ## explicit; go 1.22.1
 honnef.co/go/tools/analysis/callcheck
 honnef.co/go/tools/analysis/code

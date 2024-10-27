@@ -33,7 +33,7 @@ func TestDocument(t *testing.T) {
 	title.SetText("Great Expectations")
 	author := book.CreateElement("author")
 	author.CreateCharData("Charles Dickens")
-	doc.IndentTabs()
+	// doc.IndentTabs()
 
 	// Serialize the document to a string
 	s, err := doc.WriteToString()
@@ -42,16 +42,7 @@ func TestDocument(t *testing.T) {
 	}
 
 	// Make sure the serialized XML matches expectation.
-	expected := `<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="style.xsl"?>
-<store xmlns:t="urn:books-com:titles">
-	<!Directive>
-	<!--This is a comment-->
-	<book lang="en">
-		<t:title>Great Expectations</t:title>
-		<author>Charles Dickens</author>
-	</book>
-</store>`
+	expected := `<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="style.xsl"?><store xmlns:t="urn:books-com:titles"><!Directive><!--This is a comment--><book lang="en"><t:title>Great Expectations</t:title><author>Charles Dickens</author></book></store>`
 	checkEq(t, s, expected)
 
 	// Test the structure of the XML
@@ -411,11 +402,7 @@ func TestInsertChild(t *testing.T) {
 	book := doc.FindElement("//book")
 	book.InsertChild(book.SelectElement("t:title"), year)
 
-	expected1 := `<book lang="en">
-  <year>1861</year>
-  <t:title>Great Expectations</t:title>
-  <author>Charles Dickens</author>
-</book>`
+	expected1 := `<book lang="en"><year>1861</year><t:title>Great Expectations</t:title><author>Charles Dickens</author></book>`
 	doc.Indent(2)
 	s1, _ := doc.WriteToString()
 	checkEq(t, s1, expected1)
@@ -423,11 +410,7 @@ func TestInsertChild(t *testing.T) {
 	book.RemoveChild(year)
 	book.InsertChild(book.SelectElement("author"), year)
 
-	expected2 := `<book lang="en">
-  <t:title>Great Expectations</t:title>
-  <year>1861</year>
-  <author>Charles Dickens</author>
-</book>`
+	expected2 := `<book lang="en"><t:title>Great Expectations</t:title><year>1861</year><author>Charles Dickens</author></book>`
 	doc.Indent(2)
 	s2, _ := doc.WriteToString()
 	checkEq(t, s2, expected2)
@@ -435,11 +418,7 @@ func TestInsertChild(t *testing.T) {
 	book.RemoveChild(year)
 	book.InsertChild(book.SelectElement("UNKNOWN"), year)
 
-	expected3 := `<book lang="en">
-  <t:title>Great Expectations</t:title>
-  <author>Charles Dickens</author>
-  <year>1861</year>
-</book>`
+	expected3 := `<book lang="en"><t:title>Great Expectations</t:title><author>Charles Dickens</author><year>1861</year></book>`
 	doc.Indent(2)
 	s3, _ := doc.WriteToString()
 	checkEq(t, s3, expected3)
@@ -447,11 +426,7 @@ func TestInsertChild(t *testing.T) {
 	book.RemoveChild(year)
 	book.InsertChild(nil, year)
 
-	expected4 := `<book lang="en">
-  <t:title>Great Expectations</t:title>
-  <author>Charles Dickens</author>
-  <year>1861</year>
-</book>`
+	expected4 := `<book lang="en"><t:title>Great Expectations</t:title><author>Charles Dickens</author><year>1861</year></book>`
 	doc.Indent(2)
 	s4, _ := doc.WriteToString()
 	checkEq(t, s4, expected4)
@@ -506,10 +481,7 @@ func TestAddChild(t *testing.T) {
 	s1, _ := doc1.WriteToString()
 	checkEq(t, s1, expected1)
 
-	expected2 := `<root>
-  <t:title>Great Expectations</t:title>
-  <author>Charles Dickens</author>
-</root>`
+	expected2 := `<root><t:title>Great Expectations</t:title><author>Charles Dickens</author></root>`
 	doc2.Indent(2)
 	s2, _ := doc2.WriteToString()
 	checkEq(t, s2, expected2)

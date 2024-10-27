@@ -44,7 +44,7 @@ func (r *Report) Close() error {
 	return r.finalize()
 }
 
-//  Name() returns name of underlying file.
+// Name() returns name of underlying file.
 func (r *Report) Name() string {
 
 	if r.file == nil {

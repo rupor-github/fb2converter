@@ -1,0 +1,22 @@
+#!/bin/bash
+# To use, store as .git/hooks/pre-push inside your repository and make sure
+# it has execute permissions.
+
+# run security/vulnerabilities scanner prior to pushing to repo
+
+scanner=trivy
+
+# detect if "trivy" is installed
+if ! command -v ${scanner} &> /dev/null; then
+  echo "==== ${scanner} is not installed"
+  echo "     to install it follow instructions on https://github.com/aquasecurity/trivy/blob/main/docs/getting-started/installation.md#debianubuntu"
+  exit 1
+fi
+
+echo "==== running vulnerabilities scanner (${scanner}) from $0"
+echo "     to accept risks create a .trivyignore file in repo's root"
+echo "     See https://github.com/aquasecurity/trivy/blob/main/docs/docs/vulnerability/examples/filter.md#by-vulnerability-ids"
+echo
+
+# without the --exit-code 1 flag - trivy always exists with 0
+${scanner} --exit-code 1 fs --ignore-unfixed .

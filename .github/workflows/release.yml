@@ -3,7 +3,7 @@ name: fb2converter release
 on:
   create:
     tags:
-    - "v*.*.*"
+      - "v*.*.*"
 
 permissions:
   contents: write
@@ -14,41 +14,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Ubuntu version
-      run: lsb_release -a
+      - name: Ubuntu version
+        run: lsb_release -a
 
-    - name: Checkout sources
-      uses: actions/checkout@v4
+      - name: Checkout sources
+        uses: actions/checkout@v4
 
-    - name: Install Task
-      uses: arduino/setup-task@v2
-      with:
-        version: 3.x
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.22'
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
 
-    - name: Build everything
-      run: task release
+      - name: Build everything
+        run: task release
 
-    - name: Sign release artifacts
-      # After lunar this could be replaced with "apt install minisign"
-      uses: thomasdesr/minisign-action@v1
-      with:
-        args: -Sm release/fb2c-*.zip
-        minisign_key: ${{ secrets.minisign_key }}
-        password: ${{ secrets.minisign_password }}
+      - name: Sign release artifacts
+        # After lunar this could be replaced with "apt install minisign"
+        uses: thomasdesr/minisign-action@v1
+        with:
+          args: -Sm release/fb2c-*.zip
+          minisign_key: ${{ secrets.minisign_key }}
+          password: ${{ secrets.minisign_password }}
 
-    - name: List results
-      run: ls -lah release/
+      - name: List results
+        run: ls -lah release/
 
-    - name: Upload release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        generate_release_notes: true
-        files: |
-          release/fb2c-*.zip
-          release/fb2c-*.minisig
+      - name: Upload release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          generate_release_notes: true
+          files: |-
+            release/fb2c-*.zip
+            release/fb2c-*.minisig

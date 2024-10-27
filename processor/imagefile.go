@@ -6,20 +6,17 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	_ "image/gif"
+	_ "image/jpeg"
 	"image/png"
 	"os"
 	"path/filepath"
 
-	// additional supported image formats
-	_ "image/gif"
-	_ "image/jpeg"
-
+	"github.com/disintegration/imaging"
+	"go.uber.org/zap"
 	_ "golang.org/x/image/bmp"
 	_ "golang.org/x/image/tiff"
 	_ "golang.org/x/image/webp"
-
-	"github.com/disintegration/imaging"
-	"go.uber.org/zap"
 
 	"fb2converter/processor/internal/mobi"
 )

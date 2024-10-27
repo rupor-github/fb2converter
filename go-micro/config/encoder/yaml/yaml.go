@@ -1,8 +1,9 @@
 package yaml
 
 import (
-	"fb2converter/go-micro/config/encoder"
 	"github.com/ghodss/yaml"
+
+	"fb2converter/go-micro/config/encoder"
 )
 
 type yamlEncoder struct{}

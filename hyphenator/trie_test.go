@@ -1,12 +1,7 @@
 package hyphenator
 
 import (
-	// "fmt"
-	// "io"
-	// "os"
 	"testing"
-	// "text/scanner"
-	// "unicode/utf8"
 )
 
 func checkValues(trie *Trie, s string, v []int, t *testing.T) {

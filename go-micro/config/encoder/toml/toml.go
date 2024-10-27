@@ -3,8 +3,9 @@ package toml
 import (
 	"bytes"
 
-	"fb2converter/go-micro/config/encoder"
 	"github.com/BurntSushi/toml"
+
+	"fb2converter/go-micro/config/encoder"
 )
 
 type tomlEncoder struct{}

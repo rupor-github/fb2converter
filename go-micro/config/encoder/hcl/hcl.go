@@ -3,8 +3,9 @@ package hcl
 import (
 	"encoding/json"
 
-	"fb2converter/go-micro/config/encoder"
 	"github.com/hashicorp/hcl"
+
+	"fb2converter/go-micro/config/encoder"
 )
 
 type hclEncoder struct{}

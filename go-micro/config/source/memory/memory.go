@@ -5,8 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"fb2converter/go-micro/config/source"
 	"github.com/google/uuid"
+
+	"fb2converter/go-micro/config/source"
 )
 
 type memory struct {

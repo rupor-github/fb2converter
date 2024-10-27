@@ -7,8 +7,9 @@ import (
 	"errors"
 	"os"
 
-	"fb2converter/go-micro/config/source"
 	"github.com/fsnotify/fsnotify"
+
+	"fb2converter/go-micro/config/source"
 )
 
 type watcher struct {

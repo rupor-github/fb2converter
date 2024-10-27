@@ -17,48 +17,53 @@ similar to XPath strings, they have a more limited set of selectors and
 filtering options. The following selectors and filters are supported by etree
 paths:
 
-    .               Select the current element.
-    ..              Select the parent of the current element.
-    *               Select all child elements of the current element.
-    /               Select the root element when used at the start of a path.
-    //              Select all descendants of the current element. If used at
-                      the start of a path, select all descendants of the root.
-    tag             Select all child elements with the given tag.
-    [#]             Select the element of the given index (1-based,
-                      negative starts from the end).
-    [@attrib]       Select all elements with the given attribute.
-    [@attrib='val'] Select all elements with the given attribute set to val.
-    [tag]           Select all elements with a child element named tag.
-    [tag='val']     Select all elements with a child element named tag
-                      and text matching val.
-    [text()]        Select all elements with non-empty text.
-    [text()='val']  Select all elements whose text matches val.
+	.               Select the current element.
+	..              Select the parent of the current element.
+	*               Select all child elements of the current element.
+	/               Select the root element when used at the start of a path.
+	//              Select all descendants of the current element. If used at
+	                  the start of a path, select all descendants of the root.
+	tag             Select all child elements with the given tag.
+	[#]             Select the element of the given index (1-based,
+	                  negative starts from the end).
+	[@attrib]       Select all elements with the given attribute.
+	[@attrib='val'] Select all elements with the given attribute set to val.
+	[tag]           Select all elements with a child element named tag.
+	[tag='val']     Select all elements with a child element named tag
+	                  and text matching val.
+	[text()]        Select all elements with non-empty text.
+	[text()='val']  Select all elements whose text matches val.
 
 Examples:
 
 Select the bookstore child element of the root element:
-    /bookstore
+
+	/bookstore
 
 Beginning a search from the root element, select the title elements of all
 descendant book elements having a 'category' attribute of 'WEB':
-    //book[@category='WEB']/title
+
+	//book[@category='WEB']/title
 
 Beginning a search from the current element, select the first descendant book
 element with a title child containing the text 'Great Expectations':
-    .//book[title='Great Expectations'][1]
+
+	.//book[title='Great Expectations'][1]
 
 Beginning a search from the current element, select all children of book
 elements with an attribute 'language' set to 'english':
-    ./book/*[@language='english']
+
+	./book/*[@language='english']
 
 Beginning a search from the current element, select all children of book
 elements containing the text 'special':
-    ./book/*[text()='special']
+
+	./book/*[text()='special']
 
 Beginning a search from the current element, select all descendant book
 elements whose title element has an attribute 'language' equal to 'french':
-    .//book/title[@language='french']/..
 
+	.//book/title[@language='french']/..
 */
 type Path struct {
 	segments []segment

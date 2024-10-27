@@ -93,6 +93,7 @@ func TestHyphenatorRussian(t *testing.T) {
 }
 
 const testStrSpecial = `сегодня? –`
+
 const hyphStrSpecial = `се­го­дня? –`
 
 func TestHyphenatorSpecial(t *testing.T) {
