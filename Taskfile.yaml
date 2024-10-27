@@ -99,7 +99,7 @@ tasks:
 
   release:
     desc: Cross-builds release for all supported platforms
-    deps: [get-dictionaries, get-sentences]
+    deps: [generate-project-version, get-dictionaries, get-sentences]
     cmds:
       - mkdir -p '{{.REL_BUILD_DIR}}'
       - for: [linux-amd64, linux-arm64, linux-386, darwin-amd64, darwin-arm64, windows-amd64-.exe, windows-arm64-.exe, windows-386-.exe]

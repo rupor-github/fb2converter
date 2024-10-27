@@ -1,6 +1,5 @@
 vendor/
 static/
 pkg/
-CMakeLists.txt
 go.sum
 README.*
