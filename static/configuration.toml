@@ -128,6 +128,7 @@
 
 	#---- When breaking sentences into words nbsp symbols are considered to be part of the word. This will replace all
 	#---- nbsp symbols with ordinary spaces, potentially breaking original formatting and changing hyphenation
+	#---- NOTE: this setting may conflict with document transforms
 	# ignore_nonbreakable_space = false
 
 	#---- To generate epub page map we use very rough text processing, controlling approximate page size in Unicode code points
@@ -232,6 +233,9 @@
 
 	[document.transform]
 		#---- Additional text transformations, presently "direct speech normalization" and "dashes unification" are supported
+		#---- Happens during paragraph processing, before any language sensitive tokenization
+		#---- Order of transformation is hardcoded: speech, dashes, dialogue
+		#---- Comment out any section to disable transformation
 
 		#---- At the beginning of paragraph text starting with Unicode symbol included in "from" string possibly
 		#---- followed by any number of Unicode space symbols is replaced with "to" string
@@ -244,6 +248,12 @@
 		# [document.transform.dashes]
 			# from = "‐‑−–—―"
 			# to = "—"
+
+		#---- In paragraphs sequence of leading Unicode spaces followed by any Unicode symbol included in "from" string is
+		#---- replaced with "to" string followed by this Unicode symbol.
+		# [document.transform.dialogue]
+			# from = "‐‑−–—―"
+			# to = " "
 
 	#---- Vignette images could be specified for up to 6 levels of headers (h0 - h6) and "default"
 	#---- "none" has a special meaning suppressing particular vignette usage

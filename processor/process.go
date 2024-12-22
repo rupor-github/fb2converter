@@ -23,7 +23,7 @@ import (
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
-	"gopkg.in/gomail.v2"
+	gomail "gopkg.in/gomail.v2"
 
 	"fb2converter/config"
 	"fb2converter/etree"
@@ -82,11 +82,12 @@ type Processor struct {
 	Book     *Book
 	notFound *binImage
 	// program environment
-	env             *state.LocalEnv
-	speechTransform *config.Transformation
-	dashTransform   *config.Transformation
-	metaOverwrite   *config.MetaInfo
-	kindlegenPath   string
+	env               *state.LocalEnv
+	speechTransform   *config.Transformation
+	dashTransform     *config.Transformation
+	dialogueTransform *config.Transformation
+	metaOverwrite     *config.MetaInfo
+	kindlegenPath     string
 }
 
 // NewFB2 creates FB2 book processor and prepares necessary temporary directories.
@@ -142,25 +143,26 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 	}
 
 	p := &Processor{
-		kind:            InFb2,
-		src:             src,
-		dst:             dst,
-		nodirs:          nodirs,
-		stk:             stk,
-		overwrite:       overwrite,
-		format:          format,
-		notesMode:       notes,
-		tocType:         toct,
-		tocPlacement:    place,
-		kindlePageMap:   apnx,
-		stampPlacement:  stamp,
-		coverResize:     resize,
-		doc:             etree.NewDocument(),
-		Book:            NewBook(u, filepath.Base(src)),
-		env:             env,
-		speechTransform: env.Cfg.GetTransformation("speech"),
-		dashTransform:   env.Cfg.GetTransformation("dashes"),
-		metaOverwrite:   env.Cfg.GetOverwrite(src),
+		kind:              InFb2,
+		src:               src,
+		dst:               dst,
+		nodirs:            nodirs,
+		stk:               stk,
+		overwrite:         overwrite,
+		format:            format,
+		notesMode:         notes,
+		tocType:           toct,
+		tocPlacement:      place,
+		kindlePageMap:     apnx,
+		stampPlacement:    stamp,
+		coverResize:       resize,
+		doc:               etree.NewDocument(),
+		Book:              NewBook(u, filepath.Base(src)),
+		env:               env,
+		speechTransform:   env.Cfg.GetTransformation("speech"),
+		dashTransform:     env.Cfg.GetTransformation("dashes"),
+		dialogueTransform: env.Cfg.GetTransformation("dialogue"),
+		metaOverwrite:     env.Cfg.GetOverwrite(src),
 	}
 	p.doc.WriteSettings = etree.WriteSettings{CanonicalText: true, CanonicalAttrVal: true}
 
@@ -183,6 +185,10 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 	if p.dashTransform != nil {
 		sym, _ := utf8.DecodeRuneInString(p.dashTransform.To)
 		p.dashTransform.To = string(sym)
+	}
+	if p.dialogueTransform != nil && len(p.dialogueTransform.To) == 0 {
+		env.Log.Warn("Invalid dialogue transformation, ignoring")
+		p.dialogueTransform = nil
 	}
 
 	p.tmpDir, err = os.MkdirTemp("", "fb2c-")

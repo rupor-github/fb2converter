@@ -188,7 +188,7 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 func (p *Processor) doTextTransformations(text string, breakable, tail bool) string {
 
 	if p.ctx().inParagraph && breakable {
-		// normalize direct speech if requested
+		// normalize direct speech if requested - legacy, from fb2mobi
 		if !tail && p.speechTransform != nil {
 			from, to := p.speechTransform.From, p.speechTransform.To
 			cutIndex := 0
@@ -209,7 +209,7 @@ func (p *Processor) doTextTransformations(text string, breakable, tail bool) str
 			}
 		}
 
-		// unify dashes if requested
+		// unify dashes if requested - legacy, from fb2mobi
 		if p.dashTransform != nil {
 			var (
 				b     strings.Builder
@@ -224,6 +224,37 @@ func (p *Processor) doTextTransformations(text string, breakable, tail bool) str
 					continue
 				}
 				b.WriteRune(runes[i])
+			}
+			text = b.String()
+		}
+
+		// handle punctuation in dialogues if requested. Allows to enforce line break after
+		// dash in accordance with Russian rules
+		if !tail && p.dialogueTransform != nil {
+			var (
+				b             strings.Builder
+				runes         = []rune(text)
+				leadingSpaces = -1
+			)
+			for i := 0; i < len(runes); i++ {
+				if unicode.IsSpace(runes[i]) {
+					leadingSpaces = i
+					continue
+				}
+				if i > 0 && strings.ContainsRune(p.dialogueTransform.From, runes[i]) {
+					b.WriteString(p.dialogueTransform.To)
+					b.WriteRune(runes[i])
+					leadingSpaces = -1
+					continue
+				}
+				if leadingSpaces >= 0 {
+					b.WriteString(string(runes[leadingSpaces:i]))
+				}
+				b.WriteRune(runes[i])
+				leadingSpaces = -1
+			}
+			if leadingSpaces > 0 {
+				b.WriteString(string(runes[leadingSpaces:]))
 			}
 			text = b.String()
 		}

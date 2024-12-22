@@ -27,9 +27,9 @@ tasks:
     platforms: [linux]
     deps:
       - task: copy-file
-        vars: {SRC: 'scripts/pre-commit', DST: '.git/hooks/pre-commit'}
+        vars: {SRC: 'scripts/git/pre-commit', DST: '.git/hooks/pre-commit'}
       - task: copy-file
-        vars: {SRC: 'scripts/pre-push', DST: '.git/hooks/pre-push'}
+        vars: {SRC: 'scripts/git/pre-push', DST: '.git/hooks/pre-push'}
       - task: copy-file
         vars: {SRC: 'kindlegen/linux/kindlegen', DST: '{{.DEV_BUILD_DIR}}/kindlegen'}
       - task: generate-project-version
