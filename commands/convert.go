@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/urfave/cli/v2"
+	cli "github.com/urfave/cli/v2"
 	"go.uber.org/zap"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/ianaindex"
