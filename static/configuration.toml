@@ -232,7 +232,7 @@
 		# stamp_font = "LinLibertine_RBah.ttf"
 
 	[document.transform]
-		#---- Additional text transformations, presently "direct speech normalization" and "dashes unification" are supported
+		#---- Additional text transformations - could be used to fix some common issues with FB2 files
 		#---- Happens during paragraph processing, before any language sensitive tokenization
 		#---- Order of transformation is hardcoded: speech, dashes, dialogue
 		#---- Comment out any section to disable transformation
