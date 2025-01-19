@@ -315,8 +315,8 @@ tasks:
     cmds:
       - rm -f *.txt
       - echo "{{.TATN}}Downloading dictionary patterns from \"ctan.math.utah.edu\"{{.TOFF}}"
-      - wget -q -r -l1 --no-parent -nd -A.pat.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
-      - wget -q -r -l1 --no-parent -nd -A.hyp.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/generic/hyph-utf8/patterns/txt
+      - wget -q -r -l1 --no-parent -nd -A.pat.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/patterns/txt
+      - wget -q -r -l1 --no-parent -nd -A.hyp.txt http://ctan.math.utah.edu/ctan/tex-archive/language/hyph-utf8/tex/patterns/txt
       - gzip -q -f hyph-*.txt
     status:
       - find -type f -name 'hyph-*.txt.gz' | grep -q .

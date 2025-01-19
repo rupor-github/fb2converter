@@ -108,19 +108,31 @@ func splitSentences(t *tokenizer, in string) []string {
 
 // splitWords returns slice of words in sentence.
 func splitWords(_ *tokenizer, in string, ignoreNBSP bool) []string {
-	if ignoreNBSP {
-		// unicode.IsSpace will eat everything - for backward compatibility
-		return strings.Fields(in)
-	}
-	// exclude NBSP from the list of white space separators for latin1 symbols
-	return strings.FieldsFunc(in, func(r rune) bool {
-		if uint32(r) <= unicode.MaxLatin1 {
-			switch r {
-			case '\t', '\n', '\v', '\f', '\r', ' ', 0x85:
-				return true
-			}
-			return false
+	var (
+		result = []string{}
+		word   strings.Builder
+	)
+	for _, sym := range in {
+		if isSep(sym, ignoreNBSP) {
+			result = append(result, word.String())
+			word.Reset()
+			continue
 		}
-		return unicode.IsSpace(r)
-	})
+		word.WriteRune(sym)
+	}
+	return append(result, word.String())
+}
+
+func isSep(r rune, ignoreNBSP bool) bool {
+	if uint32(r) <= unicode.MaxLatin1 {
+		switch r {
+		// exclude NBSP from the list of white space separators for latin1 symbols
+		case '\t', '\n', '\v', '\f', '\r', ' ', 0x85:
+			return true
+		case 0xA0: // NBSP
+			return ignoreNBSP
+		}
+		return false
+	}
+	return unicode.IsSpace(r)
 }
