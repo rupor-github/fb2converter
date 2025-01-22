@@ -140,6 +140,7 @@ type Doc struct {
 	FileNameFormat        string   `json:"file_name_format"`
 	FileNameTransliterate bool     `json:"file_name_transliterate"`
 	FixZip                bool     `json:"fix_zip_format"`
+	NoPageMap             bool     `json:"no_page_map"`
 	//
 	DropCaps struct {
 		Create        bool   `json:"create"`

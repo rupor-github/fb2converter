@@ -109,7 +109,7 @@ tasks:
     deps: [generate-project-version, get-dictionaries, get-sentences]
     cmds:
       - mkdir -p '{{.REL_BUILD_DIR}}'
-      - for: [linux-amd64, linux-arm64, linux-386, darwin-amd64, darwin-arm64, windows-amd64-.exe, windows-arm64-.exe, windows-386-.exe]
+      - for: [linux-amd64, linux-arm64, linux-386, darwin-amd64, darwin-arm64, freebsd-amd64, freebsd-arm64, windows-amd64-.exe, windows-arm64-.exe, windows-386-.exe]
         task: release-for-platform-{{with $arch := split "-" .ITEM}}{{$arch._0}}{{end}}
         vars:
           GOOS: '{{with $arch := split "-" .ITEM}}{{$arch._0}}{{end}}'
@@ -176,6 +176,25 @@ tasks:
       - defer: rm -rf {{.BUILD_DIR}}
       - task: copy-file
         vars: {SRC: 'kindlegen/{{.GOOS}}/kindlegen{{.SUFFIX}}', DST: '{{.BUILD_DIR}}/kindlegen{{.SUFFIX}}'}
+      - task: go-build
+        vars: {GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2c', TARGET: '{{.BUILD_DIR}}/fb2c{{.SUFFIX}}'}
+      - echo "{{.TATN}}Archiving release \"{{.REL_NAME}}.zip\"{{.TOFF}}"
+      - 7z a -r -bd -bso0 -tzip {{.REL_NAME}} ./{{.BUILD_DIR}}/*
+    status:
+      - test -f '{{.REL_NAME}}.zip'
+
+  release-for-platform-freebsd:
+    internal: true
+    desc: Builds release for specified platform
+    requires:
+      vars: [GOOS, GOARCH, SUFFIX]
+    label: release-for-platform-darwin-{{.GOOS}}-{{.GOARCH}}
+    vars:
+      BUILD_DIR: '{{.REL_BUILD_DIR}}_{{.GOOS}}_{{.GOARCH}}'
+      REL_NAME: '{{.REL_BUILD_DIR}}/fb2c-{{.GOOS}}-{{.GOARCH}}'
+    cmds:
+      - mkdir -p {{.BUILD_DIR}}
+      - defer: rm -rf {{.BUILD_DIR}}
       - task: go-build
         vars: {GOOS: '{{.GOOS}}', GOARCH: '{{.GOARCH}}', FLAGS: 'release', PACKAGE: './cmd/fb2c', TARGET: '{{.BUILD_DIR}}/fb2c{{.SUFFIX}}'}
       - echo "{{.TATN}}Archiving release \"{{.REL_NAME}}.zip\"{{.TOFF}}"
@@ -348,6 +367,7 @@ tasks:
     vars:
       GO_VER: '{{default "" (regexFind "[0-9]+\\.[0-9]+\\.?[0-9]*[-a-zA-Z0-9+]*" (env "CUR_PROJECT_TYPE"))}}'
     cmds:
+      - GOOS=freebsd go mod tidy{{if .GO_VER}} -go={{.GO_VER}}{{end}} {{.CLI_ARGS}}
       - GOOS=linux go mod tidy{{if .GO_VER}} -go={{.GO_VER}}{{end}} {{.CLI_ARGS}}
       - GOOS=darwin go mod tidy{{if .GO_VER}} -go={{.GO_VER}}{{end}} {{.CLI_ARGS}}
       - GOOS=windows go mod tidy{{if .GO_VER}} -go={{.GO_VER}}{{end}} {{.CLI_ARGS}}

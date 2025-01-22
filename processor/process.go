@@ -71,6 +71,7 @@ type Processor struct {
 	notesMode      NotesFmt
 	tocPlacement   TOCPlacement
 	tocType        TOCType
+	noPages        bool
 	kindlePageMap  APNXGeneration
 	stampPlacement StampPlacement
 	coverResize    CoverProcessing
@@ -126,6 +127,11 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 			apnx = APNXNone
 		}
 	}
+	if env.Cfg.Doc.NoPageMap && apnx != APNXNone {
+		env.Log.Warn("APNX generation option requested but no page map is generated, turning off")
+		apnx = APNXNone
+	}
+
 	var stamp StampPlacement
 	if len(env.Cfg.Doc.Cover.Placement) > 0 {
 		stamp = ParseStampPlacementString(env.Cfg.Doc.Cover.Placement)
@@ -153,6 +159,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		notesMode:         notes,
 		tocType:           toct,
 		tocPlacement:      place,
+		noPages:           env.Cfg.Doc.NoPageMap,
 		kindlePageMap:     apnx,
 		stampPlacement:    stamp,
 		coverResize:       resize,

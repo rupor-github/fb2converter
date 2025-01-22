@@ -131,6 +131,10 @@
 	#---- NOTE: this setting may conflict with document transforms
 	# ignore_nonbreakable_space = false
 
+	#---- When set no page maps will be generated in epub and no page markers inserted anywhere.
+	#---- this in turn will disable apnx generation for kindle based formats
+	# no_page_map = false
+
 	#---- To generate epub page map we use very rough text processing, controlling approximate page size in Unicode code points
 	# characters_per_page = 2300
 

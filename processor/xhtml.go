@@ -262,7 +262,7 @@ func (p *Processor) doTextTransformations(text string, breakable, tail bool) str
 	return text
 }
 
-// formatText inserts page markers (for page map), kobo spans (if necessary) and hyphenates words if requested.
+// formatText inserts page markers (for page map) if requested, kobo spans (if necessary) and hyphenates words if requested.
 func (p *Processor) formatText(in string, breakable, tail bool, to *etree.Element) {
 
 	in = p.doTextTransformations(in, breakable, tail)
@@ -275,6 +275,8 @@ func (p *Processor) formatText(in string, breakable, tail bool, to *etree.Elemen
 		page, insertMarkers = p.Book.Pages[p.ctx().fname]
 		kobo                = p.format == OKepub
 	)
+
+	insertMarkers = insertMarkers && !p.noPages
 
 	bufWriteString := func(text string, kobo bool) {
 		if kobo {

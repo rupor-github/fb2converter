@@ -395,6 +395,10 @@ func (p *Processor) prepareStylesheet() error {
 // generatePagemap creates epub page map.
 func (p *Processor) generatePagemap() error {
 
+	if p.noPages {
+		return nil
+	}
+
 	p.env.Log.Debug("Generating page map - start")
 	defer func(start time.Time) {
 		p.env.Log.Debug("Generating page map - done", zap.Duration("elapsed", time.Since(start)))
@@ -534,7 +538,12 @@ func (p *Processor) generateOPF() error {
 
 	// Spine generation
 
-	spine := to.AddNext("spine", attr("toc", "ncx"), attr("page-map", "page-map"))
+	var spine *etree.Element
+	if p.noPages {
+		spine = to.AddNext("spine", attr("toc", "ncx"))
+	} else {
+		spine = to.AddNext("spine", attr("toc", "ncx"), attr("page-map", "page-map"))
+	}
 
 	for _, f := range p.Book.Files {
 		id := f.id
