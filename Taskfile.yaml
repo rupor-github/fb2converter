@@ -188,7 +188,7 @@ tasks:
     desc: Builds release for specified platform
     requires:
       vars: [GOOS, GOARCH, SUFFIX]
-    label: release-for-platform-darwin-{{.GOOS}}-{{.GOARCH}}
+    label: release-for-platform-freebsd-{{.GOOS}}-{{.GOARCH}}
     vars:
       BUILD_DIR: '{{.REL_BUILD_DIR}}_{{.GOOS}}_{{.GOARCH}}'
       REL_NAME: '{{.REL_BUILD_DIR}}/fb2c-{{.GOOS}}-{{.GOARCH}}'
