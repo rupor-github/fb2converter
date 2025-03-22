@@ -352,7 +352,7 @@ tasks:
           var: TARGET_RELEASES
         cmd: |
           echo "Tidying with {{with $arch := split "-" .ITEM}}{{$arch._0}}{{end}} GOARCH={{with $arch := split "-" .ITEM}}{{$arch._1}}{{end}}"
-          GOOS={{with $arch := split "-" .ITEM}}{{$arch._0}}{{end}} GOARCH={{with $arch := split "-" .ITEM}}{{$arch._1}}{{end}} go mod tidy {{.CLI_ARGS}}
+          GOOS={{with $arch := split "-" .ITEM}}{{$arch._0}}{{end}} GOARCH={{with $arch := split "-" .ITEM}}{{$arch._1}}{{end}} go mod tidy -go={{.GO_VERSION}} {{.CLI_ARGS}}
 
   go-vendor:
     desc: Creates vendor directory for release build
