@@ -1,4 +1,4 @@
-# dario.cat/mergo v1.0.1
+# dario.cat/mergo v1.0.2
 ## explicit; go 1.13
 dario.cat/mergo
 # github.com/BurntSushi/toml v1.5.0
@@ -11,7 +11,7 @@ github.com/asaskevich/govalidator
 # github.com/bitly/go-simplejson v0.5.1
 ## explicit; go 1.17
 github.com/bitly/go-simplejson
-# github.com/cpuguy83/go-md2man/v2 v2.0.6
+# github.com/cpuguy83/go-md2man/v2 v2.0.7
 ## explicit; go 1.12
 github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/davecgh/go-spew v1.1.1
@@ -26,7 +26,7 @@ github.com/felixge/fgprof
 # github.com/fogleman/gg v1.3.0
 ## explicit
 github.com/fogleman/gg
-# github.com/fsnotify/fsnotify v1.8.0
+# github.com/fsnotify/fsnotify v1.9.0
 ## explicit; go 1.17
 github.com/fsnotify/fsnotify
 github.com/fsnotify/fsnotify/internal
@@ -39,8 +39,8 @@ github.com/golang/freetype/raster
 github.com/golang/freetype/truetype
 # github.com/google/go-cmp v0.7.0
 ## explicit; go 1.21
-# github.com/google/pprof v0.0.0-20250317173921-a4b03ec1a45e
-## explicit; go 1.23
+# github.com/google/pprof v0.0.0-20250501235452-c0086092b71a
+## explicit; go 1.23.0
 github.com/google/pprof/profile
 # github.com/google/uuid v1.6.0
 ## explicit
@@ -109,10 +109,10 @@ go.uber.org/zap/internal/stacktrace
 go.uber.org/zap/internal/ztest
 go.uber.org/zap/zapcore
 go.uber.org/zap/zaptest
-# golang.org/x/exp/typeparams v0.0.0-20250305212735-054e65f0b394
+# golang.org/x/exp/typeparams v0.0.0-20250506013437-ce4c2cf36ca6
 ## explicit; go 1.23.0
 golang.org/x/exp/typeparams
-# golang.org/x/image v0.25.0
+# golang.org/x/image v0.27.0
 ## explicit; go 1.23.0
 golang.org/x/image/bmp
 golang.org/x/image/ccitt
@@ -130,24 +130,24 @@ golang.org/x/image/webp
 # golang.org/x/mod v0.24.0
 ## explicit; go 1.23.0
 golang.org/x/mod/semver
-# golang.org/x/net v0.37.0
+# golang.org/x/net v0.40.0
 ## explicit; go 1.23.0
 golang.org/x/net/html
 golang.org/x/net/html/atom
 golang.org/x/net/html/charset
-# golang.org/x/sync v0.12.0
+# golang.org/x/sync v0.14.0
 ## explicit; go 1.23.0
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.31.0
+# golang.org/x/sys v0.33.0
 ## explicit; go 1.23.0
 golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
-# golang.org/x/term v0.30.0
+# golang.org/x/term v0.32.0
 ## explicit; go 1.23.0
 golang.org/x/term
-# golang.org/x/text v0.23.0
+# golang.org/x/text v0.25.0
 ## explicit; go 1.23.0
 golang.org/x/text/cases
 golang.org/x/text/encoding
@@ -173,7 +173,7 @@ golang.org/x/text/language/display
 golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
-# golang.org/x/tools v0.31.0
+# golang.org/x/tools v0.33.0
 ## explicit; go 1.23.0
 golang.org/x/tools/cmd/stringer
 golang.org/x/tools/go/analysis
