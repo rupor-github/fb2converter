@@ -808,7 +808,16 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 		// keep structure uniform
 
 		tocRefID := fmt.Sprintf("tocref%d", p.ctx().tocIndex)
-		tocTitle := p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, true) + " " + p.Book.Title
+		var tocTitle string
+		if p.version == 1 {
+			tocTitle = p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, true) + " " + p.Book.Title
+		} else {
+			var err error
+			tocTitle, err = p.expandTemplate("section-title", p.env.Cfg.Doc.AuthorFormat, -1)
+			if err != nil {
+				return fmt.Errorf("unable to prepare author for section-title using '%s': %w", p.env.Cfg.Doc.AuthorFormat, err)
+			}
+		}
 
 		cls := "titleblock"
 		if p.ctx().header.Int() >= p.env.Cfg.Doc.ChapterLevel {
@@ -824,8 +833,16 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 		}
 
 		header := div.AddNext("div", attr("class", h))
-		for _, an := range p.Book.Authors {
-			header.AddNext("p", attr("class", "title")).SetText(ReplaceKeywords(p.env.Cfg.Doc.AuthorFormat, CreateAuthorKeywordsMap(an)))
+		for i, an := range p.Book.Authors {
+			if p.version == 1 {
+				header.AddNext("p", attr("class", "title")).SetText(ReplaceKeywords(p.env.Cfg.Doc.AuthorFormat, CreateAuthorKeywordsMap(an)))
+			} else {
+				res, err := p.expandTemplate("section-author", p.env.Cfg.Doc.AuthorFormat, i)
+				if err != nil {
+					return fmt.Errorf("unable to prepare author for section-author using '%s': %w", p.env.Cfg.Doc.AuthorFormat, err)
+				}
+				header.AddNext("p", attr("class", "title")).SetText(res)
+			}
 		}
 		header.AddNext("p", attr("class", "title")).SetText(p.Book.Title)
 

@@ -42,7 +42,16 @@ func (p *Processor) stampCover(im image.Image) (image.Image, error) {
 			titles = append(titles, series)
 		}
 	}
-	author := p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, true)
+	var author string
+	if p.version == 1 {
+		author = p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, true)
+	} else {
+		var err error
+		author, err = p.expandTemplate("stamp-title", p.env.Cfg.Doc.AuthorFormat, -1)
+		if err != nil {
+			return nil, fmt.Errorf("unable to prepare author for stamp-title using '%s': %w", p.env.Cfg.Doc.AuthorFormat, err)
+		}
+	}
 	if len(author) > 0 {
 		titles = append(titles, author)
 	}

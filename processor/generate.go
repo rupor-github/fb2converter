@@ -36,12 +36,13 @@ func (p *Processor) generateTOCPage() error {
 	to, f := p.ctx().createXHTML("toc", attr("xmlns", `http://www.w3.org/1999/xhtml`))
 	f.id = "toc"
 
-	if p.tocPlacement == TOCBefore {
+	switch p.tocPlacement {
+	case TOCBefore:
 		// TOC page goes first
 		p.Book.Files = append(p.Book.Files, nil)
 		copy(p.Book.Files[1:], p.Book.Files[0:])
 		p.Book.Files[0] = f
-	} else if p.tocPlacement == TOCAfter {
+	case TOCAfter:
 		p.Book.Files = append(p.Book.Files, f)
 	}
 
@@ -63,11 +64,14 @@ func (p *Processor) generateTOCPage() error {
 		inner := toc.AddNext("div", attr("class", "indent0")).AddNext("a", attr("href", te.ref))
 
 		if p.env.Cfg.Doc.TOC.BookTitleFromMeta && te.main {
-			inner.AddNext("span", attr("class", "toc_author")).SetText(p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, false))
+			if p.version == 1 {
+				inner.AddNext("span", attr("class", "toc_author")).SetText(p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, false))
+			} else {
+			}
 			inner.AddNext("span", attr("class", "toc_title")).SetText(p.Book.Title)
 		} else {
 			var notFirst bool
-			for _, l := range strings.Split(te.title, "\n") {
+			for l := range strings.SplitSeq(te.title, "\n") {
 				t := strings.TrimSpace(l)
 				if len(t) > 0 {
 					if notFirst {
@@ -451,7 +455,15 @@ func (p *Processor) generateOPF() error {
 
 	var title string
 	if len(p.env.Cfg.Doc.TitleFormat) > 0 {
-		title = ReplaceKeywords(p.env.Cfg.Doc.TitleFormat, CreateTitleKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos, p.env.Cfg.Doc.SeqFirstWordLen, p.src))
+		if p.version == 1 {
+			title = ReplaceKeywords(p.env.Cfg.Doc.TitleFormat, CreateTitleKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos, p.env.Cfg.Doc.SeqFirstWordLen, p.src))
+		} else {
+			var err error
+			title, err = p.expandTemplate("opf-title", p.env.Cfg.Doc.TitleFormat, -1)
+			if err != nil {
+				return fmt.Errorf("unable to prepare title for opf-title using '%s': %w", p.env.Cfg.Doc.TitleFormat, err)
+			}
+		}
 	}
 	if len(title) == 0 {
 		title = p.Book.Title
@@ -463,8 +475,17 @@ func (p *Processor) generateOPF() error {
 	meta.AddNext("dc:language").SetText(p.Book.Lang.String())
 	meta.AddNext("dc:identifier", attr("id", "BookId"), attr("opf:scheme", "uuid")).SetText(fmt.Sprintf("urn:uuid:%s", p.Book.ID))
 
-	for _, an := range p.Book.Authors {
-		a := ReplaceKeywords(p.env.Cfg.Doc.AuthorFormatMeta, CreateAuthorKeywordsMap(an))
+	for i, an := range p.Book.Authors {
+		var a string
+		if p.version == 1 {
+			a = ReplaceKeywords(p.env.Cfg.Doc.AuthorFormatMeta, CreateAuthorKeywordsMap(an))
+		} else {
+			var err error
+			a, err = p.expandTemplate("opf-author", p.env.Cfg.Doc.AuthorFormat, i)
+			if err != nil {
+				return fmt.Errorf("unable to prepare author for opr-author using '%s': %w", p.env.Cfg.Doc.AuthorFormat, err)
+			}
+		}
 		if p.env.Cfg.Doc.TransliterateMeta {
 			a = slug.Make(a)
 		}

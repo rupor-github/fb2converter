@@ -114,8 +114,13 @@ func (c *SMTPConfig) IsValid() bool {
 		len(c.To) > 0 && govalidator.IsEmail(c.To)
 }
 
+// document configuration version
+// version 2 drops support for AuthorFormatFileName and changes all XXXXFormat fields processing
+const MaxDocConfigVersion = 2
+
 // Doc format configuration for book processor.
 type Doc struct {
+	Version               int      `json:"version"`
 	TitleFormat           string   `json:"title_format"`
 	AuthorFormat          string   `json:"author_format"`
 	AuthorFormatMeta      string   `json:"author_format_meta"`
@@ -218,6 +223,7 @@ type Config struct {
 
 var defaultConfig = []byte(`{
   "document": {
+	"version": 1,
     "title_format": "{(#ABBRseries{ - #padnumber}) }#title",
     "author_format": "#l{ #f}{ #m}",
     "chapter_per_file": true,
@@ -391,6 +397,9 @@ func BuildConfig(fnames ...string) (*Config, error) {
 	}
 	if len(conf.Doc.AuthorFormatFileName) == 0 {
 		conf.Doc.AuthorFormatFileName = conf.Doc.AuthorFormat
+	}
+	if conf.Doc.Version <= 0 || conf.Doc.Version > MaxDocConfigVersion {
+		conf.Doc.Version = 1
 	}
 	return &conf, nil
 }

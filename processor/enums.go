@@ -19,7 +19,7 @@ const (
 // ParseFmtString converts string to enum value. Case insensitive.
 func ParseFmtString(format string) OutputFmt {
 
-	for i := OEpub; i < UnsupportedOutputFmt; i++ {
+	for i := range UnsupportedOutputFmt {
 		if strings.EqualFold(i.String(), format) {
 			return i
 		}
@@ -45,7 +45,7 @@ const (
 // ParseNotesString converts string to enum value. Case insensitive.
 func ParseNotesString(format string) NotesFmt {
 
-	for i := NDefault; i < UnsupportedNotesFmt; i++ {
+	for i := range UnsupportedNotesFmt {
 		if strings.EqualFold(i.String(), format) {
 			return i
 		}
@@ -67,7 +67,7 @@ const (
 // ParseTOCPlacementString converts string to enum value. Case insensitive.
 func ParseTOCPlacementString(format string) TOCPlacement {
 
-	for i := TOCNone; i < UnsupportedTOCPlacement; i++ {
+	for i := range UnsupportedTOCPlacement {
 		if strings.EqualFold(i.String(), format) {
 			return i
 		}
@@ -89,7 +89,7 @@ const (
 // ParseTOCTypeString converts string to enum value. Case insensitive.
 func ParseTOCTypeString(format string) TOCType {
 
-	for i := TOCTypeNormal; i < UnsupportedTOCType; i++ {
+	for i := range UnsupportedTOCType {
 		if strings.EqualFold(i.String(), format) {
 			return i
 		}
@@ -111,7 +111,7 @@ const (
 // ParseAPNXGenerationSring converts string to enum value. Case insensitive.
 func ParseAPNXGenerationSring(format string) APNXGeneration {
 
-	for i := APNXNone; i < UnsupportedAPNXGeneration; i++ {
+	for i := range UnsupportedAPNXGeneration {
 		if strings.EqualFold(i.String(), format) {
 			return i
 		}
@@ -134,7 +134,7 @@ const (
 // ParseStampPlacementString converts string to enum value. Case insensitive.
 func ParseStampPlacementString(format string) StampPlacement {
 
-	for i := StampNone; i < UnsupportedStampPlacement; i++ {
+	for i := range UnsupportedStampPlacement {
 		if strings.EqualFold(i.String(), format) {
 			return i
 		}
@@ -156,7 +156,7 @@ const (
 // ParseCoverProcessingString converts string to enum value. Case insensitive.
 func ParseCoverProcessingString(format string) CoverProcessing {
 
-	for i := CoverNone; i < UnsupportedCoverProcessing; i++ {
+	for i := range UnsupportedCoverProcessing {
 		if strings.EqualFold(i.String(), format) {
 			return i
 		}

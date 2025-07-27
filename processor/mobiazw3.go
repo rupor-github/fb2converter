@@ -128,17 +128,10 @@ func (p *Processor) FinalizeAZW3(fname string) error {
 func (p *Processor) generateIntermediateContent(fname string) (string, error) {
 
 	workDir := filepath.Join(p.tmpDir, DirContent)
-	if p.kind == InEpub {
-		workDir = p.tmpDir
-	}
 	workFile := strings.TrimSuffix(filepath.Base(fname), filepath.Ext(fname)) + ".mobi"
 
 	args := make([]string, 0, 10)
-	if p.kind == InEpub {
-		args = append(args, filepath.Join(p.tmpDir, filepath.Base(p.src)))
-	} else {
-		args = append(args, filepath.Join(workDir, "content.opf"))
-	}
+	args = append(args, filepath.Join(workDir, "content.opf"))
 	args = append(args, fmt.Sprintf("-c%d", p.env.Cfg.Doc.Kindlegen.CompressionLevel))
 	args = append(args, "-locale", "en")
 	if p.env.Cfg.Doc.Kindlegen.Verbose {

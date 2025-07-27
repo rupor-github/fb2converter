@@ -31,15 +31,6 @@ import (
 	"fb2converter/state"
 )
 
-// InputFmt defines type of input we are processing.
-type InputFmt int
-
-// Supported formats
-const (
-	InFb2 InputFmt = iota
-	InEpub
-)
-
 // Various directories used across the program
 const (
 	DirContent    = "OEBPS"
@@ -58,8 +49,6 @@ var nameSpaceFB2 = uuid.MustParse("09aa0c17-ca72-42d3-afef-75911e5d7646")
 
 // Processor state.
 type Processor struct {
-	// what kind of processing is expected
-	kind InputFmt
 	// input parameters
 	src string
 	dst string
@@ -75,6 +64,7 @@ type Processor struct {
 	kindlePageMap  APNXGeneration
 	stampPlacement StampPlacement
 	coverResize    CoverProcessing
+	version        int
 	// working directory
 	tmpDir string
 	// input document
@@ -149,7 +139,6 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 	}
 
 	p := &Processor{
-		kind:              InFb2,
 		src:               src,
 		dst:               dst,
 		nodirs:            nodirs,
@@ -163,6 +152,7 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 		kindlePageMap:     apnx,
 		stampPlacement:    stamp,
 		coverResize:       resize,
+		version:           env.Cfg.Doc.Version,
 		doc:               etree.NewDocument(),
 		Book:              NewBook(u, filepath.Base(src)),
 		env:               env,
@@ -238,11 +228,6 @@ func NewFB2(r io.Reader, unknownEncoding bool, src, dst string, nodirs, stk, ove
 // Process does all the work.
 func (p *Processor) Process() error {
 
-	if p.kind == InEpub {
-		// later we may decide to clean epub, massage its stylesheet, etc.
-		return nil
-	}
-
 	// Processing - order of steps and their presence are important as information and context
 	// being built and accumulated...
 
@@ -297,22 +282,20 @@ func (p *Processor) Save() (string, error) {
 		p.env.Log.Debug("Saving content - done", zap.Duration("elapsed", time.Since(start)))
 	}(time.Now())
 
-	if p.kind == InFb2 {
-		if err := p.Book.flushData(p.tmpDir); err != nil {
-			return "", err
-		}
-		if err := p.Book.flushVignettes(p.tmpDir); err != nil {
-			return "", err
-		}
-		if err := p.Book.flushImages(p.tmpDir); err != nil {
-			return "", err
-		}
-		if err := p.Book.flushXHTML(p.tmpDir); err != nil {
-			return "", err
-		}
-		if err := p.Book.flushMeta(p.tmpDir); err != nil {
-			return "", err
-		}
+	if err := p.Book.flushData(p.tmpDir); err != nil {
+		return "", err
+	}
+	if err := p.Book.flushVignettes(p.tmpDir); err != nil {
+		return "", err
+	}
+	if err := p.Book.flushImages(p.tmpDir); err != nil {
+		return "", err
+	}
+	if err := p.Book.flushXHTML(p.tmpDir); err != nil {
+		return "", err
+	}
+	if err := p.Book.flushMeta(p.tmpDir); err != nil {
+		return "", err
 	}
 
 	fname := p.prepareOutputName()
@@ -444,7 +427,7 @@ func (p *Processor) prepareOutputName() string {
 		outFile += "." + OEpub.String()
 	}
 
-	if p.kind == InFb2 && len(p.env.Cfg.Doc.FileNameFormat) > 0 {
+	if len(p.env.Cfg.Doc.FileNameFormat) > 0 {
 
 		insertDir := func(dirs []string, dir string) []string {
 			dirs = append(dirs, "")
@@ -499,7 +482,7 @@ func (p *Processor) processDescription() error {
 			zap.Stringer("lang", p.Book.Lang),
 			zap.String("cover", p.Book.Cover),
 			zap.Strings("genres", p.Book.Genres),
-			zap.String("authors", p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, false)),
+			zap.Any("authors", p.Book.Authors),
 			zap.String("sequence", p.Book.SeqName),
 			zap.Int("sequence number", p.Book.SeqNum),
 			zap.String("date", p.Book.Date),
@@ -682,7 +665,7 @@ func (p *Processor) processDescription() error {
 	}
 	if len(p.metaOverwrite.Authors) > 0 {
 		p.Book.Authors = append([]*config.AuthorName{}, p.metaOverwrite.Authors...)
-		p.env.Log.Info("Meta overwrite", zap.String("authors", p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, false)))
+		p.env.Log.Info("Meta overwrite", zap.Any("authors", p.Book.Authors))
 	}
 	seq := strings.TrimSpace(p.metaOverwrite.SeqName)
 	if len(seq) > 0 {

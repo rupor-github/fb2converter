@@ -32,12 +32,31 @@
 		mode = "append"
 
 [document]
-	#---- NOTE: in all format specifications curly brackets are indicating conditional blocks: only if result of keywords
-	#---- expansion inside block is not empty - block will be used, otherwise entire block will be ignored. Could be recursive,
-	#---- to output curly brackets escape them with backslash.
-	#
 	#---- NOTE: unless specified separately all relative paths in configuration are relative to the directory of configuration
 	#---- file!
+	#
+	#---- Version of document configuration.
+	#---- Version 1 is default for backward compatibility.
+	#-------- In all format specifications curly brackets are indicating conditional blocks: only if result of keywords
+	#-------- expansion inside block is not empty - block will be used, otherwise entire block will be ignored. Could be recursive,
+	#-------- to output curly brackets escape them with backslash.
+	#---- Version 2 changes how all format fields are defined and processed.
+	#-------- fields must be specified using go template language: https://pkg.go.dev/text/template#pkg-overview
+	#-------- additional functions from slim-sprig package are available for processing: https://go-task.github.io/slim-sprig
+	#-------- Full list of variables available (unless specified otherwise for a particular field):
+	#------------ .Context (string) - provides indication where the result be used
+	#------------ .Title (string) - book title as specified in fb2
+	#------------ .Series { .Name (string), .Number (integer) } - series as specified in fb2
+	#------------ .Language (string) - cannonical string representation of a language
+	#------------ .Date (string) - date as specified in fb2. Converter makes no attempt to parse or validate it
+	#------------ .Authors (array of { .FirstName (string), .MiddleName (string), .LastName (string)}) as specified in fb2
+	#------------ .Format (string) - string representing requested conversion (ex: epub, azw3, kepub...)
+	#------------ .SourceFile (string) - base part of the source file name (no path)
+	#------------ .BookID (string) - book ID as specified by fb2 or assigned by converter
+	#------------ .ASIN (string) - ASIN as specified by metadata overwrite
+	#------------ .Genres (array of strings) - genres names as specified by fb2
+	#
+	# version = 1
 
 	#---- CSS stylesheet to use. If absent - default one will be supplied
 	# style = "profiles/default.css"
@@ -60,7 +79,7 @@
 	#---- JPEG quality level to use, percentage points (40% - 100%), when not specified or wrong 75% is used
 	# jpeq_quality_level = 75
 
-	#---- Pattern to format book title
+    #---- For v1: pattern to format book title in OPF metadata
 	#---- "#title"             - book title
 	#---- "#file_name"         - name of original FB2 file (no path, no extension)
 	#---- "#file_name_ext"     - name of original FB2 file (no path)
@@ -72,20 +91,91 @@
 	#---- "#padnumber"         - number in a series padded with zeros to "series_number_positions"
 	#---- "#date"              - date specified in a book description
 	title_format = "{(#ABBRseries{ - #padnumber}) }#title"
+	#---- For v2: template to produce book title.
+	#-------- Contexts: opf-title, section-title, stamp-title, toc-title
+	#---- to get exactly the same result as v1 defaults use this:
+	# title_format = """\
+	# 	{{- /* Shorten book authors + book title */ -}}\
+	# 	{{- if hasPrefix "section-" .Context -}}\
+	# 	{{-   $all := "" -}}\
+	# 	{{-   if gt (len .Authors) 0 -}}\
+	# 	{{-     with first .Authors -}}\
+	# 	{{-       $all = .LastName -}}\
+	# 	{{-       if .FirstName }}{{ $all = (cat $all .FirstName) }}{{- end -}}\
+	# 	{{-       if .MiddleName }}{{ $all = (cat $all .MiddleName) }}{{- end -}}\
+	# 	{{-     end -}}\
+	# 	{{-     if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (cat $all ", et al") }}{{- end -}}\
+	# 	{{-   end -}}\
+	# 	{{-   cat $all .Title -}}\
+	# 	{{- /* Shorten book authors */ -}}\
+	# 	{{- else if hasPrefix "stamp-" .Context -}}\
+	# 	{{-   if gt (len .Authors) 0 -}}\
+	# 	{{-     $all := "" -}}\
+	# 	{{-     with first .Authors -}}\
+	# 	{{-       $all = .LastName }}\
+	# 	{{-       if .FirstName }}{{ $all = (cat $all .FirstName) }}{{- end -}}\
+	# 	{{-       if .MiddleName }}{{ $all = (cat $all .MiddleName) }}{{- end -}}\
+	# 	{{-     end -}}\
+	# 	{{-     if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (append $all ", et al") }}{{- end -}}\
+	# 	{{-     $all -}}
+	# 	{{-   end -}}\
+	# 	{{- /* All book authors */ -}}\
+	# 	{{- else if hasPrefix "toc-" .Context -}}\
+	# 	{{-   $all := list -}}\
+	# 	{{-   range .Authors -}}\
+	# 	{{-     $name := .LastName -}}\
+	# 	{{-     if .FirstName -}}{{ $name = (cat $name .FirstName) -}}{{- end -}}\
+	# 	{{-     if .MiddleName -}}{{ $name = (cat $name .MiddleName) -}}{{- end -}}\
+	# 	{{-     $all = append $all $name -}}\
+	# 	{{-   end -}}\
+	# 	{{-   join ", " $all -}}\
+	# 	{{- /* Abbreviated series/number + book title */ -}}\
+	# 	{{- else -}}\
+	# 	{{-   $seriesLetters := list -}}\
+	# 	{{-   range $word := splitList " " .Series.Name -}}\
+	# 	{{-     $seriesLetters = append $seriesLetters (upper (first (splitList "" $word))) -}}\
+	# 	{{-   end -}}\
+	# 	{{-   if gt (len $seriesLetters) 0 -}}\
+	# 	{{-     "(" }}{{- join "" $seriesLetters -}}\
+	# 	{{-     if gt .Series.Number 0 -}}\
+	# 	{{-       printf " - %02d" .Series.Number -}}\
+	# 	{{-     end -}}\
+	# 	{{-     ") " -}}\
+	# 	{{-   end -}}\
+	# 	{{    .Title -}}\
+	# 	{{- end -}}\
+	# """
+
 	#---- How many positions padded series number will take
+	#---- NOTE: for v1 only, otherwise ignored
 	# series_number_positions = 2
-	#---- How many letters take from first word of series name, if less or equal 0 - take whole word, if word is shorter than specified - take whole word only
+	#---- How many letters take from first word of series name
+	#---- if less or equal 0 - take whole word, if word is shorter than specified - take whole word only
+	#---- NOTE: for v1 only, otherwise ignored
 	# series_first_word_length = 4
 
-	#---- Patterns to format author name (#author, #autors) in different places
+	#---- Processing author name in different contexts
+	#---- For v1: patterns to format author name (#author, #autors)
 	#---- "#f"  - first name
 	#---- "#fi" - first name initial (first letter)
 	#---- "#m"  - middle name
 	#---- "#mi" - middle name initial (first letter of middle name)
 	#---- "#l"  - last name
 	author_format = "#l{ #f}{ #m}"
+	#---- NOTE: author_format_meta, author_format_file_name are for v1 only, otherwise ignored
 	# author_format_meta = "#l{ #f}{ #m}"
 	# author_format_file_name = "#l{ #f}{ #m}"
+	#---- For v2: template to format author name
+	#-------- Contexts: opf-author, section-author
+	#-------- .Author { .FirstName (string), .MiddleName (string), .LastName (string)} is available.
+	#---- to get exactly the same result as v1 defaults use this:
+	# author_format = """\
+	# 	{{- with .Author }}\
+	# 	{{   .LastName }}\
+	# 	{{   if .FirstName }} {{ .FirstName}}{{ end }}\
+	# 	{{   if .MiddleName }} {{ .MiddleName }}{{ end }}\
+	#	{{ end -}}\
+	# """
 
 	#---- Output file name pattern - output file will have name created using FB2 information
 	#---- NOTE: watch out for path separators, directories will be created!
