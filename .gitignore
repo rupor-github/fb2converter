@@ -9,6 +9,10 @@
 *.mprof
 *.log
 *.syso
+*.epub
+*.azw3
+*.kepub
+*.mobi
 
 # build specific
 build/
