@@ -67,6 +67,11 @@ func (p *Processor) generateTOCPage() error {
 			if p.version == 1 {
 				inner.AddNext("span", attr("class", "toc_author")).SetText(p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, false))
 			} else {
+				t, err := p.expandTemplate("toc-title", p.env.Cfg.Doc.AuthorFormat)
+				if err != nil {
+					return fmt.Errorf("unable to prepare author for toc-title using '%s': %w", p.env.Cfg.Doc.AuthorFormat, err)
+				}
+				inner.AddNext("span", attr("class", "toc_author")).SetText(t)
 			}
 			inner.AddNext("span", attr("class", "toc_title")).SetText(p.Book.Title)
 		} else {
@@ -459,7 +464,7 @@ func (p *Processor) generateOPF() error {
 			title = ReplaceKeywords(p.env.Cfg.Doc.TitleFormat, CreateTitleKeywordsMap(p.Book, p.env.Cfg.Doc.SeqNumPos, p.env.Cfg.Doc.SeqFirstWordLen, p.src))
 		} else {
 			var err error
-			title, err = p.expandTemplate("opf-title", p.env.Cfg.Doc.TitleFormat, -1)
+			title, err = p.expandTemplate("opf-title", p.env.Cfg.Doc.TitleFormat)
 			if err != nil {
 				return fmt.Errorf("unable to prepare title for opf-title using '%s': %w", p.env.Cfg.Doc.TitleFormat, err)
 			}
@@ -475,13 +480,17 @@ func (p *Processor) generateOPF() error {
 	meta.AddNext("dc:language").SetText(p.Book.Lang.String())
 	meta.AddNext("dc:identifier", attr("id", "BookId"), attr("opf:scheme", "uuid")).SetText(fmt.Sprintf("urn:uuid:%s", p.Book.ID))
 
-	for i, an := range p.Book.Authors {
+	for _, an := range p.Book.Authors {
 		var a string
 		if p.version == 1 {
 			a = ReplaceKeywords(p.env.Cfg.Doc.AuthorFormatMeta, CreateAuthorKeywordsMap(an))
 		} else {
 			var err error
-			a, err = p.expandTemplate("opf-author", p.env.Cfg.Doc.AuthorFormat, i)
+			a, err = p.expandTemplate("opf-author", p.env.Cfg.Doc.AuthorFormat, AuthorDefinition{
+				FirstName:  an.First,
+				LastName:   an.Last,
+				MiddleName: an.Middle,
+			})
 			if err != nil {
 				return fmt.Errorf("unable to prepare author for opr-author using '%s': %w", p.env.Cfg.Doc.AuthorFormat, err)
 			}

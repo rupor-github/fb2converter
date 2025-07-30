@@ -47,7 +47,7 @@ func (p *Processor) stampCover(im image.Image) (image.Image, error) {
 		author = p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, true)
 	} else {
 		var err error
-		author, err = p.expandTemplate("stamp-title", p.env.Cfg.Doc.AuthorFormat, -1)
+		author, err = p.expandTemplate("stamp-title", p.env.Cfg.Doc.AuthorFormat)
 		if err != nil {
 			return nil, fmt.Errorf("unable to prepare author for stamp-title using '%s': %w", p.env.Cfg.Doc.AuthorFormat, err)
 		}

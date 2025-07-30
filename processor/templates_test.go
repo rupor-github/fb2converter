@@ -16,7 +16,7 @@ import (
 
 type testCaseTmpl struct {
 	context string
-	index   int
+	arg     any
 	tmpl    []byte
 	result  string
 }
@@ -31,7 +31,9 @@ const titleTemplate = `template = """\
 {{-       if .FirstName }}{{ $all = (cat $all .FirstName) }}{{- end -}}\
 {{-       if .MiddleName }}{{ $all = (cat $all .MiddleName) }}{{- end -}}\
 {{-     end -}}\
-{{-     if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (cat $all ", et al") }}{{- end -}}\
+{{-     if gt (len .Authors) 1 -}}\
+{{-       if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (printf "%s%s" $all ", et al") }}{{- end -}}\
+{{-     end -}}\
 {{-   end -}}\
 {{-   cat $all .Title -}}\
 {{- /* Shorten book authors */ -}}\
@@ -43,7 +45,9 @@ const titleTemplate = `template = """\
 {{-       if .FirstName }}{{ $all = (cat $all .FirstName) }}{{- end -}}\
 {{-       if .MiddleName }}{{ $all = (cat $all .MiddleName) }}{{- end -}}\
 {{-     end -}}\
-{{-     if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (append $all ", et al") }}{{- end -}}\
+{{-     if gt (len .Authors) 1 -}}\
+{{-       if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (printf "%s%s" $all ", et al") }}{{- end -}}\
+{{-     end -}}\
 {{-     $all -}}
 {{-   end -}}\
 {{- /* All book authors */ -}}\
@@ -73,10 +77,37 @@ const titleTemplate = `template = """\
 {{- end -}}\
 """`
 
+const filenameTemplate = `template = """\
+{{- $all := "" -}}\
+{{- if gt (len .Authors) 0 -}}\
+{{-   with first .Authors -}}\
+{{-     $all = .LastName -}}\
+{{-     if .FirstName }}{{ $all = (cat $all .FirstName) }}{{- end -}}\
+{{-     if .MiddleName }}{{ $all = (cat $all .MiddleName) }}{{- end -}}\
+{{-   end -}}\
+{{-   if gt (len .Authors) 1 -}}\
+{{-     if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (printf "%s%s" $all ", et al") }}{{- end -}}\
+{{-   end -}}\
+{{-   $all = cat $all "-" -}}\
+{{- end -}}\
+{{- if $all -}}
+{{-   cat $all .Title -}}\
+{{- else -}}\
+{{-   .Title -}}\
+{{- end -}}\
+"""`
+
+const linkNoteTemplate = `template = """\
+	[{{- if gt .Body.Number 0 -}}
+	 {{-   printf "%d" .Body.Number -}}.\
+	 {{- end -}}\
+	 {{- printf "%d" .Body.NoteNumber -}}]\
+"""`
+
 var tests = []testCaseTmpl{
 	{
 		context: "section-author",
-		index:   2,
+		arg:     AuthorDefinition{FirstName: "Иван", MiddleName: "Иванович", LastName: "Иванов"},
 		tmpl: []byte(`template = """\
 				{{- with .Author }}\
 				{{   .LastName }}\
@@ -84,31 +115,77 @@ var tests = []testCaseTmpl{
 				{{   if .MiddleName }} {{ .MiddleName }}{{ end }}\
 			  {{ end -}}\
 		      """`),
-		result: "Сидоров Сидор Сидорович",
+		result: "Иванов Иван Иванович",
 	},
 	{
 		context: "opf-title",
-		index:   -1,
 		tmpl:    []byte(titleTemplate),
 		result:  "(Т - 01) Тестовая книга",
 	},
 	{
 		context: "section-title",
-		index:   -1,
 		tmpl:    []byte(titleTemplate),
 		result:  "Иванов Иван Иванович и др Тестовая книга",
 	},
 	{
 		context: "stamp-title",
-		index:   -1,
 		tmpl:    []byte(titleTemplate),
 		result:  "Иванов Иван Иванович и др",
 	},
 	{
 		context: "toc-title",
-		index:   -1,
 		tmpl:    []byte(titleTemplate),
 		result:  "Иванов Иван Иванович, Петров Пётр Петрович, Сидоров Сидор Сидорович",
+	},
+	{
+		context: "output-filename",
+		tmpl:    []byte(filenameTemplate),
+		result:  "Иванов Иван Иванович и др - Тестовая книга",
+	},
+	{
+		context: "link-notes",
+		arg:     NoteDefinition{Name: "n_17", Number: 0, NoteNumber: 17},
+		tmpl:    []byte(linkNoteTemplate),
+		result:  "[17]",
+	},
+	{
+		context: "link-notes",
+		arg:     NoteDefinition{Name: "n_17", Number: 22, NoteNumber: 17},
+		tmpl:    []byte(linkNoteTemplate),
+		result:  "[22.17]",
+	},
+	{
+		context: "output-filename",
+		tmpl: []byte(`template = """\
+					{{- $parts := list -}}\
+					{{- if gt (len .Authors) 0 -}}\
+					{{-   $name := "" -}}\
+					{{-   with first .Authors -}}\
+					{{-     $name = .LastName -}}\
+					{{-     if .FirstName }}{{ $name = (cat $name .FirstName) }}{{- end -}}\
+					{{-     if .MiddleName }}{{ $name = (cat $name .MiddleName) }}{{- end -}}\
+					{{-   end -}}\
+					{{-   $parts = append $parts $name -}}\
+					{{- end -}}\
+					{{- if .Series.Name -}}\
+					{{-   $parts = append $parts .Series.Name -}}\
+					{{- else -}}\
+					{{-   $parts = append $parts "-" -}}\
+					{{- end -}}\
+					{{- $last := "" -}}\
+					{{- if gt (len .Authors) 0 -}}\
+					{{-   with first .Authors -}}\
+					{{-     $last = .LastName -}}\
+					{{-   end -}}\
+					{{- end -}}\
+					{{- if gt .Series.Number 0 -}}\
+					{{-   $last = printf "%s %02d" $last .Series.Number -}}\
+					{{- end -}}\
+					{{- $last = (cat $last .Title) -}}\
+					{{- $parts = append $parts $last -}}\
+					{{- join "/" $parts -}}\
+	            """`),
+		result: "Иванов Иван Иванович/Тесты/Иванов 01 Тестовая книга",
 	},
 }
 
@@ -163,26 +240,14 @@ func TestTemplates(t *testing.T) {
 		if !ok {
 			t.Fatalf("Bad decoding %d: %s", i, spew.Sprint(v))
 		}
-		res, err := p.expandTemplate(c.context, tmpl, c.index)
+		res, err := p.expandTemplate(c.context, tmpl, c.arg)
 		if err != nil {
-			t.Fatal(err)
+			t.Fatal(err, c.arg, tmpl)
 		}
 		if res != c.result {
 			t.Fatalf("Unexpected for %d: [%s] != [%s]", i, res, c.result)
 		}
 	}
-
-	// res, err := p.expandTemplate("test-template", test, -1)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// t.Logf("RESULT: %s", res)
-	//
-	// res, err = p.expandTemplate("test-template-author", test, 1)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// t.Logf("AUTOR RESULT: %s", res)
 }
 
 var testConfig = []byte(`

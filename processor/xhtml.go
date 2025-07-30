@@ -403,12 +403,12 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	// See if decorations are requested
 	var tag, css, href string
 	for i, p := range decorations {
-		switch {
-		case i == 0:
+		switch i {
+		case 0:
 			tag = p
-		case i == 1:
+		case 1:
 			css = p
-		case i == 2:
+		case 2:
 			href = p
 		}
 	}
@@ -432,7 +432,7 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 	if tag == "a" && len(href) > 0 {
 		var noteID string
 		// Some people does not know how to format url properly
-		href = strings.Replace(href, "\\", "/", -1)
+		href = strings.ReplaceAll(href, "\\", "/")
 		if u, err := url.Parse(href); err != nil {
 			p.env.Log.Warn("unable to parse note href", zap.String("href", href), zap.Error(err))
 		} else {
@@ -472,7 +472,19 @@ func (p *Processor) transfer(from, to *etree.Element, decorations ...string) err
 						if p.Book.NotesBodies > 1 {
 							bodyNumber = note.bodyNumber
 						}
-						text = ReplaceKeywords(p.env.Cfg.Doc.Notes.Format, CreateAnchorLinkKeywordsMap(name, bodyNumber, note.number))
+						if p.version == 1 {
+							text = ReplaceKeywords(p.env.Cfg.Doc.Notes.Format, CreateAnchorLinkKeywordsMap(name, bodyNumber, note.number))
+						} else {
+							var err error
+							text, err = p.expandTemplate("link-notes", p.env.Cfg.Doc.Notes.Format, NoteDefinition{
+								Name:       name,
+								Number:     bodyNumber,
+								NoteNumber: note.number,
+							})
+							if err != nil {
+								return fmt.Errorf("unable to prepare note link using '%s': %w", p.env.Cfg.Doc.Notes.Format, err)
+							}
+						}
 						processChildren = false
 					}
 					// NOTE: modifying attribute on SOURCE node!
@@ -813,7 +825,7 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 			tocTitle = p.Book.BookAuthors(p.env.Cfg.Doc.AuthorFormat, true) + " " + p.Book.Title
 		} else {
 			var err error
-			tocTitle, err = p.expandTemplate("section-title", p.env.Cfg.Doc.AuthorFormat, -1)
+			tocTitle, err = p.expandTemplate("section-title", p.env.Cfg.Doc.AuthorFormat)
 			if err != nil {
 				return fmt.Errorf("unable to prepare author for section-title using '%s': %w", p.env.Cfg.Doc.AuthorFormat, err)
 			}
@@ -833,11 +845,15 @@ func transferSection(p *Processor, from, to *etree.Element) error {
 		}
 
 		header := div.AddNext("div", attr("class", h))
-		for i, an := range p.Book.Authors {
+		for _, an := range p.Book.Authors {
 			if p.version == 1 {
 				header.AddNext("p", attr("class", "title")).SetText(ReplaceKeywords(p.env.Cfg.Doc.AuthorFormat, CreateAuthorKeywordsMap(an)))
 			} else {
-				res, err := p.expandTemplate("section-author", p.env.Cfg.Doc.AuthorFormat, i)
+				res, err := p.expandTemplate("section-author", p.env.Cfg.Doc.AuthorFormat, AuthorDefinition{
+					FirstName:  an.First,
+					LastName:   an.Last,
+					MiddleName: an.Middle,
+				})
 				if err != nil {
 					return fmt.Errorf("unable to prepare author for section-author using '%s': %w", p.env.Cfg.Doc.AuthorFormat, err)
 				}

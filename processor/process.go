@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -427,46 +428,54 @@ func (p *Processor) prepareOutputName() string {
 		outFile += "." + OEpub.String()
 	}
 
-	if len(p.env.Cfg.Doc.FileNameFormat) > 0 {
+	if len(p.env.Cfg.Doc.FileNameFormat) == 0 {
+		return filepath.Join(outDir, outFile)
+	}
 
-		insertDir := func(dirs []string, dir string) []string {
-			dirs = append(dirs, "")
-			copy(dirs[1:], dirs[0:])
-			dirs[0] = dir
-			return dirs
-		}
-
+	if p.version == 1 {
 		name = filepath.FromSlash(
 			ReplaceKeywords(p.env.Cfg.Doc.FileNameFormat,
 				CreateFileNameKeywordsMap(p.Book, p.env.Cfg.Doc.AuthorFormatFileName, p.env.Cfg.Doc.SeqNumPos, p.env.Cfg.Doc.SeqFirstWordLen)))
-		if len(name) > 0 {
-			first := true
-			dirs := make([]string, 0, 16)
-			for head, tail := filepath.Split(strings.TrimSuffix(name, string(os.PathSeparator))); ; head, tail = filepath.Split(strings.TrimSuffix(head, string(os.PathSeparator))) {
-				if first {
-					if p.env.Cfg.Doc.FileNameTransliterate {
-						tail = slug.Make(tail)
-					}
-					outFile = config.CleanFileName(tail) + "." + p.format.String()
-					if p.format == OKepub {
-						outFile += "." + OEpub.String()
-					}
-					first = false
-				} else {
-					if p.env.Cfg.Doc.FileNameTransliterate {
-						tail = slug.Make(tail)
-					}
-					dirs = insertDir(dirs, config.CleanFileName(tail))
-				}
-				if len(head) == 0 {
-					break
-				}
-			}
-			dirs = insertDir(dirs, outDir)
-			outDir = filepath.Join(dirs...)
+	} else {
+		var err error
+		name, err = p.expandTemplate("output-filename", p.env.Cfg.Doc.FileNameFormat)
+		if err != nil {
+			p.env.Log.Warn("Unable to prepare output filename", zap.String("format", p.env.Cfg.Doc.FileNameFormat), zap.Error(err))
+			name = ""
+		} else {
+			name = filepath.FromSlash(name)
 		}
 	}
-	return filepath.Join(outDir, outFile)
+
+	if len(name) == 0 {
+		return filepath.Join(outDir, outFile)
+	}
+
+	first := true
+	parts := make([]string, 0, 16)
+	for head, tail := filepath.Split(strings.TrimSuffix(name, string(os.PathSeparator))); ; head, tail = filepath.Split(strings.TrimSuffix(head, string(os.PathSeparator))) {
+		if first {
+			if p.env.Cfg.Doc.FileNameTransliterate {
+				tail = slug.Make(tail)
+			}
+			outFile = config.CleanFileName(tail) + "." + p.format.String()
+			if p.format == OKepub {
+				outFile += "." + OEpub.String()
+			}
+			first = false
+		} else {
+			if p.env.Cfg.Doc.FileNameTransliterate {
+				tail = slug.Make(tail)
+			}
+			parts = slices.Insert(parts, 0, config.CleanFileName(tail))
+		}
+		if len(head) == 0 {
+			break
+		}
+	}
+	parts = slices.Insert(parts, 0, outDir)
+	parts = append(parts, outFile)
+	return filepath.Join(parts...)
 }
 
 // processDescription processes book description element.

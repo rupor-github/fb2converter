@@ -15,7 +15,7 @@
 		#---- "none"   - suppress all console logging
 		#---- "normal" - messages INFO level and higher are outputted
 		#---- "debug"  - all log messages are outputted
-		level = "normal"
+		# level = "normal"
 
 	#---- controls logging to a file (could duplicate CONSOLE messages)
 	[logger.file]
@@ -23,39 +23,43 @@
 		#---- "none"   - suppress logging
 		#---- "normal" - messages INFO level and higher are printed
 		#---- "debug"  - all log output is printed
-		level = "debug"
+		# level = "debug"
 		#---- path to the log file, if relative - relative to current working directory
 		# destination = "conversion.log"
 		#---- how to handle output file during consecutive program runs
 		#---- "append"    - keep all old log messages, append new ones at the end
 		#---- "overwrite" - keep only messages from the last run, log is overwritten
-		mode = "append"
+		# mode = "append"
 
 [document]
 	#---- NOTE: unless specified separately all relative paths in configuration are relative to the directory of configuration
 	#---- file!
 	#
 	#---- Version of document configuration.
-	#---- Version 1 is default for backward compatibility.
+	#---- Version 1 (v1) - fb2mobi legacy format with some additional patterns
 	#-------- In all format specifications curly brackets are indicating conditional blocks: only if result of keywords
 	#-------- expansion inside block is not empty - block will be used, otherwise entire block will be ignored. Could be recursive,
 	#-------- to output curly brackets escape them with backslash.
-	#---- Version 2 changes how all format fields are defined and processed.
+	#---- Version 2 (v2) changes how all format fields are defined and processed.
 	#-------- fields must be specified using go template language: https://pkg.go.dev/text/template#pkg-overview
 	#-------- additional functions from slim-sprig package are available for processing: https://go-task.github.io/slim-sprig
-	#-------- Full list of variables available (unless specified otherwise for a particular field):
-	#------------ .Context (string) - provides indication where the result be used
-	#------------ .Title (string) - book title as specified in fb2
-	#------------ .Series { .Name (string), .Number (integer) } - series as specified in fb2
-	#------------ .Language (string) - cannonical string representation of a language
-	#------------ .Date (string) - date as specified in fb2. Converter makes no attempt to parse or validate it
-	#------------ .Authors (array of { .FirstName (string), .MiddleName (string), .LastName (string)}) as specified in fb2
+	#-------- Full list of variables always available (additional variables could be specified for a particular field):
+	#------------ .Context (string) - provides indication where the result of expansion be used
+	#------------ .Title (string) - book title as specified in fb2 meta information
+	#------------ .Series { .Name (string), .Number (integer) } - series as specified in fb2 metainformation
+	#------------ .Language (string) - cannonical string representation of a language as specified in fb2 metainformation
+	#------------ .Date (string) - date as specified in fb2 metainformation. Converter makes no attempt to parse or validate it
+	#------------ .Authors (array of { .FirstName (string), .MiddleName (string), .LastName (string)}) as specified in fb2 metainformation
 	#------------ .Format (string) - string representing requested conversion (ex: epub, azw3, kepub...)
 	#------------ .SourceFile (string) - base part of the source file name (no path)
-	#------------ .BookID (string) - book ID as specified by fb2 or assigned by converter
-	#------------ .ASIN (string) - ASIN as specified by metadata overwrite
-	#------------ .Genres (array of strings) - genres names as specified by fb2
+	#------------ .BookID (string) - book UUID as specified by fb2 metainformation or assigned by converter if none
+	#------------ .ASIN (string) - ASIN as specified by metainformation overwrite
+	#------------ .Genres (array of strings) - genres names as specified by fb2 metainformation
 	#
+	#---- NOTE: v2 gives you a lot of power over v1 - you could easily produce broken documents, be careful!
+	#---- fb2 quality varies greately - some fields could be empty.
+	#
+	#---- NOTE: v1 is always default for backward compatibility
 	# version = 1
 
 	#---- CSS stylesheet to use. If absent - default one will be supplied
@@ -66,7 +70,7 @@
 	# fix_zip_format = true
 
 	# When true program removes transparency on PNG files - Kindle eInc devices do not handle it well
-	remove_png_transparency = false
+	# remove_png_transparency = false
 
 	#---- Forcefully resize all images (but cover) with specified ratio
 	# images_scale_factor = 0
@@ -90,8 +94,8 @@
 	#---- "#number"            - number in a series
 	#---- "#padnumber"         - number in a series padded with zeros to "series_number_positions"
 	#---- "#date"              - date specified in a book description
-	title_format = "{(#ABBRseries{ - #padnumber}) }#title"
-	#---- For v2: template to produce book title.
+	# title_format = "{(#ABBRseries{ - #padnumber}) }#title"
+	#---- For v2: template to produce book title in various contexts.
 	#-------- Contexts: opf-title, section-title, stamp-title, toc-title
 	#---- to get exactly the same result as v1 defaults use this:
 	# title_format = """\
@@ -104,7 +108,9 @@
 	# 	{{-       if .FirstName }}{{ $all = (cat $all .FirstName) }}{{- end -}}\
 	# 	{{-       if .MiddleName }}{{ $all = (cat $all .MiddleName) }}{{- end -}}\
 	# 	{{-     end -}}\
-	# 	{{-     if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (cat $all ", et al") }}{{- end -}}\
+	# 	{{-     if gt (len .Authors) 1 -}}\
+	# 	{{-       if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (printf "%s%s" $all ", et al") }}{{- end -}}\
+	# 	{{-     end -}}\
 	# 	{{-   end -}}\
 	# 	{{-   cat $all .Title -}}\
 	# 	{{- /* Shorten book authors */ -}}\
@@ -116,7 +122,9 @@
 	# 	{{-       if .FirstName }}{{ $all = (cat $all .FirstName) }}{{- end -}}\
 	# 	{{-       if .MiddleName }}{{ $all = (cat $all .MiddleName) }}{{- end -}}\
 	# 	{{-     end -}}\
-	# 	{{-     if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (append $all ", et al") }}{{- end -}}\
+	# 	{{-     if gt (len .Authors) 1 -}}\
+	# 	{{-       if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (printf "%s%s" $all ", et al") }}{{- end -}}\
+	# 	{{-     end -}}\
 	# 	{{-     $all -}}
 	# 	{{-   end -}}\
 	# 	{{- /* All book authors */ -}}\
@@ -144,7 +152,7 @@
 	# 	{{-   end -}}\
 	# 	{{    .Title -}}\
 	# 	{{- end -}}\
-	# """
+	# 	"""
 
 	#---- How many positions padded series number will take
 	#---- NOTE: for v1 only, otherwise ignored
@@ -161,24 +169,25 @@
 	#---- "#m"  - middle name
 	#---- "#mi" - middle name initial (first letter of middle name)
 	#---- "#l"  - last name
-	author_format = "#l{ #f}{ #m}"
+	# author_format = "#l{ #f}{ #m}"
 	#---- NOTE: author_format_meta, author_format_file_name are for v1 only, otherwise ignored
 	# author_format_meta = "#l{ #f}{ #m}"
 	# author_format_file_name = "#l{ #f}{ #m}"
 	#---- For v2: template to format author name
 	#-------- Contexts: opf-author, section-author
-	#-------- .Author { .FirstName (string), .MiddleName (string), .LastName (string)} is available.
+	#-------- .Author { .FirstName (string), .MiddleName (string), .LastName (string)} is set in addion to other variables.
 	#---- to get exactly the same result as v1 defaults use this:
 	# author_format = """\
 	# 	{{- with .Author }}\
 	# 	{{   .LastName }}\
 	# 	{{   if .FirstName }} {{ .FirstName}}{{ end }}\
 	# 	{{   if .MiddleName }} {{ .MiddleName }}{{ end }}\
-	#	{{ end -}}\
-	# """
+	# 	{{ end -}}\
+	# 	"""
 
-	#---- Output file name pattern - output file will have name created using FB2 information
+	#---- When file_name_format is set output file will have name created using FB2 metainformation
 	#---- NOTE: watch out for path separators, directories will be created!
+	#---- For v1: pattern to format output file name
 	#---- "#title"             - book title
 	#---- "#series"            - name of sequence book belongs to
 	#---- "#series_first_word" - first word in the name of series book belongs to, up to "series_first_word_length" letters
@@ -191,6 +200,28 @@
 	#----                        be indicated with either ", et al" or " и др" depending on book language
 	#---- "#bookid"            - Book UUID (either parsed from or genrated based of fb2 information)
 	# file_name_format = "{#author - }#title"
+	#---- For v2: template to format output file name
+	#-------- Contexts: output-filename
+	#---- to get exactly the same result as v1 above use this:
+	# file_name_format = """\
+	# {{- $all := "" -}}\
+	# {{- if gt (len .Authors) 0 -}}\
+	# {{-   with first .Authors -}}\
+	# {{-     $all = .LastName -}}\
+	# {{-     if .FirstName }}{{ $all = (cat $all .FirstName) }}{{- end -}}\
+	# {{-     if .MiddleName }}{{ $all = (cat $all .MiddleName) }}{{- end -}}\
+	# {{-   end -}}\
+	# {{-   if gt (len .Authors) 1 -}}\
+	# {{-     if eq .Language "ru" }}{{ $all = (cat $all "и др") }}{{- else -}}{{ $all = (printf "%s%s" $all ", et al") }}{{- end -}}\
+	# {{-   end -}}\
+	# {{-   $all = cat $all "-" -}}\
+	# {{- end -}}\
+	# {{- if $all -}}
+	# {{-   cat $all .Title -}}\
+	# {{- else -}}\
+	# {{-   .Title -}}\
+	# {{- end -}}\
+	# """
 
 	#---- Slugify/transliterate output file name - after all other processing on file name is completed
 	# file_name_transliterate = false
@@ -199,7 +230,7 @@
 	#---- chapter on a new page. This mode usually provides faster reading experience as most readers
 	#---- keep only current content file in memory.
 	#---- NOTE: when this is "false" other settings controlling size of the resulting content are ignored.
-	chapter_per_file = true
+	# chapter_per_file = true
 
 	#---- Determines on what level fb2 <section> becomes book chapter
 	# chapter_level = 2147483647
@@ -242,15 +273,15 @@
 
 	[document.dropcaps]
 		#---- Allow dropcap styles
-		create = false
+		# create = false
 		#---- Characters to ignore when styling dropcaps
-		ignore_symbols = "'\"-.…0123456789‒–—«»“”<>"
+		# ignore_symbols = "'\"-.…0123456789‒–—«»“”<>"
 
 	[document.annotation]
 		#---- Create separate "chapter" with book annotation if available
-		create = false
+		# create = false
 		#---- And use provded annotation title
-		title = "Annotation"
+		# title = "Annotation"
 		#---- Show annotation in TOC
 		# add_to_toc = false
 
@@ -265,38 +296,48 @@
 		#---- "float-new-more" - pop up notes using "preferred" method - HTML5 with <aside> recommended by Amazon publishing guidelines.
 		#----                    Shows (…etc.) at the end of first paragraph of the note when note has more than one paragraph (Kindle shows
 		#----                    only first paragraph in floating window)
-		mode = "default"
+		# mode = "default"
 		#---- Names of the <body> tags in fb2 document to consider for notes processing
-		body_names = [ "notes", "comments" ]
+		# body_names = [ "notes", "comments" ]
 		#---- Make sure that links in the content are named and numbered consistently
-		#---- NOTE: only works for pop up notes formatting (float, float-old, float-new)
-		renumber = false
-		#---- Pattern to format notes links when renumbering them
+		#---- NOTE: only works for pop up notes formatting (only for floating notes)
+		# renumber = false
+		#---- For v1: pattern to format notes links when renumbering them
 		#---- "#body_number"  - number of the body where note is located. If there is only one body with notes it will be empty
 		#---- "#number"       - number of note in the body
 		#---- "#body_name"    - either title of the body where note is located or body's name if there is no title
 		#---- "#body_name_Fl" - first letter of the #body_name exactly as it was encountered
 		#---- "#body_name_fl" - first letter of the #body_name lowercased
 		#---- "#body_name_FL" - first letter of the #body_name uppercased
-		link_format = "[{#body_number.}#number]"
+		# link_format = "[{#body_number.}#number]"
+		#---- For v2: template to format notes links when renumbering them
+		#-------- Contexts: link-notes
+		#-------- .Body { .Name (string), .Number (int), .NoteNumber (int)} is set in addion to other variables.
+		#---- to get exactly the same result as v1 defaults use this:
+		# link_format = """\
+		# 	[{{- if gt .Body.Number 0 -}}
+		# 	 {{-   printf "%d" .Body.Number -}}.\
+		# 	 {{- end -}}\
+		# 	 {{- printf "%d" .Body.NoteNumber -}}]\
+		# 	"""
 
 	[document.toc]
 		#---- Type of ncx TOC generated, depends on device support
 		#---- "normal" - TOC could have as many levels as possible
 		#---- "kindle" - TOC will have two levels for Kindle eInk support
 		#---- "flat"   - TOC will have single level
-		type = "normal"
+		# type = "normal"
 		#---- Generate additional page with TOC (some devices may not support proper ncx TOC at all)
 		#---- "none"   - do not generate it at all
 		#---- "before" - place it at the beginning of the book
 		#---- "after"  - place it at the end of the book
-		page_placement = "after"
+		# page_placement = "after"
 		#---- Name of the TOC page in a book
 		# page_title = "Content"
 		#---- How many levels TOC page will have before flattening
 		# page_maxlevel = 2147483647
 		#---- Include chapter without title to TOC - this prevents empty TOC on "bad" books adding chapters without titles to the TOC
-		include_chapters_without_title = false
+		# include_chapters_without_title = false
 		#---- When creating TOC page take book title and author(s) from meta info and not from first title of main body
 		# book_title_from_meta = false
 
@@ -309,19 +350,19 @@
 		#---- Will be used as default cover image. If not specified - one will be provided by the program
 		# image_path = "default_cover.jpeg"
 		#---- Specify device screen size so cover image could be adjusted properly. It defaults to Oasis 2 (width = 1264, height = 1680)
-		width = 1264
-		height = 1680
+		# width = 1264
+		# height = 1680
 		#---- Specifies how to additionally process cover image.
 		#---- "none" - do nothing for non-Kindle formats, for Kindle if image height is less than specified above, resize to specified height keeping aspect ratio
 		#---- "keepAR" - unconditionally resize to specified height keeping aspect ratio
 		#---- "stretch" - unconditionally resize to specified width and height
-		resize = "none"
+		# resize = "none"
 		#---- Places stamp with title, author and book sequence on cover image (if default cover used - it always will be stamped)
 		#---- "none" - no stamping
 		#---- "top" - stamp at the top of cover
 		#---- "middle" - stamp in the middle of cover
 		#---- "bottom" - stamp at the bottom of cover
-		stamp_placement = "none"
+		# stamp_placement = "none"
 		#---- Font to use for stamping, if not specified program will use default
 		# stamp_font = "LinLibertine_RBah.ttf"
 
@@ -353,19 +394,19 @@
 	#---- "none" has a special meaning suppressing particular vignette usage
 	[document.vignettes]
 		#---- Use vignette images
-		create = true
+		# create = true
 
 		#---- "default" level images (for all non specified levels) and images for specific header levels ("h0" - "h6") are supported
 		#---- For any header to overwrite any image from "default" level use "none" keyword
 		[document.vignettes.images.default]
-			before_title = "profiles/vignettes/title_before.png"
-			after_title = "profiles/vignettes/title_after.png"
-			chapter_end = "profiles/vignettes/chapter_end.png"
+			# before_title = "profiles/vignettes/title_before.png"
+			# after_title = "profiles/vignettes/title_after.png"
+			# chapter_end = "profiles/vignettes/chapter_end.png"
 
 		[document.vignettes.images.h0]
-			before_title = "none"
-			after_title = "none"
-			chapter_end = "none"
+			# before_title = "none"
+			# after_title = "none"
+			# chapter_end = "none"
 
 	#---- Data from this section only used when output is requested in Amazon's format: mobi or azw3
 	[document.kindlegen]
@@ -377,12 +418,12 @@
 		#---- Kindlegen compression level
 		# compression_level = 1
 		#---- Kindlegen will produce verbose output (when debugging - always verbose)
-		verbose = false
+		# verbose = false
 		#---- When producing mobi - do not touch it after kindlegen
 		# no_mobi_optimization = false
 		#---- If set to true "Personal label" will be removed from the resulting book producing "EBOK" document.
 		#---- Otherwise - "PDOC", default for kndlegen
-		remove_personal_label = true
+		# remove_personal_label = true
 		#---- When producing azw3 - make sure that ASIN is set.
 		#---- Looks like this is important for "vocabulary builder" at least on eInk devices
 		# force_asin_on_azw3 = false
@@ -390,7 +431,7 @@
 		#----  "none" - nothing will be generated
 		#----  "eink" - apnx will be located in .sbr directory
 		#----  "app"  - apnx will be located alongside with converted file
-		generate_apnx = "none"
+		# generate_apnx = "none"
 
 [sendtokindle]
 	#---- In case book sent successfully - delete it from disk

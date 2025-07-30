@@ -253,6 +253,7 @@ tasks:
       - go build {{.GOARGS}} -o '{{.TARGET}}' '{{.PACKAGE}}'
     sources:
       - ./**/*.go
+      - static/*
     generates:
       - '{{.TARGET}}'
 

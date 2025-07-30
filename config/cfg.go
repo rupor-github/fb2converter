@@ -384,6 +384,10 @@ func BuildConfig(fnames ...string) (*Config, error) {
 		}
 	}
 
+	if conf.Doc.Version <= 0 || conf.Doc.Version > MaxDocConfigVersion {
+		conf.Doc.Version = 1
+	}
+
 	// some defaults
 	if conf.Doc.Kindlegen.CompressionLevel < 0 || conf.Doc.Kindlegen.CompressionLevel > 2 {
 		conf.Doc.Kindlegen.CompressionLevel = 1
@@ -391,16 +395,31 @@ func BuildConfig(fnames ...string) (*Config, error) {
 	if conf.Doc.JPEGQuality < 40 || conf.Doc.JPEGQuality > 100 {
 		conf.Doc.JPEGQuality = 75
 	}
+
 	// to keep old behavior
-	if len(conf.Doc.AuthorFormatMeta) == 0 {
+	if conf.Doc.Version == 1 && len(conf.Doc.AuthorFormatMeta) == 0 {
 		conf.Doc.AuthorFormatMeta = conf.Doc.AuthorFormat
 	}
-	if len(conf.Doc.AuthorFormatFileName) == 0 {
+	if conf.Doc.Version == 1 && len(conf.Doc.AuthorFormatFileName) == 0 {
 		conf.Doc.AuthorFormatFileName = conf.Doc.AuthorFormat
 	}
-	if conf.Doc.Version <= 0 || conf.Doc.Version > MaxDocConfigVersion {
-		conf.Doc.Version = 1
+
+	// new behavior - remove old fields
+	if conf.Doc.Version > 1 {
+		conf.Doc.SeqNumPos = 0
+		conf.Doc.SeqFirstWordLen = 0
+		conf.Doc.AuthorFormatMeta = ""
+		conf.Doc.AuthorFormatFileName = ""
+
+		// check that necessary format fields are set
+		if len(conf.Doc.TitleFormat) == 0 {
+			return nil, errors.New("document title format is not set")
+		}
+		if len(conf.Doc.AuthorFormat) == 0 {
+			return nil, errors.New("document author format is not set")
+		}
 	}
+
 	return &conf, nil
 }
 
