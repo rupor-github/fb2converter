@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -74,7 +75,7 @@ var noteCleaner = regexp.MustCompile(`[\[{].*[\]}]`)
 
 // SanitizeTitle removes footnote leftovers and CR (in case this is Windows).
 func SanitizeTitle(in string) string {
-	return strings.Replace(noteCleaner.ReplaceAllLiteralString(in, ""), "\r", "", -1)
+	return strings.ReplaceAll(noteCleaner.ReplaceAllLiteralString(in, ""), "\r", "")
 }
 
 // AllLines joins lines using space as a EOL replacement.
@@ -95,7 +96,7 @@ func ReplaceKeywords(in string, m map[string]string) string {
 
 	expandKeyword := func(in, key, value string) (string, bool) {
 		if strings.Contains(in, key) {
-			return strings.Replace(in, key, value, -1), len(value) > 0
+			return strings.ReplaceAll(in, key, value), len(value) > 0
 		}
 		return in, false
 	}
@@ -123,7 +124,7 @@ func ReplaceKeywords(in string, m map[string]string) string {
 	bopen, bclose := -1, -1
 
 	// I do not want to write real parser
-	in = strings.Replace(strings.Replace(in, `\{`, "\x01", -1), `\}`, "\x02", -1)
+	in = strings.ReplaceAll(strings.ReplaceAll(in, `\{`, "\x01"), `\}`, "\x02")
 
 	for i, c := range in {
 		if c == '{' {
@@ -140,7 +141,7 @@ func ReplaceKeywords(in string, m map[string]string) string {
 	} else {
 		out = expandAll(in, m)
 	}
-	return strings.Replace(strings.Replace(out, "\x01", "{", -1), "\x02", "}", -1)
+	return strings.ReplaceAll(strings.ReplaceAll(out, "\x01", "{"), "\x02", "}")
 }
 
 // CreateAuthorKeywordsMap prepares keywords map for replacement.
@@ -186,7 +187,7 @@ func firstWordSeq(seq string, l int) (word string) {
 }
 
 func abbrSeq(seq string) (abbr string) {
-	for _, w := range strings.Fields(seq) {
+	for w := range strings.FieldsSeq(seq) {
 		for len(w) > 0 {
 			r, l := utf8.DecodeRuneInString(w)
 			if r != utf8.RuneError && unicode.IsLetter(r) {
@@ -280,10 +281,8 @@ func CreateAnchorLinkKeywordsMap(name string, bodyNumber, noteNumber int) map[st
 
 // AppendIfMissing well append string to slice only if it is not there already.
 func AppendIfMissing(slice []string, str string) []string {
-	for _, s := range slice {
-		if s == str {
-			return slice
-		}
+	if slices.Contains(slice, str) {
+		return slice
 	}
 	return append(slice, str)
 }
