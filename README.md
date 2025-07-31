@@ -27,7 +27,7 @@ Russian [WiKi](https://github.com/rupor-github/fb2converter/wiki/fb2converter) a
   - ...
 - full support for kepub format
 - processing of files, directories, zip archives and directories with zip archives - no special consideration is made for `.fb2.zip` files.
-- flexible output path/name formatting
+- flexible output path/name formatting (starting with 1.78.0 formatting could be specified using proper template language, rather than fb2mobi #tag(s))
 - fb2c could be build for any platform supported by [go language](https://golang.org/doc/install). If mobi or azw3 are required additional limitations are imposed by [Amazon's kindlegen](https://www.amazon.com/gp/feature.html?ie=UTF8&docId=1000765211)
 - fb2c has no dependencies and does not require installation or any kind
 

@@ -45,7 +45,7 @@
 	#-------- additional functions from slim-sprig package are available for processing: https://go-task.github.io/slim-sprig
 	#-------- Full list of variables always available (additional variables could be specified for a particular field):
 	#------------ .Context (string) - provides indication where the result of expansion be used
-	#------------ .Title (string) - book title as specified in fb2 meta information
+	#------------ .Title (string) - book title as specified in fb2 metainformation
 	#------------ .Series { .Name (string), .Number (integer) } - series as specified in fb2 metainformation
 	#------------ .Language (string) - cannonical string representation of a language as specified in fb2 metainformation
 	#------------ .Date (string) - date as specified in fb2 metainformation. Converter makes no attempt to parse or validate it
