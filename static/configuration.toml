@@ -139,16 +139,18 @@
 	# 	{{-   join ", " $all -}}\
 	# 	{{- /* Abbreviated series/number + book title */ -}}\
 	# 	{{- else -}}\
-	# 	{{-   $seriesLetters := list -}}\
-	# 	{{-   range $word := splitList " " .Series.Name -}}\
-	# 	{{-     $seriesLetters = append $seriesLetters (upper (first (splitList "" $word))) -}}\
-	# 	{{-   end -}}\
-	# 	{{-   if gt (len $seriesLetters) 0 -}}\
-	# 	{{-     "(" }}{{- join "" $seriesLetters -}}\
-	# 	{{-     if gt .Series.Number 0 -}}\
-	# 	{{-       printf " - %02d" .Series.Number -}}\
+	#	{{-   if .Series.Name -}}\
+	# 	{{-     $seriesLetters := list -}}\
+	# 	{{-     range $word := splitList " " .Series.Name -}}\
+	# 	{{-       $seriesLetters = append $seriesLetters (upper (first (splitList "" $word))) -}}\
 	# 	{{-     end -}}\
-	# 	{{-     ") " -}}\
+	# 	{{-     if gt (len $seriesLetters) 0 -}}\
+	# 	{{-       "(" }}{{- join "" $seriesLetters -}}\
+	# 	{{-       if gt .Series.Number 0 -}}\
+	# 	{{-         printf " - %02d" .Series.Number -}}\
+	# 	{{-       end -}}\
+	# 	{{-       ") " -}}\
+	# 	{{-     end -}}\
 	# 	{{-   end -}}\
 	# 	{{    .Title -}}\
 	# 	{{- end -}}\
