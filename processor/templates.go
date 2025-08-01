@@ -62,7 +62,7 @@ func (p *Processor) expandTemplate(name, field string, args ...any) (string, err
 		Language:   p.Book.Lang.String(),
 		Date:       p.Book.Date,
 		Format:     p.format.String(),
-		SourceFile: filepath.Base(p.src),
+		SourceFile: strings.TrimSuffix(filepath.Base(p.src), filepath.Ext(p.src)),
 		BookID:     p.Book.ID.String(),
 		ASIN:       p.Book.ASIN,
 		Genres:     slices.Clone(p.Book.Genres),

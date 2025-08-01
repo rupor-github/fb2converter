@@ -51,7 +51,7 @@
 	#------------ .Date (string) - date as specified in fb2 metainformation. Converter makes no attempt to parse or validate it
 	#------------ .Authors (array of { .FirstName (string), .MiddleName (string), .LastName (string)}) as specified in fb2 metainformation
 	#------------ .Format (string) - string representing requested conversion (ex: epub, azw3, kepub...)
-	#------------ .SourceFile (string) - base part of the source file name (no path)
+	#------------ .SourceFile (string) - base part of the source file name (no path, no extension)
 	#------------ .BookID (string) - book UUID as specified by fb2 metainformation or assigned by converter if none
 	#------------ .ASIN (string) - ASIN as specified by metainformation overwrite
 	#------------ .Genres (array of strings) - genres names as specified by fb2 metainformation
