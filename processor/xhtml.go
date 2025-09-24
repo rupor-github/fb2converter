@@ -187,77 +187,79 @@ func (p *Processor) processBody(index int, from *etree.Element) (err error) {
 
 func (p *Processor) doTextTransformations(text string, breakable, tail bool) string {
 
-	if p.ctx().inParagraph && breakable {
-		// normalize direct speech if requested - legacy, from fb2mobi
-		if !tail && p.speechTransform != nil {
-			from, to := p.speechTransform.From, p.speechTransform.To
-			cutIndex := 0
-			for i, sym := range text {
-				if i == 0 {
-					if !strings.ContainsRune(from, sym) {
-						break
-					}
+	if !p.ctx().inParagraph {
+		return text
+	}
+
+	// normalize direct speech if requested - legacy, from fb2mobi
+	if breakable && !tail && p.speechTransform != nil {
+		from, to := p.speechTransform.From, p.speechTransform.To
+		cutIndex := 0
+		for i, sym := range text {
+			if i == 0 {
+				if !strings.ContainsRune(from, sym) {
+					break
+				}
+				cutIndex += utf8.RuneLen(sym)
+			} else {
+				if unicode.IsSpace(sym) {
 					cutIndex += utf8.RuneLen(sym)
 				} else {
-					if unicode.IsSpace(sym) {
-						cutIndex += utf8.RuneLen(sym)
-					} else {
-						text = to + text[cutIndex:]
-						break
-					}
+					text = to + text[cutIndex:]
+					break
 				}
 			}
 		}
+	}
 
-		// unify dashes if requested - legacy, from fb2mobi
-		if p.dashTransform != nil {
-			var (
-				b     strings.Builder
-				runes = []rune(text)
-			)
-			for i := 0; i < len(runes); i++ {
-				if i > 0 && unicode.IsSpace(runes[i-1]) &&
-					i < len(runes)-1 && unicode.IsSpace(runes[i+1]) &&
-					strings.ContainsRune(p.dashTransform.From, runes[i]) {
+	// unify dashes if requested - legacy, from fb2mobi
+	if breakable && p.dashTransform != nil {
+		var (
+			b     strings.Builder
+			runes = []rune(text)
+		)
+		for i := range len(runes) {
+			if i > 0 && unicode.IsSpace(runes[i-1]) &&
+				i < len(runes)-1 && unicode.IsSpace(runes[i+1]) &&
+				strings.ContainsRune(p.dashTransform.From, runes[i]) {
 
-					b.WriteString(p.dashTransform.To)
-					continue
-				}
-				b.WriteRune(runes[i])
+				b.WriteString(p.dashTransform.To)
+				continue
 			}
-			text = b.String()
+			b.WriteRune(runes[i])
 		}
+		text = b.String()
+	}
 
-		// handle punctuation in dialogues if requested. Allows to enforce line break after
-		// dash in accordance with Russian rules
-		if !tail && p.dialogueTransform != nil {
-			var (
-				b             strings.Builder
-				runes         = []rune(text)
-				leadingSpaces = -1
-			)
-			for i := 0; i < len(runes); i++ {
-				if unicode.IsSpace(runes[i]) {
-					leadingSpaces = i
-					continue
-				}
-				if i > 0 && strings.ContainsRune(p.dialogueTransform.From, runes[i]) {
-					b.WriteString(p.dialogueTransform.To)
-					b.WriteRune(runes[i])
-					leadingSpaces = -1
-					continue
-				}
-				if leadingSpaces >= 0 {
-					b.WriteString(string(runes[leadingSpaces:i]))
-				}
+	// handle punctuation in dialogues if requested. Allows to enforce line break after
+	// dash in accordance with Russian rules
+	if !tail && p.dialogueTransform != nil {
+		var (
+			b             strings.Builder
+			runes         = []rune(text)
+			leadingSpaces = -1
+		)
+		for i := range len(runes) {
+			if unicode.IsSpace(runes[i]) {
+				leadingSpaces = i
+				continue
+			}
+			if i > 0 && strings.ContainsRune(p.dialogueTransform.From, runes[i]) {
+				b.WriteString(p.dialogueTransform.To)
 				b.WriteRune(runes[i])
 				leadingSpaces = -1
+				continue
 			}
-			if leadingSpaces > 0 {
-				b.WriteString(string(runes[leadingSpaces:]))
+			if leadingSpaces >= 0 {
+				b.WriteString(string(runes[leadingSpaces:i]))
 			}
-			text = b.String()
+			b.WriteRune(runes[i])
+			leadingSpaces = -1
 		}
+		if leadingSpaces > 0 {
+			b.WriteString(string(runes[leadingSpaces:]))
+		}
+		text = b.String()
 	}
 	return text
 }
