@@ -233,7 +233,7 @@ func (p *Processor) doTextTransformations(text string, breakable, tail bool) str
 
 	// handle punctuation in dialogues if requested. Allows to enforce line break after
 	// dash in accordance with Russian rules
-	if !tail && p.dialogueTransform != nil {
+	if p.dialogueTransform != nil {
 		var (
 			b             strings.Builder
 			runes         = []rune(text)

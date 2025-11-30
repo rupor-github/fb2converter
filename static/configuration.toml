@@ -317,7 +317,7 @@
 		#-------- .Body { .Name (string), .Number (int), .NoteNumber (int)} is set in addion to other variables.
 		#---- to get exactly the same result as v1 defaults use this:
 		# link_format = """\
-		# 	[{{- if gt .Body.Number 0 -}}
+		# 	[{{- if gt .Body.Number 0 -}}\
 		# 	 {{-   printf "%d" .Body.Number -}}.\
 		# 	 {{- end -}}\
 		# 	 {{- printf "%d" .Body.NoteNumber -}}]\
