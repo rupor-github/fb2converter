@@ -6,8 +6,10 @@
 [![GitHub Release](https://img.shields.io/github/release/rupor-github/fb2converter.svg)](https://github.com/rupor-github/fb2converter/releases)
 
 
-# As of 02/2026 this project is effectively frozen - it is scheduled for archivation (soon).
+# <span style="color:red">As of 02/2026 this project is effectively frozen - it is scheduled for archivation (soon).</span>
+---
 ## New and supported converter engine is [fb2cng](https://github.com/rupor-github/fb2cng) and device syncronization is now covered by [sync2kindle](https://github.com/rupor-github/sync2kindle) which offers much more than simple "Send to Kindle" functionality. 
+---
 
 ### A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi)
 Aims to be faster than python implementation and much easier to maintain. Simpler configuration, zero dependencies, better diagnostics and no installation required.
