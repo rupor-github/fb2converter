@@ -3,10 +3,8 @@
     <span style="vertical-align:middle;">&nbsp;&nbsp;FB2 converter to EPUB2, KEPUB, MOBI 7/8, AZW3</span>
 </h1>
 
-[![GitHub Release](https://img.shields.io/github/release/rupor-github/fb2converter.svg)](https://github.com/rupor-github/fb2converter/releases)
-
 > [!CAUTION]
-> ## This project has reached End of Life
+> ## As of verion 1.78.5 this project has reached End of Life
 >
 > **fb2converter** is no longer under active development. This repository is now archived.
 >
