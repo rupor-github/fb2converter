@@ -1,15 +1,25 @@
-﻿<h1>
+<h1>
     <img src="docs/books.svg" style="vertical-align:middle; width:8%" align="absmiddle"/>
     <span style="vertical-align:middle;">&nbsp;&nbsp;FB2 converter to EPUB2, KEPUB, MOBI 7/8, AZW3</span>
 </h1>
 
 [![GitHub Release](https://img.shields.io/github/release/rupor-github/fb2converter.svg)](https://github.com/rupor-github/fb2converter/releases)
 
-
-# <span style="color:red">As of 02/2026 this project is effectively frozen - it is scheduled for archivation (soon).</span>
----
-## New and supported converter engine is [fb2cng](https://github.com/rupor-github/fb2cng) and device syncronization is now covered by [sync2kindle](https://github.com/rupor-github/sync2kindle) which offers much more than simple "Send to Kindle" functionality. 
----
+> [!CAUTION]
+> ## This project has reached End of Life
+>
+> **fb2converter** is no longer under active development. This repository is now archived.
+>
+> ### Successor projects
+>
+> This project has been superseded by purpose-built replacements that offer improved functionality and ongoing support:
+>
+> - **[fb2cng](https://github.com/rupor-github/fb2cng)** — the next-generation FB2 conversion engine, providing
+>   faster, more accurate, and actively maintained e-book conversion.
+> - **[sync2kindle](https://github.com/rupor-github/sync2kindle)** — handles device synchronization with
+>   capabilities that go well beyond the original "Send to Kindle" workflow.
+>
+> All users are strongly encouraged to migrate to these projects.
 
 ### A complete rewrite of [fb2mobi](https://github.com/rupor-github/fb2mobi)
 Aims to be faster than python implementation and much easier to maintain. Simpler configuration, zero dependencies, better diagnostics and no installation required.
